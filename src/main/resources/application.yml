@@ -3,10 +3,11 @@ server:
 
 spring:
   profiles:
-    active: dev
+    active: dev # ?? ????: dev
   config:
     import:
       - optional:file:.env[.properties]
+      - classpath:application-oauth.yml
 
 jwt:
   secret: ${JWT_SECRET_KEY}
@@ -15,21 +16,23 @@ jwt:
 
 security:
   public-urls:
-    # ?? ??? ??
+    # 소셜 로그인 관련
     - "/oauth2/**"
     - "/login/oauth2/**"
-    # JWT ?? ??
+    # JWT 토큰 관리
     - "/api/auth/token/refresh"
     - "/api/auth/token/refresh/full"
     - "/api/auth/logout"
-    # ??? API (dev ???????)
+    # 개발용 API (dev 프로파일에서만)
     - "/api/dev/**"
-    # API ??
+    # API 문서
     - "/api-docs"
     - "/v3/api-docs/**"
     - "/swagger-ui/**"
+    # 일반 회원가입 제거: "/api/join", "/api/join/email-check", "/api/auth/login"
   cors-max-age: 3600
 
+# ?? Swagger ??
 springdoc:
   swagger-ui:
     path: /api-docs
