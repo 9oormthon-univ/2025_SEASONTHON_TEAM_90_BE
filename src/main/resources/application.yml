@@ -1,0 +1,35 @@
+server:
+  port: 8080
+
+spring:
+  profiles:
+    active: dev
+  config:
+    import:
+      - optional:file:.env[.properties]
+
+jwt:
+  secret: ${JWT_SECRET_KEY}
+  access-token-expiration: ${JWT_ACCESS_EXPIRATION:3600000}
+  refresh-token-expiration: ${JWT_REFRESH_EXPIRATION:86400000}
+
+security:
+  public-urls:
+    # ?? ??? ??
+    - "/oauth2/**"
+    - "/login/oauth2/**"
+    # JWT ?? ??
+    - "/api/auth/token/refresh"
+    - "/api/auth/token/refresh/full"
+    - "/api/auth/logout"
+    # ??? API (dev ???????)
+    - "/api/dev/**"
+    # API ??
+    - "/api-docs"
+    - "/v3/api-docs/**"
+    - "/swagger-ui/**"
+  cors-max-age: 3600
+
+springdoc:
+  swagger-ui:
+    path: /api-docs
