@@ -78,17 +78,17 @@ jobs:
           mkdir -p ~/.ssh
           echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_rsa
           chmod 600 ~/.ssh/id_rsa
-          
+
           # SCP를 사용해 JAR 파일 EC2로 전송
-          scp -o StrictHostKeyChecking=no -i ~/.ssh/id_rsa ./build/libs/*.jar ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }}:/home/ubuntu/
+          scp -o StrictHostKeyChecking=no -i ~/.ssh/id_rsa ./build/libs/habiglow-0.0.1-SNAPSHOT.jar ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }}:/home/ubuntu/
           
           # SSH 접속 및 애플리케이션 재시작
           ssh -o StrictHostKeyChecking=no -i ~/.ssh/id_rsa ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} << 'EOF'
             # 원격 서버에서 실행할 명령어들
             sudo pkill -f "java -jar" || true # 기존 애플리케이션 종료
-          
+
             # 새 애플리케이션 시작 (환경 변수 적용)
-            nohup java -jar -Dspring.profiles.active=prod -DDB_HOST=${{ secrets.DB_HOST }} -DDB_PORT=5432 -DDB_NAME=${{ secrets.DB_NAME }} -DDB_USERNAME=${{ secrets.DB_USERNAME }} -DDB_PASSWORD=${{ secrets.DB_PASSWORD }} -DJWT_SECRET_KEY=${{ secrets.JWT_SECRET_KEY }} ~/2025_SEASONTHON_TEAM_90_BE/build/libs/Habiglow-0.0.1-SNAPSHOT.jar > ~/nohup.out 2>&1 &
+            nohup java -jar -Dspring.profiles.active=prod -DDB_HOST=${{ secrets.DB_HOST }} -DDB_PORT=5432 -DDB_NAME=${{ secrets.DB_NAME }} -DDB_USERNAME=${{ secrets.DB_USERNAME }} -DDB_PASSWORD=${{ secrets.DB_PASSWORD }} -DJWT_SECRET_KEY=${{ secrets.JWT_SECRET_KEY }} ~/habiglow-0.0.1-SNAPSHOT.jar > ~/nohup.out 2>&1 &
           
             # Nginx 재시작
             sudo systemctl restart nginx
