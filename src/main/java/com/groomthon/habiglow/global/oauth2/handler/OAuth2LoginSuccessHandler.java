@@ -11,7 +11,7 @@ import com.groomthon.habiglow.global.dto.CommonApiResponse;
 import com.groomthon.habiglow.global.oauth2.dto.OAuthLoginResponse;
 import com.groomthon.habiglow.global.oauth2.service.OAuth2TokenService;
 import com.groomthon.habiglow.global.oauth2.user.CustomOAuth2User;
-import com.groomthon.habiglow.global.response.MemberSuccessCode;
+import com.groomthon.habiglow.global.response.ApiSuccessCode;
 
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -73,7 +73,7 @@ public class OAuth2LoginSuccessHandler implements AuthenticationSuccessHandler {
 			.build();
 
 		CommonApiResponse<OAuthLoginResponse> apiResponse = CommonApiResponse.success(
-			MemberSuccessCode.SOCIAL_LOGIN_SUCCESS, oAuthLoginResponse);
+			ApiSuccessCode.SOCIAL_LOGIN_SUCCESS, oAuthLoginResponse);
 
 		sendJsonResponse(response, apiResponse);
 

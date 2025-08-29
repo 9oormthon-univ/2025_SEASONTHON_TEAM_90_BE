@@ -11,7 +11,7 @@ import com.groomthon.habiglow.domain.auth.dto.request.MockLoginRequest;
 import com.groomthon.habiglow.domain.auth.dto.response.TokenResponse;
 import com.groomthon.habiglow.domain.auth.service.DevAuthService;
 import com.groomthon.habiglow.global.response.AutoApiResponse;
-import com.groomthon.habiglow.global.response.MemberSuccessCode;
+import com.groomthon.habiglow.global.response.ApiSuccessCode;
 import com.groomthon.habiglow.global.response.SuccessCode;
 
 import io.swagger.v3.oas.annotations.Operation;
@@ -34,7 +34,7 @@ public class DevAuthController {
 	@PostMapping("/register")
 	@Operation(summary = "개발용 Mock 회원가입", description = "테스트용 사용자를 생성합니다.")
 	@AutoApiResponse
-	@SuccessCode(MemberSuccessCode.MEMBER_CREATED)
+	@SuccessCode(ApiSuccessCode.MEMBER_CREATED)
 	public ResponseEntity<Void> mockRegister(@Valid @RequestBody MockLoginRequest request) {
 		log.info("개발용 Mock 회원가입 요청: email={}, socialType={}",
 			request.getEmail(), request.getSocialType());
@@ -47,7 +47,7 @@ public class DevAuthController {
 	@PostMapping("/mock-login")
 	@Operation(summary = "개발용 Mock 로그인", description = "기존 테스트용 사용자로 로그인하여 JWT 토큰을 발급받습니다.")
 	@AutoApiResponse
-	@SuccessCode(MemberSuccessCode.SOCIAL_LOGIN_SUCCESS)
+	@SuccessCode(ApiSuccessCode.SOCIAL_LOGIN_SUCCESS)
 	public ResponseEntity<TokenResponse> mockLogin(
 		@Valid @RequestBody MockLoginRequest request,
 		HttpServletResponse response) {
