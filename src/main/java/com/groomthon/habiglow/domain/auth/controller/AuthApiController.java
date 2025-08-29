@@ -7,7 +7,7 @@ import org.springframework.web.bind.annotation.RestController;
 import com.groomthon.habiglow.domain.auth.dto.response.TokenResponse;
 import com.groomthon.habiglow.domain.auth.service.AuthenticationService;
 import com.groomthon.habiglow.global.response.AutoApiResponse;
-import com.groomthon.habiglow.global.response.MemberSuccessCode;
+import com.groomthon.habiglow.global.response.ApiSuccessCode;
 import com.groomthon.habiglow.global.response.SuccessCode;
 import com.groomthon.habiglow.global.swagger.CustomExceptionDescription;
 import com.groomthon.habiglow.global.swagger.SwaggerResponseDescription;
@@ -36,7 +36,7 @@ public class AuthApiController {
 	})
 	@PostMapping("/token/refresh")
 	@CustomExceptionDescription(SwaggerResponseDescription.AUTH_ERROR)
-	@SuccessCode(MemberSuccessCode.TOKEN_REISSUE_SUCCESS)
+	@SuccessCode(ApiSuccessCode.TOKEN_REISSUE_SUCCESS)
 	public TokenResponse refreshAccessToken(
 		HttpServletRequest request,
 		HttpServletResponse response) {
@@ -51,7 +51,7 @@ public class AuthApiController {
 	})
 	@PostMapping("/token/refresh/full")
 	@CustomExceptionDescription(SwaggerResponseDescription.AUTH_ERROR)
-	@SuccessCode(MemberSuccessCode.TOKEN_REISSUE_FULL_SUCCESS)
+	@SuccessCode(ApiSuccessCode.TOKEN_REISSUE_FULL_SUCCESS)
 	public TokenResponse refreshAllTokens(
 		HttpServletRequest request,
 		HttpServletResponse response) {
@@ -65,7 +65,7 @@ public class AuthApiController {
 	})
 	@PostMapping("/logout")
 	@CustomExceptionDescription(SwaggerResponseDescription.AUTH_ERROR)
-	@SuccessCode(MemberSuccessCode.LOGOUT_SUCCESS)
+	@SuccessCode(ApiSuccessCode.LOGOUT_SUCCESS)
 	public void logout(
 		HttpServletRequest request,
 		HttpServletResponse response) {

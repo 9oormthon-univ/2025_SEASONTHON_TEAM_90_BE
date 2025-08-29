@@ -12,7 +12,7 @@ import org.springframework.web.bind.annotation.RestController;
 import com.groomthon.habiglow.domain.member.dto.response.MemberResponse;
 import com.groomthon.habiglow.domain.member.service.MemberService;
 import com.groomthon.habiglow.global.response.AutoApiResponse;
-import com.groomthon.habiglow.global.response.MemberSuccessCode;
+import com.groomthon.habiglow.global.response.ApiSuccessCode;
 import com.groomthon.habiglow.global.response.SuccessCode;
 import com.groomthon.habiglow.global.swagger.CustomExceptionDescription;
 import com.groomthon.habiglow.global.swagger.SwaggerResponseDescription;
@@ -42,7 +42,7 @@ public class UserApiController {
 	@GetMapping
 	@PreAuthorize("isAuthenticated()")
 	@CustomExceptionDescription(SwaggerResponseDescription.MEMBER_ERROR)
-	@SuccessCode(MemberSuccessCode.MEMBER_VIEW)
+	@SuccessCode(ApiSuccessCode.MEMBER_VIEW)
 	public List<MemberResponse> findAll() {
 		return memberService.findAll();
 	}
@@ -59,7 +59,7 @@ public class UserApiController {
 	@GetMapping("/{id}")
 	@PreAuthorize("isAuthenticated()")
 	@CustomExceptionDescription(SwaggerResponseDescription.MEMBER_ERROR)
-	@SuccessCode(MemberSuccessCode.MEMBER_VIEW)
+	@SuccessCode(ApiSuccessCode.MEMBER_VIEW)
 	public MemberResponse findById(@PathVariable Long id) {
 		return memberService.findById(id);
 	}
@@ -77,8 +77,9 @@ public class UserApiController {
 	@DeleteMapping("/{id}")
 	@PreAuthorize("isAuthenticated()")
 	@CustomExceptionDescription(SwaggerResponseDescription.MEMBER_ERROR)
-	@SuccessCode(MemberSuccessCode.MEMBER_DELETED)
+	@SuccessCode(ApiSuccessCode.MEMBER_DELETED)
 	public void delete(@PathVariable Long id) {
 		memberService.deleteById(id);
 	}
 }
+
