@@ -2,14 +2,15 @@ package com.groomthon.habiglow.global.jwt;
 
 import java.io.IOException;
 
+import java.util.Collections;
+
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import com.groomthon.habiglow.domain.auth.service.BlacklistService;
-import com.groomthon.habiglow.domain.member.security.CustomUserDetailsService;
 
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
@@ -24,7 +25,6 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
 	private final JWTUtil jwtUtil;
 	private final BlacklistService blacklistService;
-	private final CustomUserDetailsService userDetailsService;
 
 	@Override
 	protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
@@ -32,20 +32,22 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
 		jwtUtil.extractAccessToken(request)
 			.filter(token -> validateAccessToken(token, response))
-			.flatMap(jwtUtil::getEmail)
-			.ifPresent(email -> {
+			.ifPresent(token -> {
 				try {
-					UserDetails userDetails = userDetailsService.loadUserByUsername(email);
+					String email = jwtUtil.getEmail(token).orElse("");
+					String userId = jwtUtil.getId(token).orElse("");
+
+					// JWT에서 추출한 정보로 직접 Authentication 생성
 					Authentication authentication = new UsernamePasswordAuthenticationToken(
-						userDetails,
-						null,
-						userDetails.getAuthorities()
+						userId, // principal: 사용자 ID
+						null,   // credentials: JWT 토큰 기반이므로 null
+						Collections.singletonList(new SimpleGrantedAuthority("SOCIAL_USER")) // authorities
 					);
 					SecurityContextHolder.getContext().setAuthentication(authentication);
-					log.info("SecurityContext에 인증 객체 저장 완료: {}", email);
+					log.info("JWT 기반 SecurityContext 저장 완료: email={}, userId={}", email, userId);
 				} catch (Exception e) {
-					log.warn("UserDetails 로딩 실패: {}", e.getMessage());
-					sendUnauthorized(response, "회원 인증 실패");
+					log.warn("JWT 인증 처리 실패: {}", e.getMessage());
+					sendUnauthorized(response, "JWT 토큰 처리 실패");
 				}
 			});
 
