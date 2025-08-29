@@ -30,11 +30,11 @@ public class RefreshTokenService {
 	 */
 	@Transactional
 	public void saveRefreshToken(Long memberId, String token) {
-		saveToken(String.valueOf(memberId), token);
+		saveRefreshToken(String.valueOf(memberId), token);
 	}
 
 	@Transactional
-	public void saveToken(String memberId, String token) {
+	public void saveRefreshToken(String memberId, String token) {
 		LocalDateTime expiresAt = LocalDateTime.now().plusSeconds(refreshTokenExpiration / 1000);
 
 		Optional<RefreshToken> existingToken = refreshTokenRepository.findById(memberId);

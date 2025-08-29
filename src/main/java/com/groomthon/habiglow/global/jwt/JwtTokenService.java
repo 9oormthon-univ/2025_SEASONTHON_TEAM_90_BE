@@ -23,7 +23,7 @@ public class JwtTokenService {
 		String memberId = member.getId().toString();
 		TokenPair tokens = createTokenPair(memberId, member.getMemberEmail(), member.getSocialUniqueId());
 
-		refreshTokenService.saveToken(memberId, tokens.refreshToken);
+		refreshTokenService.saveRefreshToken(memberId, tokens.refreshToken);
 
 		setAccessToken(response, tokens.accessToken);
 		setRefreshCookie(response, tokens.refreshToken);
@@ -40,7 +40,7 @@ public class JwtTokenService {
 	public void reissueAllTokens(HttpServletResponse response, String memberId, String email, String socialUniqueId) {
 		TokenPair tokens = createTokenPair(memberId, email, socialUniqueId);
 
-		refreshTokenService.saveToken(memberId, tokens.refreshToken);
+		refreshTokenService.saveRefreshToken(memberId, tokens.refreshToken);
 
 		setAccessToken(response, tokens.accessToken);
 		setRefreshCookie(response, tokens.refreshToken);

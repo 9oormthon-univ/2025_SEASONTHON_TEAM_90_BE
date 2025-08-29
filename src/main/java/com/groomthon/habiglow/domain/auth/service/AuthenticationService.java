@@ -7,6 +7,7 @@ import com.groomthon.habiglow.domain.auth.dto.request.SocialLoginRequest;
 import com.groomthon.habiglow.domain.auth.dto.response.TokenResponse;
 import com.groomthon.habiglow.global.exception.BaseException;
 import com.groomthon.habiglow.global.jwt.JWTUtil;
+import com.groomthon.habiglow.global.jwt.JwtTokenService;
 import com.groomthon.habiglow.global.response.ErrorCode;
 
 import jakarta.servlet.http.HttpServletRequest;
@@ -21,6 +22,7 @@ import lombok.extern.slf4j.Slf4j;
 public class AuthenticationService {
 
 	private final JWTUtil jwtUtil;
+	private final JwtTokenService jwtTokenService;
 	private final TokenValidator tokenValidator;
 	private final RefreshTokenService refreshTokenService;
 	private final BlacklistService blacklistService;
@@ -40,8 +42,7 @@ public class AuthenticationService {
 			throw new BaseException(ErrorCode.INVALID_TOKEN);
 		}
 
-		String accessToken = jwtUtil.createAccessTokenSafe(validation.getMemberId(), validation.getEmail(), validation.getSocialUniqueId());
-		response.setHeader("Authorization", "Bearer " + accessToken);
+		jwtTokenService.reissueAccessToken(response, validation.getMemberId(), validation.getEmail(), validation.getSocialUniqueId());
 
 		log.info("Access token refreshed for member: {}", validation.getMemberId());
 		return TokenResponse.accessOnly(
@@ -60,14 +61,7 @@ public class AuthenticationService {
 		}
 
 		refreshTokenService.deleteRefreshToken(validation.getMemberId());
-		
-		String accessToken = jwtUtil.createAccessTokenSafe(validation.getMemberId(), validation.getEmail(), validation.getSocialUniqueId());
-		String newRefreshToken = jwtUtil.createRefreshTokenSafe(validation.getMemberId(), validation.getEmail(), validation.getSocialUniqueId());
-		
-		refreshTokenService.saveRefreshToken(Long.valueOf(validation.getMemberId()), newRefreshToken);
-		
-		response.setHeader("Authorization", "Bearer " + accessToken);
-		response.setHeader("Set-Cookie", jwtUtil.createRefreshTokenCookie(newRefreshToken).toString());
+		jwtTokenService.reissueAllTokens(response, validation.getMemberId(), validation.getEmail(), validation.getSocialUniqueId());
 
 		log.info("Full token refresh completed for member: {}", validation.getMemberId());
 		return TokenResponse.withRefresh(
@@ -78,6 +72,7 @@ public class AuthenticationService {
 
 	@Transactional
 	public void logout(HttpServletRequest request, HttpServletResponse response) {
+		// Refresh Token 삭제
 		jwtUtil.extractRefreshToken(request)
 			.filter(jwtUtil::isRefreshToken)
 			.flatMap(jwtUtil::getId)
@@ -86,8 +81,10 @@ public class AuthenticationService {
 				log.info("Refresh token deleted for member: {}", memberId);
 			});
 
-		response.setHeader("Set-Cookie", jwtUtil.invalidateRefreshToken().toString());
+		// Refresh Token 쿠키 무효화
+		jwtTokenService.expireRefreshCookie(response);
 
+		// Access Token 블랙리스트 추가
 		jwtUtil.extractAccessToken(request)
 			.filter(jwtUtil::isAccessToken)
 			.ifPresent(accessToken -> {

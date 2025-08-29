@@ -53,8 +53,8 @@ public class DevAuthService {
 		MemberEntity mockUser = findExistingMockUser(request);
 
 		String memberId = mockUser.getId().toString();
-		String accessToken = jwtUtil.createAccessToken(memberId, mockUser.getMemberEmail(), mockUser.getSocialUniqueId());
-		String refreshToken = jwtUtil.createRefreshToken(memberId, mockUser.getMemberEmail(), mockUser.getSocialUniqueId());
+		String accessToken = jwtUtil.createAccessTokenSafe(memberId, mockUser.getMemberEmail(), mockUser.getSocialUniqueId());
+		String refreshToken = jwtUtil.createRefreshTokenSafe(memberId, mockUser.getMemberEmail(), mockUser.getSocialUniqueId());
 
 		refreshTokenService.saveRefreshToken(mockUser.getId(), refreshToken);
 		

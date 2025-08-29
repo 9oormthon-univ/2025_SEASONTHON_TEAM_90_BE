@@ -36,13 +36,13 @@ public class SocialAuthService {
 
         MemberEntity member = memberService.findOrCreateSocialMember(userAttributes);
 
-        String accessToken = jwtUtil.createAccessToken(
+        String accessToken = jwtUtil.createAccessTokenSafe(
             member.getId().toString(),
             member.getEmail(), 
             member.getSocialUniqueId()
         );
         
-        String refreshToken = jwtUtil.createRefreshToken(
+        String refreshToken = jwtUtil.createRefreshTokenSafe(
             member.getId().toString(),
             member.getEmail(), 
             member.getSocialUniqueId()
