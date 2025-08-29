@@ -190,4 +190,17 @@ public class JWTUtil {
 			.sameSite("Lax")
 			.build();
 	}
+
+	// 공통 토큰 생성 헬퍼 메서드들
+	public String createAccessTokenSafe(String memberId, String email, String socialUniqueId) {
+		return socialUniqueId != null 
+			? createAccessToken(memberId, email, socialUniqueId)
+			: createAccessToken(memberId, email);
+	}
+
+	public String createRefreshTokenSafe(String memberId, String email, String socialUniqueId) {
+		return socialUniqueId != null
+			? createRefreshToken(memberId, email, socialUniqueId)
+			: createRefreshToken(memberId, email);
+	}
 }

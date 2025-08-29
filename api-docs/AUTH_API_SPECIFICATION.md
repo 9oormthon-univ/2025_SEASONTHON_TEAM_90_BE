@@ -2,6 +2,19 @@
 
 > **소셜 로그인 전용 Spring Boot JWT 인증 시스템 API 문서**
 
+## 🔄 최근 업데이트 (v2.0)
+
+### 🔒 보안 강화 업데이트
+- **전체 사용자 조회 API 제거**: `GET /api/users` 보안상 완전 제거
+- **개인정보 보호 강화**: `GET /api/users/{id}` → `GET /api/users/me` (본인만 조회)
+- **계정 보안 강화**: `DELETE /api/users/{id}` → `DELETE /api/users/me` (본인만 삭제)
+- **JWT 기반 본인 인증**: 토큰에서 사용자 ID 추출하여 본인 확인
+
+### 🛠️ 시스템 개선
+- **예외 처리 강화**: 포괄적 예외 핸들러 및 민감 정보 마스킹 추가
+- **코드 품질 개선**: 중복 코드 제거 및 데드코드 정리
+- **트랜잭션 최적화**: 읽기 전용 트랜잭션 기본 적용으로 성능 향상
+
 ---
 
 ## 📋 목차
@@ -79,6 +92,18 @@ Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
 
 ## 📄 API 엔드포인트
 
+### API 엔드포인트 요약
+| 메서드 | 경로 | 설명 | 인증 필요 |
+|--------|------|------|----------|
+| POST | `/api/auth/social/login` | 클라이언트 소셜 로그인 | ❌ |
+| POST | `/api/auth/token/refresh` | Access Token 재발급 | 🟡 Refresh Token |
+| POST | `/api/auth/token/refresh/full` | 전체 토큰 재발급 | 🟡 Refresh Token |
+| POST | `/api/auth/logout` | 로그아웃 | ✅ |
+| GET | `/api/users/me` | 내 정보 조회 | ✅ |
+| DELETE | `/api/users/me` | 내 계정 삭제 | ✅ |
+| POST | `/api/dev/auth/register` | 개발용 Mock 회원가입 | ❌ (dev only) |
+| POST | `/api/dev/auth/mock-login` | 개발용 Mock 로그인 | ❌ (dev only) |
+
 ## 1. 🔐 인증 관리 API
 
 ### 1.1 Access Token 재발급
@@ -148,45 +173,14 @@ Cookie: refresh={refresh_token}
 
 ---
 
-## 2. 👥 소셜 회원 관리 API
+## 2. 👤 회원 관리 API
 
-### 2.1 전체 사용자 목록 조회
-가입된 모든 사용자의 정보를 조회합니다.
-
-**요청**
-```http
-GET /api/users
-Authorization: Bearer {access_token}
-```
-
-**응답**
-```json
-{
-  "code": "S208",
-  "message": "회원 정보 조회 성공", 
-  "data": [
-    {
-      "id": 1,
-      "memberName": "홍길동",
-      "memberEmail": "hong@example.com",
-      "socialType": "GOOGLE"
-    },
-    {
-      "id": 2, 
-      "memberName": "김철수",
-      "memberEmail": "kim@example.com",
-      "socialType": "KAKAO"
-    }
-  ]
-}
-```
-
-### 2.2 특정 사용자 조회
-사용자 ID를 기준으로 회원 정보를 조회합니다.
+### 2.1 내 정보 조회
+로그인한 사용자의 정보를 조회합니다.
 
 **요청**
 ```http
-GET /api/users/{id}
+GET /api/users/me
 Authorization: Bearer {access_token}
 ```
 
@@ -204,12 +198,21 @@ Authorization: Bearer {access_token}
 }
 ```
 
-### 2.3 사용자 삭제
-지정한 사용자 ID에 해당하는 회원을 삭제합니다.
+**에러 응답**
+```json
+{
+  "code": "E401",
+  "message": "인증되지 않은 사용자",
+  "data": null
+}
+```
+
+### 2.2 내 계정 삭제
+로그인한 사용자의 계정을 삭제합니다.
 
 **요청**
 ```http
-DELETE /api/users/{id}
+DELETE /api/users/me
 Authorization: Bearer {access_token}
 ```
 
@@ -218,6 +221,15 @@ Authorization: Bearer {access_token}
 {
   "code": "S207",
   "message": "회원 삭제 성공",
+  "data": null
+}
+```
+
+**에러 응답**
+```json
+{
+  "code": "E401",
+  "message": "인증되지 않은 사용자",
   "data": null
 }
 ```
@@ -414,10 +426,11 @@ pm.sendRequest(mockLoginRequest, function (err, response) {
 ```
 
 ### 테스트 시나리오
-1. **기본 인증 플로우**: Mock 로그인 → 사용자 목록 조회 → 로그아웃
+1. **기본 인증 플로우**: Mock 로그인 → 내 정보 조회 → 로그아웃
 2. **토큰 갱신 플로우**: 로그인 → Access Token 갱신 → 전체 토큰 갱신
-3. **회원 관리 플로우**: 전체 조회 → 특정 조회 → 삭제
-4. **에러 케이스**: 잘못된 토큰, 존재하지 않는 사용자, 만료된 토큰
+3. **회원 관리 플로우**: 내 정보 조회 → 내 계정 삭제
+4. **보안 테스트**: 토큰 없이 접근 시도 → 401 에러 확인
+5. **에러 케이스**: 잘못된 토큰, 만료된 토큰, 블랙리스트 토큰
 
 ---
 
@@ -430,11 +443,23 @@ pm.sendRequest(mockLoginRequest, function (err, response) {
 
 ## 📝 참고사항
 
+### 🔒 보안 강화 사항
+1. **개인정보 보호**: 사용자는 오직 본인의 정보만 조회/삭제할 수 있습니다.
+2. **전체 사용자 조회 제거**: 보안상의 이유로 전체 사용자 목록 조회 API는 제거되었습니다.
+3. **토큰 기반 인증**: JWT 토큰에서 사용자 ID를 추출하여 본인 확인을 수행합니다.
+4. **민감 정보 마스킹**: 로그에서 password, token, secret 등의 민감 정보는 자동으로 마스킹됩니다.
+
+### 🛡️ 시스템 보안
 1. **소셜 로그인 전용**: 일반 회원가입/로그인은 지원하지 않습니다.
-2. **개발용 API**: `/api/dev/` 경로의 API는 dev, local 프로파일에서만 사용 가능합니다.
-3. **토큰 보안**: Refresh Token은 HttpOnly Cookie로 관리되어 XSS 공격을 방지합니다.
+2. **토큰 보안**: Refresh Token은 HttpOnly Cookie로 관리되어 XSS 공격을 방지합니다.
+3. **토큰 블랙리스트**: 로그아웃 시 Access Token이 블랙리스트에 등록되어 재사용을 방지합니다.
 4. **Rate Limiting**: OAuth2 로그인 엔드포인트는 5회/분 제한이 적용됩니다.
-5. **사용자 분리**: 플랫폼별 사용자는 socialUniqueId로 완전 분리 관리됩니다.
+
+### 🔧 기술적 사항
+1. **개발용 API**: `/api/dev/` 경로의 API는 dev, local 프로파일에서만 사용 가능합니다.
+2. **사용자 분리**: 플랫폼별 사용자는 socialUniqueId로 완전 분리 관리됩니다.
+3. **트랜잭션 최적화**: 읽기 전용 트랜잭션을 기본으로 사용하여 성능을 최적화했습니다.
+4. **예외 처리 강화**: 포괄적인 예외 처리로 안정적인 에러 응답을 제공합니다.
 
 ---
 

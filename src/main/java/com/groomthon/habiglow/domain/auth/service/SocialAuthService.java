@@ -56,7 +56,7 @@ public class SocialAuthService {
         return TokenResponse.builder()
                 .accessToken(accessToken)
                 .tokenType("Bearer")
-                .expiresIn(3600L) // 1시간
+                .expiresIn(jwtUtil.getAccessTokenExpiration() / 1000)
                 .refreshTokenIncluded(true)
                 .build();
     }

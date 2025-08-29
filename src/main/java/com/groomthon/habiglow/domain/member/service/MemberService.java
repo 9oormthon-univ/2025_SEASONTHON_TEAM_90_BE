@@ -1,7 +1,5 @@
 package com.groomthon.habiglow.domain.member.service;
 
-import java.util.List;
-
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -45,12 +43,6 @@ public class MemberService {
 		return memberRepository.save(newMember);
 	}
 
-	public List<MemberResponse> findAll() {
-		return memberRepository.findAll()
-			.stream()
-			.map(MemberResponse::fromEntity)
-			.toList();
-	}
 
 	public MemberResponse findById(Long id) {
 		return memberRepository.findById(id)
@@ -58,11 +50,6 @@ public class MemberService {
 			.orElseThrow(() -> memberNotFound());
 	}
 
-	public MemberResponse findMemberForUpdate(String myEmail) {
-		return memberRepository.findByMemberEmail(myEmail)
-			.map(MemberResponse::fromEntity)
-			.orElseThrow(() -> memberNotFound());
-	}
 
 
 	@Transactional

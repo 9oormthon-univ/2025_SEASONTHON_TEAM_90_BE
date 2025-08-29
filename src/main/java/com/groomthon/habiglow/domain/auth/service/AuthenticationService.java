@@ -5,10 +5,8 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.groomthon.habiglow.domain.auth.dto.request.SocialLoginRequest;
 import com.groomthon.habiglow.domain.auth.dto.response.TokenResponse;
-import com.groomthon.habiglow.domain.member.entity.MemberEntity;
 import com.groomthon.habiglow.global.exception.BaseException;
 import com.groomthon.habiglow.global.jwt.JWTUtil;
-import com.groomthon.habiglow.global.jwt.JwtTokenService;
 import com.groomthon.habiglow.global.response.ErrorCode;
 
 import jakarta.servlet.http.HttpServletRequest;
@@ -19,11 +17,10 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @Service
 @RequiredArgsConstructor
-@Transactional
+@Transactional(readOnly = true)
 public class AuthenticationService {
 
 	private final JWTUtil jwtUtil;
-	private final JwtTokenService jwtTokenService;
 	private final TokenValidator tokenValidator;
 	private final RefreshTokenService refreshTokenService;
 	private final BlacklistService blacklistService;
@@ -33,11 +30,8 @@ public class AuthenticationService {
 		return socialAuthService.authenticateWithSocialToken(request);
 	}
 
-	public void issueTokensOnLogin(HttpServletResponse response, MemberEntity member) {
-		log.info("Issuing tokens for member: {}", member.getMemberEmail());
-		jwtTokenService.issueTokens(response, member);
-	}
 
+	@Transactional
 	public TokenResponse refreshAccessToken(HttpServletRequest request, HttpServletResponse response) {
 		String refreshToken = extractRefreshTokenFromRequest(request);
 
@@ -46,7 +40,8 @@ public class AuthenticationService {
 			throw new BaseException(ErrorCode.INVALID_TOKEN);
 		}
 
-		jwtTokenService.reissueAccessToken(response, validation.getMemberId(), validation.getEmail(), validation.getSocialUniqueId());
+		String accessToken = jwtUtil.createAccessTokenSafe(validation.getMemberId(), validation.getEmail(), validation.getSocialUniqueId());
+		response.setHeader("Authorization", "Bearer " + accessToken);
 
 		log.info("Access token refreshed for member: {}", validation.getMemberId());
 		return TokenResponse.accessOnly(
@@ -55,6 +50,7 @@ public class AuthenticationService {
 		);
 	}
 
+	@Transactional
 	public TokenResponse refreshAllTokens(HttpServletRequest request, HttpServletResponse response) {
 		String refreshToken = extractRefreshTokenFromRequest(request);
 
@@ -64,7 +60,14 @@ public class AuthenticationService {
 		}
 
 		refreshTokenService.deleteRefreshToken(validation.getMemberId());
-		jwtTokenService.reissueAllTokens(response, validation.getMemberId(), validation.getEmail(), validation.getSocialUniqueId());
+		
+		String accessToken = jwtUtil.createAccessTokenSafe(validation.getMemberId(), validation.getEmail(), validation.getSocialUniqueId());
+		String newRefreshToken = jwtUtil.createRefreshTokenSafe(validation.getMemberId(), validation.getEmail(), validation.getSocialUniqueId());
+		
+		refreshTokenService.saveRefreshToken(Long.valueOf(validation.getMemberId()), newRefreshToken);
+		
+		response.setHeader("Authorization", "Bearer " + accessToken);
+		response.setHeader("Set-Cookie", jwtUtil.createRefreshTokenCookie(newRefreshToken).toString());
 
 		log.info("Full token refresh completed for member: {}", validation.getMemberId());
 		return TokenResponse.withRefresh(
@@ -73,6 +76,7 @@ public class AuthenticationService {
 		);
 	}
 
+	@Transactional
 	public void logout(HttpServletRequest request, HttpServletResponse response) {
 		jwtUtil.extractRefreshToken(request)
 			.filter(jwtUtil::isRefreshToken)
@@ -82,7 +86,7 @@ public class AuthenticationService {
 				log.info("Refresh token deleted for member: {}", memberId);
 			});
 
-		jwtTokenService.expireRefreshCookie(response);
+		response.setHeader("Set-Cookie", jwtUtil.invalidateRefreshToken().toString());
 
 		jwtUtil.extractAccessToken(request)
 			.filter(jwtUtil::isAccessToken)
@@ -112,4 +116,5 @@ public class AuthenticationService {
 	private Long getAccessTokenExpirySeconds() {
 		return jwtUtil.getAccessTokenExpiration() / 1000;
 	}
+
 }

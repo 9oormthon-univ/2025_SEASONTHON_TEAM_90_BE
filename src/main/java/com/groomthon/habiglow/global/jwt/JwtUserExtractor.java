@@ -48,10 +48,6 @@ public class JwtUserExtractor {
 	}
 
 	private String extractTokenFromRequest(HttpServletRequest request) {
-		String authHeader = request.getHeader("Authorization");
-		if (authHeader != null && authHeader.startsWith("Bearer ")) {
-			return authHeader.substring(7);
-		}
-		return null;
+		return jwtUtil.extractAccessToken(request).orElse(null);
 	}
 }
