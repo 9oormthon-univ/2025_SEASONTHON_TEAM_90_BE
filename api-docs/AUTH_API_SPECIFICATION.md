@@ -180,7 +180,7 @@ Cookie: refresh={refresh_token}
 
 **요청**
 ```http
-GET /api/users/me
+GET /api/members/me
 Authorization: Bearer {access_token}
 ```
 
@@ -212,7 +212,7 @@ Authorization: Bearer {access_token}
 
 **요청**
 ```http
-DELETE /api/users/me
+DELETE /api/members/me
 Authorization: Bearer {access_token}
 ```
 
@@ -463,4 +463,4 @@ pm.sendRequest(mockLoginRequest, function (err, response) {
 
 ---
 
-**이 API 명세서는 Habiglow 소셜 로그인 전용 JWT 인증 시스템의 모든 엔드포인트와 사용법을 포함하고 있습니다.**
+**이 API 명세서는 Habiglow 소셜 로그인 전용 JWT 인증 시스템의 모든 엔드포인트와 사용법을 포함하고 있습니다.***

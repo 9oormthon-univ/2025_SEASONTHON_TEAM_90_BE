@@ -80,11 +80,6 @@ public class RefreshTokenService {
 	 * Refresh Token 삭제
 	 */
 	@Transactional
-	public void deleteRefreshToken(Long memberId) {
-		deleteRefreshToken(String.valueOf(memberId));
-	}
-
-	@Transactional
 	public void deleteRefreshToken(String memberId) {
 		refreshTokenRepository.deleteById(memberId);
 		log.debug("Refresh token deleted for member: {}", memberId);
