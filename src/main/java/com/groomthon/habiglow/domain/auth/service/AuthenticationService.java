@@ -26,11 +26,6 @@ public class AuthenticationService {
 	private final TokenValidator tokenValidator;
 	private final RefreshTokenService refreshTokenService;
 	private final BlacklistService blacklistService;
-	private final SocialAuthService socialAuthService;
-
-	public TokenResponse socialLogin(SocialLoginRequest request) {
-		return socialAuthService.authenticateWithSocialToken(request);
-	}
 
 
 	@Transactional

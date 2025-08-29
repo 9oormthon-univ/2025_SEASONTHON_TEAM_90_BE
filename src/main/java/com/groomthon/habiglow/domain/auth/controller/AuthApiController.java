@@ -8,6 +8,7 @@ import org.springframework.web.bind.annotation.RestController;
 import com.groomthon.habiglow.domain.auth.dto.request.SocialLoginRequest;
 import com.groomthon.habiglow.domain.auth.dto.response.TokenResponse;
 import com.groomthon.habiglow.domain.auth.service.AuthenticationService;
+import com.groomthon.habiglow.domain.auth.service.SocialAuthService;
 import com.groomthon.habiglow.global.response.AutoApiResponse;
 import com.groomthon.habiglow.global.response.ApiSuccessCode;
 import com.groomthon.habiglow.global.response.SuccessCode;
@@ -31,6 +32,7 @@ import lombok.RequiredArgsConstructor;
 public class AuthApiController {
 
 	private final AuthenticationService authenticationService;
+	private final SocialAuthService socialAuthService;
 
 	@Operation(summary = "클라이언트 소셜 로그인", description = "클라이언트가 받은 소셜 액세스 토큰으로 서버 JWT 토큰을 발급받습니다")
 	@ApiResponses(value = {
@@ -42,7 +44,7 @@ public class AuthApiController {
 	@CustomExceptionDescription(SwaggerResponseDescription.AUTH_ERROR)
 	@SuccessCode(ApiSuccessCode.SOCIAL_LOGIN_SUCCESS)
 	public TokenResponse socialLogin(@Valid @RequestBody SocialLoginRequest request) {
-		return authenticationService.socialLogin(request);
+		return socialAuthService.authenticateWithSocialToken(request);
 	}
 
 	@Operation(summary = "Access Token 재발급")
