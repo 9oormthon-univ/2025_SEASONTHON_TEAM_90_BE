@@ -76,14 +76,15 @@ docker-compose up -d
 | **Container** | Docker | - | 컨테이너화 |
 | **Documentation** | Swagger/OpenAPI | 3 | API 문서화 |
 
-### **인증 플로우**
+### **클라이언트 기반 소셜 인증 플로우**
 ```
-1. OAuth2 소셜 로그인 (Google/Naver/Kakao)
-2. 사용자 정보 추출 → socialUniqueId 생성
-3. JWT 토큰 발급 (socialUniqueId 포함)
-4. Access Token (Header) + Refresh Token (Cookie)
-5. API 요청 시 JWT 검증
-6. 토큰 만료 시 자동 갱신
+1. 클라이언트: 소셜 제공업체(Google/Naver/Kakao)에서 OAuth2 처리
+2. 클라이언트: 소셜 액세스 토큰 획득
+3. 클라이언트 → 서버: POST /api/auth/social/login (소셜 토큰 전송)
+4. 서버: 소셜 토큰 검증 및 사용자 정보 추출
+5. 서버: socialUniqueId 기반 회원 생성/조회
+6. 서버: JWT 토큰 발급 (Access + Refresh)
+7. 클라이언트: JWT 토큰으로 API 인증
 ```
 
 ---
@@ -118,12 +119,12 @@ Habiglow 방식: KAKAO_123456789, NAVER_987654321, GOOGLE_abcdef123
 }
 ```
 
-### **OAuth2 제공업체**
-| Provider | URL | 설정 필요 |
-|----------|-----|----------|
-| Google | `/oauth2/authorization/google` | Client ID/Secret |
-| Naver | `/oauth2/authorization/naver` | Client ID/Secret |
-| Kakao | `/oauth2/authorization/kakao` | Client ID/Secret |
+### **클라이언트 기반 소셜 로그인 API**
+| 엔드포인트 | 메서드 | 설명 |
+|-----------|--------|------|
+| `/api/auth/social/login` | POST | 클라이언트 소셜 토큰으로 JWT 발급 |
+| `/api/auth/token/refresh` | POST | Access Token 재발급 |
+| `/api/auth/logout` | POST | 로그아웃 및 토큰 무효화 |
 
 ### **개발용 Mock API** (dev 프로파일)
 ```bash
@@ -187,11 +188,17 @@ habiglow/
 
 ---
 
-### **소셜 로그인 테스트**
-브라우저에서 아래 URL 접속:
-- 🟢 **Google**: `http://localhost:8080/oauth2/authorization/google`
-- 🟡 **Kakao**: `http://localhost:8080/oauth2/authorization/kakao`
-- 🟦 **Naver**: `http://localhost:8080/oauth2/authorization/naver`
+### **클라이언트 소셜 로그인 테스트**
+Postman 등으로 아래 API 호출:
+```http
+POST http://localhost:8080/api/auth/social/login
+Content-Type: application/json
+
+{
+  "socialAccessToken": "클라이언트에서_받은_소셜_토큰",
+  "socialType": "GOOGLE" // GOOGLE, KAKAO, NAVER
+}
+```
 
 ### **환경변수 설정 (선택)**
 실제 소셜 로그인을 사용하려면:

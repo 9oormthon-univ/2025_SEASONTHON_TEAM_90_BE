@@ -3,7 +3,7 @@ server:
 
 spring:
   profiles:
-    active: dev # ?? ????: dev
+    active: dev
   config:
     import:
       - optional:file:.env[.properties]

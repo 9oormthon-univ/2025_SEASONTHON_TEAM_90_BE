@@ -283,19 +283,51 @@ Content-Type: application/json
 
 ---
 
-## 4. 🌐 OAuth2 소셜 로그인
+## 4. 🌐 클라이언트 기반 소셜 로그인
 
-### 지원 제공업체
-- **Google**: `/oauth2/authorization/google`
-- **Naver**: `/oauth2/authorization/naver`
-- **Kakao**: `/oauth2/authorization/kakao`
+### 클라이언트 소셜 로그인
+클라이언트에서 소셜 로그인을 처리한 후 서버에서 JWT 토큰을 발급받습니다.
 
-### 소셜 로그인 플로우
-1. 소셜 로그인 URL 접근
-2. OAuth2 제공업체 인증 페이지 리다이렉션
-3. 사용자 인증 완료
-4. JWT 토큰 발급 및 쿠키 설정
-5. 클라이언트 애플리케이션으로 리다이렉션
+**요청**
+```http
+POST /api/auth/social/login
+Content-Type: application/json
+
+{
+  "socialAccessToken": "클라이언트에서 받은 소셜 액세스 토큰",
+  "socialType": "GOOGLE" // GOOGLE, KAKAO, NAVER
+}
+```
+
+**응답**
+```json
+{
+  "code": "S209",
+  "message": "소셜 로그인 성공",
+  "data": {
+    "accessToken": "Bearer eyJhbGciOiJIUzI1NiIs...",
+    "tokenType": "Bearer",
+    "expiresIn": 3600,
+    "refreshTokenIncluded": true
+  }
+}
+```
+
+### 지원 소셜 플랫폼
+| 플랫폼 | 소셜 타입 | 설명 |
+|--------|----------|---------|
+| 🟢 Google | `GOOGLE` | 구글 소셜 로그인 |
+| 🟡 Kakao | `KAKAO` | 카카오 소셜 로그인 |
+| 🟦 Naver | `NAVER` | 네이버 소셜 로그인 |
+
+### 클라이언트 기반 소셜 로그인 플로우
+1. **클라이언트**: 소셜 제공업체에서 OAuth2 로그인 처리
+2. **클라이언트**: 소셜 액세스 토큰 획득
+3. **클라이언트**: 서버의 `/api/auth/social/login`에 소셜 토큰 전송
+4. **서버**: 소셜 토큰을 제공업체 API로 검증
+5. **서버**: 사용자 정보 추출 및 회원 생성/조회
+6. **서버**: JWT 토큰 발급 및 Refresh Token 쿠키 설정
+7. **클라이언트**: JWT 토큰으로 API 요청
 
 ---
 
