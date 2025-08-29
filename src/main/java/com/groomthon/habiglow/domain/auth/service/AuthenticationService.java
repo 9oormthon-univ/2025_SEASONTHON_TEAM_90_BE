@@ -3,6 +3,7 @@ package com.groomthon.habiglow.domain.auth.service;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.groomthon.habiglow.domain.auth.dto.request.SocialLoginRequest;
 import com.groomthon.habiglow.domain.auth.dto.response.TokenResponse;
 import com.groomthon.habiglow.domain.member.entity.MemberEntity;
 import com.groomthon.habiglow.global.exception.BaseException;
@@ -26,6 +27,11 @@ public class AuthenticationService {
 	private final TokenValidator tokenValidator;
 	private final RefreshTokenService refreshTokenService;
 	private final BlacklistService blacklistService;
+	private final SocialAuthService socialAuthService;
+
+	public TokenResponse socialLogin(SocialLoginRequest request) {
+		return socialAuthService.authenticateWithSocialToken(request);
+	}
 
 	public void issueTokensOnLogin(HttpServletResponse response, MemberEntity member) {
 		log.info("Issuing tokens for member: {}", member.getMemberEmail());

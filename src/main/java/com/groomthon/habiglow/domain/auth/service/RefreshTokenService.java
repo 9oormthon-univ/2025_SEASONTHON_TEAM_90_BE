@@ -29,6 +29,11 @@ public class RefreshTokenService {
 	 * Refresh Token 저장 또는 업데이트
 	 */
 	@Transactional
+	public void saveRefreshToken(Long memberId, String token) {
+		saveToken(String.valueOf(memberId), token);
+	}
+
+	@Transactional
 	public void saveToken(String memberId, String token) {
 		LocalDateTime expiresAt = LocalDateTime.now().plusSeconds(refreshTokenExpiration / 1000);
 
@@ -77,6 +82,11 @@ public class RefreshTokenService {
 	/**
 	 * Refresh Token 삭제
 	 */
+	@Transactional
+	public void deleteRefreshToken(Long memberId) {
+		deleteRefreshToken(String.valueOf(memberId));
+	}
+
 	@Transactional
 	public void deleteRefreshToken(String memberId) {
 		refreshTokenRepository.deleteById(memberId);

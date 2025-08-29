@@ -81,4 +81,23 @@ public class OAuthAttributes {
 			socialType,
 			oauth2UserInfo.getId());
 	}
+
+	// 직접 접근 메서드들
+	public String getEmail() {
+		return oauth2UserInfo.getEmail();
+	}
+
+	public String getName() {
+		return oauth2UserInfo.getNickname();
+	}
+
+	public SocialType getSocialType() {
+		// 이 메서드는 SocialApiClient에서 사용할 때 별도로 전달해야 함
+		// 여기서는 임시로 null 반환하고, 사용하는 곳에서 수정 필요
+		return null;
+	}
+
+	public String getSocialUniqueId() {
+		return oauth2UserInfo.getId();
+	}
 }

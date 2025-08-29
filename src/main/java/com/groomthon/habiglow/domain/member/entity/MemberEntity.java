@@ -89,4 +89,9 @@ public class MemberEntity extends BaseTimeEntity {
 	public boolean isSocialUser() {
 		return socialType != null && socialId != null;
 	}
+
+	// Getter 메서드들
+	public String getEmail() {
+		return memberEmail;
+	}
 }
