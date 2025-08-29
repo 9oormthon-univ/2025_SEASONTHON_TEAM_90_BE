@@ -20,7 +20,7 @@ public class JwtTokenService {
 	private final JWTUtil jwtUtil;
 	private final RefreshTokenService refreshTokenService;
 
-	public void issueTokens(HttpServletResponse response, MemberEntity member) {
+	public TokenResponse issueTokens(HttpServletResponse response, MemberEntity member) {
 		String memberId = member.getId().toString();
 		TokenPair tokens = createTokenPair(memberId, member.getMemberEmail(), member.getSocialUniqueId());
 
@@ -30,6 +30,8 @@ public class JwtTokenService {
 		setRefreshCookie(response, tokens.refreshToken);
 
 		log.info("Access / Refresh 토큰 발급 완료 - Member: {}", member.getMemberEmail());
+		
+		return TokenResponse.withRefresh(tokens.accessToken, jwtUtil.getAccessTokenExpiration() / 1000);
 	}
 
 	public TokenResponse reissueAccessToken(HttpServletResponse response, String memberId, String email, String socialUniqueId) {
