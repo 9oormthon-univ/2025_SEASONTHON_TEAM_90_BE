@@ -38,7 +38,6 @@ public class DevAuthService {
 			throw new IllegalArgumentException("이미 존재하는 이메일입니다: " + request.getEmail());
 		}
 
-		// 새 사용자 생성
 		MemberEntity mockUser = MemberEntity.createSocialMember(
 			request.getEmail(),
 			request.getName(),
@@ -52,13 +51,10 @@ public class DevAuthService {
 	}
 
 	public TokenResponse mockLogin(MockLoginRequest request, HttpServletResponse response) {
-		// 기존 사용자 조회만 수행
 		MemberEntity mockUser = findExistingMockUser(request);
 
-		// JWT 토큰 발급
 		jwtTokenService.issueTokens(response, mockUser);
 
-		// Access Token 추출하여 응답
 		String accessToken = extractAccessTokenFromResponse(response);
 		long expirySeconds = jwtUtil.getAccessTokenExpiration() / 1000;
 
@@ -71,7 +67,6 @@ public class DevAuthService {
 	private MemberEntity findExistingMockUser(MockLoginRequest request) {
 		String socialUniqueId = request.getSocialType().name() + "_" + request.getMockSocialId();
 
-		// socialUniqueId로 먼저 조회
 		return memberRepository.findBySocialUniqueId(socialUniqueId)
 			.or(() -> memberRepository.findByMemberEmail(request.getEmail()))
 			.orElseThrow(() -> new IllegalArgumentException(

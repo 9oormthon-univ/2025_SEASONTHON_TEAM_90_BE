@@ -28,13 +28,11 @@ public class TokenValidator {
 	 * Refresh Token의 종합적 검증
 	 */
 	public TokenValidationResult validateRefreshToken(String refreshToken) {
-		// 1. JWT 형식 및 만료시간 검증
 		if (!jwtUtil.isRefreshToken(refreshToken)) {
 			log.warn("Invalid refresh token format or expired");
 			return TokenValidationResult.invalid("Invalid or expired refresh token");
 		}
 
-		// 2. 토큰에서 사용자 ID 추출
 		Optional<String> memberIdOpt = jwtUtil.getId(refreshToken);
 		if (memberIdOpt.isEmpty()) {
 			log.warn("Cannot extract member ID from refresh token");
@@ -43,14 +41,12 @@ public class TokenValidator {
 
 		String memberId = memberIdOpt.get();
 
-		// 3. 데이터베이스에 저장된 토큰과 일치 여부 확인
 		RefreshToken storedToken = refreshTokenRepository.findById(memberId).orElse(null);
 		if (storedToken == null || !storedToken.getToken().equals(refreshToken)) {
 			log.warn("Refresh token not found or mismatched for member: {}", memberId);
 			return TokenValidationResult.invalid("Token not found or mismatched");
 		}
 
-		// 4. 토큰에서 추가 정보 추출
 		Optional<String> emailOpt = jwtUtil.getEmail(refreshToken);
 		Optional<String> socialUniqueIdOpt = jwtUtil.getSocialUniqueId(refreshToken);
 

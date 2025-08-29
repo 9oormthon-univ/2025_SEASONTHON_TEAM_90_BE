@@ -40,12 +40,10 @@ public class RefreshTokenService {
 		Optional<RefreshToken> existingToken = refreshTokenRepository.findById(memberId);
 
 		if (existingToken.isPresent()) {
-			// 기존 토큰 업데이트
 			RefreshToken updatedToken = existingToken.get().update(token, expiresAt);
 			refreshTokenRepository.save(updatedToken);
 			log.debug("Refresh token updated for member: {}", memberId);
 		} else {
-			// 새 토큰 저장
 			RefreshToken newToken = RefreshToken.builder()
 				.memberId(memberId)
 				.token(token)
@@ -62,7 +60,6 @@ public class RefreshTokenService {
 	public Optional<RefreshToken> findTokenByMemberId(String memberId) {
 		Optional<RefreshToken> token = refreshTokenRepository.findById(memberId);
 
-		// 만료된 토큰인 경우 삭제하고 empty 반환
 		if (token.isPresent() && token.get().isExpired()) {
 			deleteRefreshToken(memberId);
 			return Optional.empty();

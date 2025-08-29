@@ -24,12 +24,10 @@ public class JwtTokenService {
 		String accessToken, refreshToken;
 
 		if (member.isSocialUser()) {
-			// 소셜 사용자인 경우 socialUniqueId 포함
 			accessToken = jwtUtil.createAccessToken(memberId, member.getMemberEmail(), member.getSocialUniqueId());
 			refreshToken = jwtUtil.createRefreshToken(memberId, member.getMemberEmail(), member.getSocialUniqueId());
 			log.info("소셜 사용자 토큰 발급 - socialUniqueId: {}", member.getSocialUniqueId());
 		} else {
-			// 일반 사용자 (향후 제거 예정)
 			accessToken = jwtUtil.createAccessToken(memberId, member.getMemberEmail());
 			refreshToken = jwtUtil.createRefreshToken(memberId, member.getMemberEmail());
 		}

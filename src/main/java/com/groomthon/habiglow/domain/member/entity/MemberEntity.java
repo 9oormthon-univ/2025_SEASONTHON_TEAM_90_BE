@@ -59,15 +59,12 @@ public class MemberEntity extends BaseTimeEntity {
 		return MemberEntity.builder()
 			.memberEmail(email)
 			.memberName(name)
-			.memberPassword(null) // 소셜 로그인은 비밀번호 불필요
+			.memberPassword(null)
 			.socialType(socialType)
 			.socialId(socialId)
 			.build();
 	}
 
-
-
-	// 소셜 사용자의 이름만 업데이트
 	public void updateMemberName(String name) {
 		this.memberName = name;
 	}
@@ -90,7 +87,6 @@ public class MemberEntity extends BaseTimeEntity {
 		return socialType != null && socialId != null;
 	}
 
-	// Getter 메서드들
 	public String getEmail() {
 		return memberEmail;
 	}

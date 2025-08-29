@@ -9,7 +9,7 @@ import com.groomthon.habiglow.domain.member.dto.response.MemberResponse;
 import com.groomthon.habiglow.domain.member.entity.MemberEntity;
 import com.groomthon.habiglow.domain.member.repository.MemberRepository;
 import com.groomthon.habiglow.global.exception.BaseException;
-import com.groomthon.habiglow.global.oauth2.service.EnhancedOAuthAttributes;
+import com.groomthon.habiglow.global.oauth2.dto.OAuthAttributes;
 import com.groomthon.habiglow.global.response.ErrorCode;
 
 import lombok.RequiredArgsConstructor;
@@ -19,12 +19,11 @@ import lombok.extern.slf4j.Slf4j;
 @Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true) // 기본적으로 읽기 전용
-// @Profile("disabled") 제거 - UserApiController에서 필요하므로 활성화 유지
 public class MemberService {
 	private final MemberRepository memberRepository;
 
 	@Transactional
-	public MemberEntity findOrCreateSocialMember(EnhancedOAuthAttributes attributes) {
+	public MemberEntity findOrCreateSocialMember(OAuthAttributes attributes) {
 		return memberRepository.findBySocialUniqueIdAndSocialType(
 				attributes.getSocialUniqueId(), 
 				attributes.getSocialType()
@@ -32,7 +31,7 @@ public class MemberService {
 			.orElseGet(() -> createNewSocialMember(attributes));
 	}
 
-	private MemberEntity createNewSocialMember(EnhancedOAuthAttributes attributes) {
+	private MemberEntity createNewSocialMember(OAuthAttributes attributes) {
 		log.info("새로운 소셜 사용자 생성: email={}, socialType={}", 
 				attributes.getEmail(), attributes.getSocialType());
 		
@@ -66,7 +65,7 @@ public class MemberService {
 	}
 
 
-	@Transactional // 쓰기 작업
+	@Transactional
 	public void deleteById(Long id) {
 		if (!memberRepository.existsById(id)) {
 			throw memberNotFound();

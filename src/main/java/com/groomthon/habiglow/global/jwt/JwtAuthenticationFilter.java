@@ -37,7 +37,6 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 					String email = jwtUtil.getEmail(token).orElse("");
 					String userId = jwtUtil.getId(token).orElse("");
 
-					// JWT에서 추출한 정보로 직접 Authentication 생성
 					Authentication authentication = new UsernamePasswordAuthenticationToken(
 						userId, // principal: 사용자 ID
 						null,   // credentials: JWT 토큰 기반이므로 null

@@ -27,20 +27,17 @@ public class SocialApiClient {
     private final RestTemplate restTemplate = new RestTemplate();
     private final SocialLoginStrategyManager strategyManager;
     
-    public EnhancedOAuthAttributes getUserInfo(SocialType socialType, String accessToken) {
+    public OAuthAttributes getUserInfo(SocialType socialType, String accessToken) {
         try {
             String userInfoUrl = getUserInfoUrl(socialType);
             Map<String, Object> userAttributes = callSocialApi(userInfoUrl, accessToken);
             
             // Strategy 패턴을 사용하여 각 플랫폼별 사용자 정보 추출
-            OAuthAttributes attributes = strategyManager.extractAttributes(
+            return strategyManager.extractAttributes(
                 socialType.name().toLowerCase(),
                 getUserNameAttribute(socialType),
                 userAttributes
             );
-            
-            // SocialType 정보를 별도로 설정 (OAuthAttributes 개선 필요)
-            return new EnhancedOAuthAttributes(attributes, socialType);
             
         } catch (HttpClientErrorException e) {
             log.error("소셜 API 호출 실패: socialType={}, status={}", 
