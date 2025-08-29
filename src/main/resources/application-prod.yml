@@ -1,0 +1,33 @@
+spring:
+  datasource:
+    url: jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5432}/${DB_NAME:habiglow-db}
+    driver-class-name: org.postgresql.Driver
+    username: ${DB_USERNAME}
+    password: ${DB_PASSWORD}
+    hikari:
+      maximum-pool-size: 20
+      minimum-idle: 10
+      connection-timeout: 30000
+
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    show-sql: false
+    properties:
+      hibernate:
+        format_sql: false
+
+cookie:
+  secure: true
+
+swagger:
+  server:
+    url: ${SWAGGER_SERVER_URL:http://habiglow.duckdns.org}
+    description: 운영 서버
+
+logging:
+  level:
+    org.hibernate.SQL: warn
+    org.hibernate.type.descriptor.sql.BasicBinder: warn
+    com.example.login: info
+    root: warn

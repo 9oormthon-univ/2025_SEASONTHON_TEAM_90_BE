@@ -1,0 +1,56 @@
+services:
+  db:
+    image: postgres:15
+    container_name: postgres-db
+    restart: unless-stopped
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_DB: HabiDB
+      POSTGRES_USER: ${DB_USERNAME}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_INITDB_ARGS: "--encoding=UTF8"
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    networks:
+      - backend
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USERNAME} -d HabiDB"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 10s
+
+
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: habi-app
+    restart: unless-stopped
+    ports:
+      - "8080:8080"
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      SPRING_PROFILES_ACTIVE: ${SPRING_PROFILES_ACTIVE:-dev}
+      SWAGGER_SERVER_URL: ${SWAGGER_SERVER_URL:-http://localhost:8080}
+    env_file:
+      - .env
+    networks:
+      - backend
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/actuator/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 6
+      start_period: 20s
+
+volumes:
+  postgres-data:
+    driver: local
+
+networks:
+  backend:
+    driver: bridge
