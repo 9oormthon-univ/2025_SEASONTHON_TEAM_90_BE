@@ -30,7 +30,6 @@ public class OAuthAttributes {
 		this.socialType = socialType;
 	}
 
-
 	public static OAuthAttributes ofKakao(String userNameAttributeName, Map<String, Object> attributes) {
 		return OAuthAttributes.builder()
 			.nameAttributeKey(userNameAttributeName)
