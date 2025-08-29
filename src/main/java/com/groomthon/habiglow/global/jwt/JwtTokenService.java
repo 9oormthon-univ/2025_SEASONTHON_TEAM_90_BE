@@ -4,6 +4,7 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseCookie;
 import org.springframework.stereotype.Service;
 
+import com.groomthon.habiglow.domain.auth.dto.response.TokenResponse;
 import com.groomthon.habiglow.domain.auth.service.RefreshTokenService;
 import com.groomthon.habiglow.domain.member.entity.MemberEntity;
 
@@ -31,13 +32,15 @@ public class JwtTokenService {
 		log.info("Access / Refresh 토큰 발급 완료 - Member: {}", member.getMemberEmail());
 	}
 
-	public void reissueAccessToken(HttpServletResponse response, String memberId, String email, String socialUniqueId) {
+	public TokenResponse reissueAccessToken(HttpServletResponse response, String memberId, String email, String socialUniqueId) {
 		String accessToken = jwtUtil.createAccessTokenSafe(memberId, email, socialUniqueId);
 		setAccessToken(response, accessToken);
 		log.info("Access 토큰 재발급 완료 - Member: {}", email);
+		
+		return TokenResponse.accessOnly(accessToken, jwtUtil.getAccessTokenExpiration() / 1000);
 	}
 
-	public void reissueAllTokens(HttpServletResponse response, String memberId, String email, String socialUniqueId) {
+	public TokenResponse reissueAllTokens(HttpServletResponse response, String memberId, String email, String socialUniqueId) {
 		TokenPair tokens = createTokenPair(memberId, email, socialUniqueId);
 
 		refreshTokenService.saveRefreshToken(memberId, tokens.refreshToken);
@@ -46,6 +49,8 @@ public class JwtTokenService {
 		setRefreshCookie(response, tokens.refreshToken);
 
 		log.info("Access / Refresh 토큰 모두 재발급 완료 - Member: {}", email);
+		
+		return TokenResponse.withRefresh(tokens.accessToken, jwtUtil.getAccessTokenExpiration() / 1000);
 	}
 
 

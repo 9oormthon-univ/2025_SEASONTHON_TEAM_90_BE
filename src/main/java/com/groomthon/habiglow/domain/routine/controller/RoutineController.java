@@ -17,7 +17,7 @@ import com.groomthon.habiglow.domain.routine.dto.response.RoutineListResponse;
 import com.groomthon.habiglow.domain.routine.dto.response.RoutineResponse;
 import com.groomthon.habiglow.domain.routine.entity.RoutineCategory;
 import com.groomthon.habiglow.domain.routine.service.RoutineService;
-import com.groomthon.habiglow.global.jwt.JwtUserExtractor;
+import com.groomthon.habiglow.global.jwt.JwtMemberExtractor;
 import com.groomthon.habiglow.global.response.ApiSuccessCode;
 import com.groomthon.habiglow.global.response.AutoApiResponse;
 import com.groomthon.habiglow.global.response.SuccessCode;
@@ -40,8 +40,8 @@ import lombok.RequiredArgsConstructor;
 public class RoutineController {
     
     private final RoutineService routineService;
-    private final JwtUserExtractor jwtUserExtractor;
-    
+    private final JwtMemberExtractor jwtMemberExtractor;
+
     @Operation(
         summary = "루틴 생성",
         description = "새로운 루틴을 생성합니다."
@@ -53,7 +53,7 @@ public class RoutineController {
     public RoutineResponse createRoutine(
             HttpServletRequest request,
             @Valid @RequestBody CreateRoutineRequest createRequest) {
-        Long userId = jwtUserExtractor.extractUserId(request);
+        Long userId = jwtMemberExtractor.extractMemberId(request);
         return routineService.createRoutine(userId, createRequest);
     }
     
@@ -66,7 +66,7 @@ public class RoutineController {
     @PreAuthorize("isAuthenticated()")
     @SuccessCode(ApiSuccessCode.ROUTINE_LIST_VIEW)
     public RoutineListResponse getMyRoutines(HttpServletRequest request) {
-        Long userId = jwtUserExtractor.extractUserId(request);
+        Long userId = jwtMemberExtractor.extractMemberId(request);
         return routineService.getMyRoutines(userId);
     }
     
@@ -81,7 +81,7 @@ public class RoutineController {
     public RoutineListResponse getMyRoutinesByCategory(
             HttpServletRequest request,
             @Parameter(description = "루틴 카테고리") @RequestParam RoutineCategory category) {
-        Long userId = jwtUserExtractor.extractUserId(request);
+        Long userId = jwtMemberExtractor.extractMemberId(request);
         return routineService.getMyRoutinesByCategory(userId, category);
     }
     
@@ -99,7 +99,7 @@ public class RoutineController {
     public RoutineResponse getRoutineById(
             HttpServletRequest request,
             @PathVariable Long routineId) {
-        Long userId = jwtUserExtractor.extractUserId(request);
+        Long userId = jwtMemberExtractor.extractMemberId(request);
         return routineService.getRoutineById(userId, routineId);
     }
     
@@ -118,7 +118,7 @@ public class RoutineController {
             HttpServletRequest request,
             @PathVariable Long routineId,
             @Valid @RequestBody UpdateRoutineRequest updateRequest) {
-        Long userId = jwtUserExtractor.extractUserId(request);
+        Long userId = jwtMemberExtractor.extractMemberId(request);
         return routineService.updateRoutine(userId, routineId, updateRequest);
     }
     
@@ -136,7 +136,7 @@ public class RoutineController {
     public void deleteRoutine(
             HttpServletRequest request,
             @PathVariable Long routineId) {
-        Long userId = jwtUserExtractor.extractUserId(request);
+        Long userId = jwtMemberExtractor.extractMemberId(request);
         routineService.deleteRoutine(userId, routineId);
     }
 }

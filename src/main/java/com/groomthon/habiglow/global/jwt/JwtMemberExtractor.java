@@ -2,6 +2,7 @@ package com.groomthon.habiglow.global.jwt;
 
 import org.springframework.stereotype.Component;
 
+import com.groomthon.habiglow.domain.auth.service.TokenValidator;
 import com.groomthon.habiglow.global.exception.BaseException;
 import com.groomthon.habiglow.global.response.ErrorCode;
 
@@ -10,41 +11,41 @@ import lombok.RequiredArgsConstructor;
 
 @Component
 @RequiredArgsConstructor
-public class JwtUserExtractor {
+public class JwtMemberExtractor {
 
 	private final JWTUtil jwtUtil;
+	private final TokenValidator tokenValidator;
 
-	public Long extractUserId(HttpServletRequest request) {
+	public Long extractMemberId(HttpServletRequest request) {
 		String token = extractTokenFromRequest(request);
 		if (token == null) {
 			throw new BaseException(ErrorCode.ACCESS_TOKEN_REQUIRED);
 		}
 
-		if (!jwtUtil.isAccessToken(token)) {
+		TokenValidator.TokenValidationResult validation = tokenValidator.validateAccessToken(token);
+		if (!validation.isValid()) {
 			throw new BaseException(ErrorCode.INVALID_TOKEN);
 		}
 
-		String userIdStr = jwtUtil.getId(token)
-			.orElseThrow(() -> new BaseException(ErrorCode.INVALID_TOKEN));
 		try {
-			return Long.parseLong(userIdStr);
+			return Long.parseLong(validation.getMemberId());
 		} catch (NumberFormatException e) {
 			throw new BaseException(ErrorCode.INVALID_TOKEN);
 		}
 	}
 
-	public String extractUserEmail(HttpServletRequest request) {
+	public String extractMemberEmail(HttpServletRequest request) {
 		String token = extractTokenFromRequest(request);
 		if (token == null) {
 			throw new BaseException(ErrorCode.ACCESS_TOKEN_REQUIRED);
 		}
 
-		if (!jwtUtil.isAccessToken(token)) {
+		TokenValidator.TokenValidationResult validation = tokenValidator.validateAccessToken(token);
+		if (!validation.isValid()) {
 			throw new BaseException(ErrorCode.INVALID_TOKEN);
 		}
 
-		return jwtUtil.getEmail(token)
-			.orElseThrow(() -> new BaseException(ErrorCode.INVALID_TOKEN));
+		return validation.getEmail();
 	}
 
 	private String extractTokenFromRequest(HttpServletRequest request) {

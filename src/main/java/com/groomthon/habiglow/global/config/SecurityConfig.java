@@ -1,5 +1,7 @@
 package com.groomthon.habiglow.global.config;
 
+import java.util.concurrent.ConcurrentHashMap;
+
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -9,6 +11,7 @@ import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
+import com.google.common.util.concurrent.RateLimiter;
 import com.groomthon.habiglow.global.config.properties.SecurityProperties;
 import com.groomthon.habiglow.global.jwt.JwtAuthenticationFilter;
 
@@ -24,8 +27,14 @@ public class SecurityConfig {
 	private final CorsConfig corsConfig;
 
 	@Bean
+	public RateLimitFilter rateLimitFilter(ConcurrentHashMap<String, RateLimiter> rateLimiterMap) {
+		return new RateLimitFilter(rateLimiterMap);
+	}
+
+	@Bean
 	public SecurityFilterChain securityFilterChain(HttpSecurity http,
-		JwtAuthenticationFilter jwtAuthenticationFilter) throws Exception {
+		JwtAuthenticationFilter jwtAuthenticationFilter,
+		RateLimitFilter rateLimitFilter) throws Exception {
 
 		http
 			.csrf(AbstractHttpConfigurer::disable)
@@ -41,6 +50,7 @@ public class SecurityConfig {
 				.authenticationEntryPoint((request, response, authException) ->
 					response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Unauthorized")));
 
+		http.addFilterBefore(rateLimitFilter, UsernamePasswordAuthenticationFilter.class);
 		http.addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
 
 		return http.build();

@@ -62,7 +62,29 @@ public class TokenValidator {
 	}
 
 	/**
-	 * Access Token의 블랙리스트 및 만료 검증
+	 * Access Token의 종합적 검증 (형식, 만료, 블랙리스트)
+	 */
+	public TokenValidationResult validateAccessToken(String accessToken) {
+		if (!jwtUtil.isAccessToken(accessToken)) {
+			log.warn("Invalid access token format or expired");
+			return TokenValidationResult.invalid("Invalid or expired access token");
+		}
+
+		Optional<String> memberIdOpt = jwtUtil.getId(accessToken);
+		Optional<String> emailOpt = jwtUtil.getEmail(accessToken);
+		
+		if (memberIdOpt.isEmpty() || emailOpt.isEmpty()) {
+			log.warn("Cannot extract claims from access token");
+			return TokenValidationResult.invalid("Invalid token payload");
+		}
+
+		log.debug("Access token validation successful for member: {}", memberIdOpt.get());
+		return TokenValidationResult.valid(memberIdOpt.get(), emailOpt.get(), 
+			jwtUtil.getSocialUniqueId(accessToken).orElse(null));
+	}
+
+	/**
+	 * Access Token의 블랙리스트 및 만료 검증 (기존 호환성)
 	 */
 	public boolean isValidAccessToken(String accessToken) {
 		return jwtUtil.isAccessToken(accessToken);

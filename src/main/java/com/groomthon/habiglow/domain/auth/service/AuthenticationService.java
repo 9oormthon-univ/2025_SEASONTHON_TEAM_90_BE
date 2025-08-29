@@ -42,13 +42,10 @@ public class AuthenticationService {
 			throw new BaseException(ErrorCode.INVALID_TOKEN);
 		}
 
-		jwtTokenService.reissueAccessToken(response, validation.getMemberId(), validation.getEmail(), validation.getSocialUniqueId());
+		TokenResponse tokenResponse = jwtTokenService.reissueAccessToken(response, validation.getMemberId(), validation.getEmail(), validation.getSocialUniqueId());
 
 		log.info("Access token refreshed for member: {}", validation.getMemberId());
-		return TokenResponse.accessOnly(
-			extractAccessTokenFromResponse(response),
-			getAccessTokenExpirySeconds()
-		);
+		return tokenResponse;
 	}
 
 	@Transactional
@@ -61,13 +58,10 @@ public class AuthenticationService {
 		}
 
 		refreshTokenService.deleteRefreshToken(validation.getMemberId());
-		jwtTokenService.reissueAllTokens(response, validation.getMemberId(), validation.getEmail(), validation.getSocialUniqueId());
+		TokenResponse tokenResponse = jwtTokenService.reissueAllTokens(response, validation.getMemberId(), validation.getEmail(), validation.getSocialUniqueId());
 
 		log.info("Full token refresh completed for member: {}", validation.getMemberId());
-		return TokenResponse.withRefresh(
-			extractAccessTokenFromResponse(response),
-			getAccessTokenExpirySeconds()
-		);
+		return tokenResponse;
 	}
 
 	@Transactional
@@ -100,18 +94,6 @@ public class AuthenticationService {
 	private String extractRefreshTokenFromRequest(HttpServletRequest request) {
 		return jwtUtil.extractRefreshToken(request)
 			.orElseThrow(() -> new BaseException(ErrorCode.REFRESH_TOKEN_NOT_FOUND));
-	}
-
-	private String extractAccessTokenFromResponse(HttpServletResponse response) {
-		String authHeader = response.getHeader("Authorization");
-		if (authHeader != null && authHeader.startsWith("Bearer ")) {
-			return authHeader.substring(7);
-		}
-		return null;
-	}
-
-	private Long getAccessTokenExpirySeconds() {
-		return jwtUtil.getAccessTokenExpiration() / 1000;
 	}
 
 }

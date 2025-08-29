@@ -40,9 +40,6 @@ public class MemberEntity extends BaseTimeEntity {
 	@Column
 	private String memberName;
 
-	@Column
-	private String memberPassword;
-
 
 	@Enumerated(EnumType.STRING)
 	@Column(nullable = true)
@@ -59,7 +56,6 @@ public class MemberEntity extends BaseTimeEntity {
 		return MemberEntity.builder()
 			.memberEmail(email)
 			.memberName(name)
-			.memberPassword(null)
 			.socialType(socialType)
 			.socialId(socialId)
 			.build();
@@ -69,11 +65,6 @@ public class MemberEntity extends BaseTimeEntity {
 		this.memberName = name;
 	}
 
-	public void updateSocialInfo(SocialType socialType, String socialId) {
-		this.socialType = socialType;
-		this.socialId = socialId;
-		generateSocialUniqueId();
-	}
 
 	@PrePersist
 	@PreUpdate
@@ -87,7 +78,4 @@ public class MemberEntity extends BaseTimeEntity {
 		return socialType != null && socialId != null;
 	}
 
-	public String getEmail() {
-		return memberEmail;
-	}
 }

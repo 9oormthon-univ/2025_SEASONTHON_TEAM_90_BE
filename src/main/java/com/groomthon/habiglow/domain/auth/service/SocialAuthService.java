@@ -38,20 +38,20 @@ public class SocialAuthService {
 
         String accessToken = jwtUtil.createAccessTokenSafe(
             member.getId().toString(),
-            member.getEmail(), 
+            member.getMemberEmail(),
             member.getSocialUniqueId()
         );
         
         String refreshToken = jwtUtil.createRefreshTokenSafe(
             member.getId().toString(),
-            member.getEmail(), 
+            member.getMemberEmail(),
             member.getSocialUniqueId()
         );
 
         refreshTokenService.saveRefreshToken(member.getId(), refreshToken);
         
         log.info("클라이언트 소셜 로그인 성공: memberId={}, email={}", 
-                member.getId(), member.getEmail());
+                member.getId(), member.getMemberEmail());
                 
         return TokenResponse.builder()
                 .accessToken(accessToken)
