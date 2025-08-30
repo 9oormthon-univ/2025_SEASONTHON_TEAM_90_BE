@@ -3,6 +3,7 @@ package com.groomthon.habiglow.domain.member.service;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.groomthon.habiglow.domain.member.dto.request.UpdateMemberRequest;
 import com.groomthon.habiglow.domain.member.dto.response.MemberResponse;
 import com.groomthon.habiglow.domain.member.entity.MemberEntity;
 import com.groomthon.habiglow.domain.member.repository.MemberRepository;
@@ -19,6 +20,7 @@ import lombok.extern.slf4j.Slf4j;
 @Transactional(readOnly = true) // 기본적으로 읽기 전용
 public class MemberService {
 	private final MemberRepository memberRepository;
+	private final MemberInterestService memberInterestService;
 
 	@Transactional
 	public MemberEntity findOrCreateSocialMember(OAuthAttributes attributes) {
@@ -73,6 +75,27 @@ public class MemberService {
 		memberRepository.deleteById(id);
 	}
 
+	@Transactional
+	public void updateMemberInfo(Long memberId, UpdateMemberRequest request) {
+		MemberEntity member = memberRepository.findById(memberId)
+			.orElseThrow(() -> new BaseException(ErrorCode.MEMBER_NOT_FOUND));
+		
+		// 부분 업데이트 로직
+		if (request.getMemberName() != null) {
+			member.updateMemberName(request.getMemberName());
+			log.info("회원 이름 업데이트: memberId={}, newName={}", memberId, request.getMemberName());
+		}
+		
+		if (request.getProfileImageUrl() != null) {
+			member.updateProfileImageUrl(request.getProfileImageUrl());
+			log.info("회원 프로필 이미지 업데이트: memberId={}, newImageUrl={}", memberId, request.getProfileImageUrl());
+		}
+
+		if (request.getInterests() != null) {
+			memberInterestService.updateInterests(memberId, request.getInterests());
+			log.info("회원 관심사 업데이트 요청: memberId={}, interests={}", memberId, request.getInterests());
+		}
+	}
 
 	private BaseException memberNotFound() {
 		return new BaseException(ErrorCode.MEMBER_NOT_FOUND);

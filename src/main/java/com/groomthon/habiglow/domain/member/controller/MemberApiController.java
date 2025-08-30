@@ -3,12 +3,14 @@ package com.groomthon.habiglow.domain.member.controller;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.groomthon.habiglow.domain.member.dto.request.UpdateMemberInterestsRequest;
+import com.groomthon.habiglow.domain.member.dto.request.UpdateMemberRequest;
 import com.groomthon.habiglow.domain.member.dto.response.MemberInterestsResponse;
 import com.groomthon.habiglow.domain.member.dto.response.MemberResponse;
 import com.groomthon.habiglow.domain.member.service.MemberInterestService;
@@ -96,14 +98,37 @@ public class MemberApiController {
 		return memberInterestService.getMemberInterests(memberId);
 	}
 
-	// 내 관심사 수정
+	// 내 정보 부분 수정
 	@Operation(
-		summary = "내 관심사 수정",
-		description = "로그인한 회원의 루틴 관심사를 수정합니다. 1개 이상 5개 이하로 선택 가능합니다."
+		summary = "내 정보 부분 수정",
+		description = "로그인한 회원의 정보를 부분적으로 수정합니다. 이름, 프로필 이미지 URL, 관심사를 선택적으로 수정할 수 있습니다."
 	)
 	@ApiResponses(value = {
 		@ApiResponse(responseCode = "200", description = "수정 성공"),
-		@ApiResponse(responseCode = "400", description = "잘못된 요청 (관심사 개수 제한 위반 등)"),
+		@ApiResponse(responseCode = "400", description = "잘못된 요청 (유효성 검증 실패)"),
+		@ApiResponse(responseCode = "401", description = "인증되지 않은 회원"),
+		@ApiResponse(responseCode = "404", description = "회원 정보를 찾을 수 없음")
+	})
+	@PatchMapping("/me")
+	@PreAuthorize("isAuthenticated()")
+	@CustomExceptionDescription(SwaggerResponseDescription.MEMBER_ERROR)
+	@SuccessCode(ApiSuccessCode.SUCCESS)
+	public void updateMyInfo(
+		HttpServletRequest request,
+		@Valid @RequestBody UpdateMemberRequest requestDto
+	) {
+		Long memberId = jwtMemberExtractor.extractMemberId(request);
+		memberService.updateMemberInfo(memberId, requestDto);
+	}
+
+	// 내 관심사 수정
+	@Operation(
+		summary = "내 관심사 수정",
+		description = "로그인한 회원의 루틴 관심사를 수정합니다."
+	)
+	@ApiResponses(value = {
+		@ApiResponse(responseCode = "200", description = "수정 성공"),
+		@ApiResponse(responseCode = "400", description = "잘못된 요청"),
 		@ApiResponse(responseCode = "401", description = "인증되지 않은 회원"),
 		@ApiResponse(responseCode = "404", description = "회원 정보를 찾을 수 없음")
 	})

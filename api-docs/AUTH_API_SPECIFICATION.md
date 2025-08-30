@@ -2,9 +2,15 @@
 
 > **소셜 로그인 전용 Spring Boot JWT 인증 시스템 API 문서**
 
-## 🔄 최근 업데이트 (v2.0)
+## 🔄 최근 업데이트 (v3.0)
 
-### 🔒 보안 강화 업데이트
+### ⭐ 새로운 기능 (v3.0 - 2025-01-30)
+- **회원 정보 부분 업데이트**: `PATCH /api/members/me` - 이름, 프로필 이미지, 관심사 선택적 수정
+- **부분 업데이트 지원**: null 필드는 기존 값 유지하는 PATCH 시맨틱 적용
+- **프로필 이미지 URL 관리**: 소셜 로그인 시 자동 수집 및 수동 업데이트 지원
+- **관심사 관리 시스템**: 루틴 카테고리 기반 개인화 기능 완전 구현
+
+### 🔒 보안 강화 업데이트 (v2.0)
 - **전체 사용자 조회 API 제거**: `GET /api/users` 보안상 완전 제거
 - **개인정보 보호 강화**: `GET /api/users/{id}` → `GET /api/users/me` (본인만 조회)
 - **계정 보안 강화**: `DELETE /api/users/{id}` → `DELETE /api/users/me` (본인만 삭제)
@@ -22,6 +28,10 @@
 - [🔐 인증 방식](#-인증-방식)
 - [🏗️ 응답 구조](#-응답-구조)
 - [📄 API 엔드포인트](#-api-엔드포인트)
+  - [1. 🔑 인증 API](#1--인증-api)
+  - [2. 👤 회원 API](#2--회원-api)
+  - [3. 🏷️ 루틴 카테고리 API](#3--루틴-카테고리-api)
+  - [4. 🛠️ 개발용 API](#4--개발용-api)
 - [⚠️ 에러 코드](#-에러-코드)
 - [🧪 테스트 가이드](#-테스트-가이드)
 
@@ -278,7 +288,63 @@ Authorization: Bearer {access_token}
 }
 ```
 
-### 2.4 내 관심사 수정
+### 2.4 내 정보 부분 수정 ⭐ NEW
+로그인한 사용자의 정보를 부분적으로 수정합니다. 이름, 프로필 이미지 URL, 관심사를 선택적으로 수정할 수 있습니다.
+
+**요청**
+```http
+PATCH /api/members/me
+Authorization: Bearer {access_token}
+Content-Type: application/json
+
+{
+  "memberName": "새로운이름",
+  "profileImageUrl": "https://example.com/new-profile.jpg",
+  "interests": ["HEALTH", "LEARNING", "MINDFULNESS"]
+}
+```
+
+**부분 업데이트 예시**
+```json
+// 이름만 수정
+{
+  "memberName": "이름만변경"
+}
+
+// 관심사만 수정  
+{
+  "interests": ["DIET", "SLEEP"]
+}
+
+// 빈 요청 (아무것도 변경되지 않음)
+{}
+```
+
+**응답**
+```json
+{
+  "code": "S200",
+  "message": "성공",
+  "data": null
+}
+```
+
+**유효성 검증 에러**
+```json
+{
+  "code": "E400",
+  "message": "이름은 1자 이상 50자 이하입니다.",
+  "data": [
+    {
+      "key": "memberName",
+      "value": "매우긴이름...",
+      "reason": "이름은 1자 이상 50자 이하입니다."
+    }
+  ]
+}
+```
+
+### 2.5 내 관심사 수정
 로그인한 사용자의 관심사를 수정합니다.
 
 **요청**
