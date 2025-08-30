@@ -1,17 +1,16 @@
 package com.groomthon.habiglow.domain.auth.controller;
 
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.groomthon.habiglow.domain.auth.dto.request.SocialLoginRequest;
 import com.groomthon.habiglow.domain.auth.dto.response.TokenResponse;
 import com.groomthon.habiglow.domain.auth.service.AuthenticationService;
+import com.groomthon.habiglow.domain.auth.service.SocialAuthService;
 import com.groomthon.habiglow.global.response.AutoApiResponse;
-<<<<<<< HEAD
 import com.groomthon.habiglow.global.response.ApiSuccessCode;
-=======
-import com.groomthon.habiglow.global.response.MemberSuccessCode;
->>>>>>> 803266e19157d4b2789d0538cff2c8d75a3a0abd
 import com.groomthon.habiglow.global.response.SuccessCode;
 import com.groomthon.habiglow.global.swagger.CustomExceptionDescription;
 import com.groomthon.habiglow.global.swagger.SwaggerResponseDescription;
@@ -22,16 +21,31 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 
 @RestController
 @RequestMapping("/api/auth")
 @RequiredArgsConstructor
 @AutoApiResponse
-@Tag(name = "인증 API", description = "소셜 로그인 전용 JWT 토큰 관리")
+@Tag(name = "인증 API", description = "클라이언트 기반 소셜 로그인 및 JWT 토큰 관리")
 public class AuthApiController {
 
 	private final AuthenticationService authenticationService;
+	private final SocialAuthService socialAuthService;
+
+	@Operation(summary = "클라이언트 소셜 로그인", description = "클라이언트가 받은 소셜 액세스 토큰으로 서버 JWT 토큰을 발급받습니다")
+	@ApiResponses(value = {
+		@ApiResponse(responseCode = "200", description = "로그인 성공"),
+		@ApiResponse(responseCode = "400", description = "잘못된 요청 데이터"),
+		@ApiResponse(responseCode = "401", description = "유효하지 않은 소셜 토큰")
+	})
+	@PostMapping("/social/login")
+	@CustomExceptionDescription(SwaggerResponseDescription.AUTH_ERROR)
+	@SuccessCode(ApiSuccessCode.SOCIAL_LOGIN_SUCCESS)
+	public TokenResponse socialLogin(@Valid @RequestBody SocialLoginRequest request) {
+		return socialAuthService.authenticateWithSocialToken(request);
+	}
 
 	@Operation(summary = "Access Token 재발급")
 	@ApiResponses(value = {
@@ -40,11 +54,7 @@ public class AuthApiController {
 	})
 	@PostMapping("/token/refresh")
 	@CustomExceptionDescription(SwaggerResponseDescription.AUTH_ERROR)
-<<<<<<< HEAD
 	@SuccessCode(ApiSuccessCode.TOKEN_REISSUE_SUCCESS)
-=======
-	@SuccessCode(MemberSuccessCode.TOKEN_REISSUE_SUCCESS)
->>>>>>> 803266e19157d4b2789d0538cff2c8d75a3a0abd
 	public TokenResponse refreshAccessToken(
 		HttpServletRequest request,
 		HttpServletResponse response) {
@@ -59,11 +69,7 @@ public class AuthApiController {
 	})
 	@PostMapping("/token/refresh/full")
 	@CustomExceptionDescription(SwaggerResponseDescription.AUTH_ERROR)
-<<<<<<< HEAD
 	@SuccessCode(ApiSuccessCode.TOKEN_REISSUE_FULL_SUCCESS)
-=======
-	@SuccessCode(MemberSuccessCode.TOKEN_REISSUE_FULL_SUCCESS)
->>>>>>> 803266e19157d4b2789d0538cff2c8d75a3a0abd
 	public TokenResponse refreshAllTokens(
 		HttpServletRequest request,
 		HttpServletResponse response) {
@@ -77,19 +83,11 @@ public class AuthApiController {
 	})
 	@PostMapping("/logout")
 	@CustomExceptionDescription(SwaggerResponseDescription.AUTH_ERROR)
-<<<<<<< HEAD
 	@SuccessCode(ApiSuccessCode.LOGOUT_SUCCESS)
-=======
-	@SuccessCode(MemberSuccessCode.LOGOUT_SUCCESS)
->>>>>>> 803266e19157d4b2789d0538cff2c8d75a3a0abd
 	public void logout(
 		HttpServletRequest request,
 		HttpServletResponse response) {
 
 		authenticationService.logout(request, response);
 	}
-<<<<<<< HEAD
 }
-=======
-}
->>>>>>> 803266e19157d4b2789d0538cff2c8d75a3a0abd

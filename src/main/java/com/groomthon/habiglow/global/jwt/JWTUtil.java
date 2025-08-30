@@ -19,6 +19,7 @@ import io.jsonwebtoken.security.Keys;
 import jakarta.annotation.PostConstruct;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
+import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
@@ -36,9 +37,11 @@ public class JWTUtil {
 	@Value("${jwt.secret}")
 	private String secret;
 
+	@Getter
 	@Value("${jwt.access-token-expiration:3600000}")
 	private long accessTokenExpiration;
 
+	@Getter
 	@Value("${jwt.refresh-token-expiration:86400000}")
 	private long refreshTokenExpiration;
 
@@ -160,8 +163,6 @@ public class JWTUtil {
 		return validateToken(token, TOKEN_TYPE_REFRESH);
 	}
 
-
-
 	// 헤더에서 AccessToken 추출
 	public Optional<String> extractAccessToken(HttpServletRequest request) {
 		return Optional.ofNullable(request.getHeader(HttpHeaders.AUTHORIZATION))
@@ -190,11 +191,16 @@ public class JWTUtil {
 			.build();
 	}
 
-	public long getAccessTokenExpiration() {
-		return accessTokenExpiration;
+	// 공통 토큰 생성 헬퍼 메서드들
+	public String createAccessTokenSafe(String memberId, String email, String socialUniqueId) {
+		return socialUniqueId != null 
+			? createAccessToken(memberId, email, socialUniqueId)
+			: createAccessToken(memberId, email);
 	}
 
-	public long getRefreshTokenExpiration() {
-		return refreshTokenExpiration;
+	public String createRefreshTokenSafe(String memberId, String email, String socialUniqueId) {
+		return socialUniqueId != null
+			? createRefreshToken(memberId, email, socialUniqueId)
+			: createRefreshToken(memberId, email);
 	}
 }
