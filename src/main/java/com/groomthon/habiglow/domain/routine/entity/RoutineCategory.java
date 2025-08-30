@@ -1,5 +1,8 @@
 package com.groomthon.habiglow.domain.routine.entity;
 
+import lombok.Getter;
+
+@Getter
 public enum RoutineCategory {
     HABIT_IMPROVEMENT("습관 개선"),
     HEALTH("건강"), 
@@ -17,7 +20,4 @@ public enum RoutineCategory {
         this.description = description;
     }
 
-    public String getDescription() {
-        return description;
-    }
 }

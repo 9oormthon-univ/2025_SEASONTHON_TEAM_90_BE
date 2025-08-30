@@ -40,9 +40,6 @@ public class MemberEntity extends BaseTimeEntity {
 	@Column
 	private String memberName;
 
-	@Column
-	private String memberPassword;
-
 
 	@Enumerated(EnumType.STRING)
 	@Column(nullable = true)
@@ -59,24 +56,15 @@ public class MemberEntity extends BaseTimeEntity {
 		return MemberEntity.builder()
 			.memberEmail(email)
 			.memberName(name)
-			.memberPassword(null) // 소셜 로그인은 비밀번호 불필요
 			.socialType(socialType)
 			.socialId(socialId)
 			.build();
 	}
 
-
-
-	// 소셜 사용자의 이름만 업데이트
 	public void updateMemberName(String name) {
 		this.memberName = name;
 	}
 
-	public void updateSocialInfo(SocialType socialType, String socialId) {
-		this.socialType = socialType;
-		this.socialId = socialId;
-		generateSocialUniqueId();
-	}
 
 	@PrePersist
 	@PreUpdate
@@ -89,4 +77,5 @@ public class MemberEntity extends BaseTimeEntity {
 	public boolean isSocialUser() {
 		return socialType != null && socialId != null;
 	}
+
 }
