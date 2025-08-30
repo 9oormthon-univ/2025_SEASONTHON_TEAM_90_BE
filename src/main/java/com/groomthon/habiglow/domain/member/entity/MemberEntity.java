@@ -1,16 +1,26 @@
 package com.groomthon.habiglow.domain.member.entity;
 
+import java.util.HashSet;
+import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
+
+import com.groomthon.habiglow.domain.routine.entity.RoutineCategory;
 import com.groomthon.habiglow.global.entity.BaseTimeEntity;
 import com.groomthon.habiglow.global.oauth2.entity.SocialType;
 
+import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
+import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Index;
+import jakarta.persistence.OneToMany;
 import jakarta.persistence.PrePersist;
 import jakarta.persistence.PreUpdate;
 import jakarta.persistence.Table;
@@ -54,6 +64,10 @@ public class MemberEntity extends BaseTimeEntity {
 	@Column(nullable = true)
 	private String profileImageUrl;
 
+	@OneToMany(mappedBy = "member", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+	@Builder.Default
+	private Set<MemberInterest> interests = new HashSet<>();
+
 
 	public static MemberEntity createSocialMember(String email, String name, SocialType socialType, String socialId, String profileImageUrl) {
 		return MemberEntity.builder()
@@ -71,6 +85,29 @@ public class MemberEntity extends BaseTimeEntity {
 
 	public void updateProfileImageUrl(String profileImageUrl) {
 		this.profileImageUrl = profileImageUrl;
+	}
+
+	public void updateInterests(List<RoutineCategory> categories) {
+		// 기존 관심사 모두 제거 (orphanRemoval = true로 자동 삭제됨)
+		this.interests.clear();
+		
+		// 새로운 관심사 추가 (중복 제거)
+		Set<RoutineCategory> uniqueCategories = new LinkedHashSet<>(categories);
+		uniqueCategories.forEach(category -> {
+			MemberInterest interest = MemberInterest.of(this, category);
+			this.interests.add(interest);
+		});
+	}
+
+	public List<RoutineCategory> getInterestCategories() {
+		return interests.stream()
+			.map(MemberInterest::getCategory)
+			.collect(Collectors.toList());
+	}
+
+	public boolean hasInterest(RoutineCategory category) {
+		return interests.stream()
+			.anyMatch(interest -> interest.getCategory() == category);
 	}
 
 

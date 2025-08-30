@@ -100,7 +100,10 @@ Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
 | POST | `/api/auth/token/refresh/full` | 전체 토큰 재발급 | 🟡 Refresh Token |
 | POST | `/api/auth/logout` | 로그아웃 | ✅ |
 | GET | `/api/users/me` | 내 정보 조회 | ✅ |
+| GET | `/api/users/me/interests` | 내 관심사 조회 | ✅ |
+| PUT | `/api/users/me/interests` | 관심사 수정 | ✅ |
 | DELETE | `/api/users/me` | 내 계정 삭제 | ✅ |
+| GET | `/api/routine-categories` | 루틴 카테고리 목록 조회 | ❌ |
 | POST | `/api/dev/auth/register` | 개발용 Mock 회원가입 | ❌ (dev only) |
 | POST | `/api/dev/auth/mock-login` | 개발용 Mock 로그인 | ❌ (dev only) |
 
@@ -194,7 +197,17 @@ Authorization: Bearer {access_token}
     "memberName": "홍길동", 
     "memberEmail": "hong@example.com",
     "socialType": "GOOGLE",
-    "profileImageUrl": "https://lh3.googleusercontent.com/a/example"
+    "profileImageUrl": "https://lh3.googleusercontent.com/a/example",
+    "interests": [
+      {
+        "code": "HEALTH",
+        "description": "건강"
+      },
+      {
+        "code": "LEARNING",
+        "description": "학습"
+      }
+    ]
   }
 }
 ```
@@ -235,9 +248,100 @@ Authorization: Bearer {access_token}
 }
 ```
 
+### 2.3 내 관심사 조회
+로그인한 사용자의 관심사 목록을 조회합니다.
+
+**요청**
+```http
+GET /api/members/me/interests
+Authorization: Bearer {access_token}
+```
+
+**응답**
+```json
+{
+  "code": "S200",
+  "message": "성공",
+  "data": {
+    "memberId": 1,
+    "interests": [
+      {
+        "code": "HEALTH",
+        "description": "건강"
+      },
+      {
+        "code": "LEARNING", 
+        "description": "학습"
+      }
+    ]
+  }
+}
+```
+
+### 2.4 내 관심사 수정
+로그인한 사용자의 관심사를 수정합니다.
+
+**요청**
+```http
+PUT /api/members/me/interests
+Authorization: Bearer {access_token}
+Content-Type: application/json
+
+{
+  "interests": ["HEALTH", "DIET", "LEARNING"]
+}
+```
+
+**응답**
+```json
+{
+  "code": "S200",
+  "message": "성공", 
+  "data": null
+}
+```
+
 ---
 
-## 3. 🛠️ 개발용 인증 API (dev 프로파일 전용)
+## 3. 🏷️ 루틴 카테고리 API
+
+### 3.1 루틴 카테고리 목록 조회
+회원이 선택할 수 있는 모든 루틴 카테고리 목록을 조회합니다.
+
+**요청**
+```http
+GET /api/routine-categories
+```
+
+**응답**
+```json
+{
+  "code": "S200",
+  "message": "성공",
+  "data": [
+    {
+      "code": "HEALTH",
+      "description": "건강"
+    },
+    {
+      "code": "LEARNING",
+      "description": "학습"
+    },
+    {
+      "code": "MINDFULNESS",
+      "description": "마음 챙김"
+    },
+    {
+      "code": "DIET",
+      "description": "식습관"
+    }
+  ]
+}
+```
+
+---
+
+## 4. 🛠️ 개발용 인증 API (dev 프로파일 전용)
 
 ### 3.1 개발용 Mock 회원가입
 테스트용 사용자를 생성합니다.
