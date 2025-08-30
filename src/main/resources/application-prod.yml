@@ -11,7 +11,7 @@ spring:
 
   jpa:
     hibernate:
-      ddl-auto: update
+      ddl-auto: validate
     show-sql: false
     properties:
       hibernate:
@@ -22,7 +22,7 @@ cookie:
 
 swagger:
   server:
-    url: ${SWAGGER_SERVER_URL:http://habiglow.duckdns.org}
+    url: ${SWAGGER_SERVER_URL:https://habiglow.duckdns.org}
     description: 운영 서버
 
 logging:

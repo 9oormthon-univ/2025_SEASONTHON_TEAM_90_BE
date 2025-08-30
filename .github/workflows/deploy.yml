@@ -98,7 +98,7 @@ jobs:
               -DJWT_SECRET_KEY=${{ secrets.JWT_SECRET_KEY }} \
               -DJWT_ACCESS_EXPIRATION=${{ vars.JWT_ACCESS_EXPIRATION }} \
               -DJWT_REFRESH_EXPIRATION=${{ vars.JWT_REFRESH_EXPIRATION }} \
-              -Dspring.jpa.hibernate.ddl-auto=update \
+              -Dspring.jpa.hibernate.ddl-auto=validate \
               -Dswagger.server.url=${{ vars.SWAGGER_SERVER_URL }} \
               /home/ubuntu/habiglow-0.0.1-SNAPSHOT.jar > /home/ubuntu/nohup.out 2>&1 &
                       
