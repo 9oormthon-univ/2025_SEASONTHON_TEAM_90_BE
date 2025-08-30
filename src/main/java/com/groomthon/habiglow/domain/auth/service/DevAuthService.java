@@ -41,7 +41,8 @@ public class DevAuthService {
 			request.getEmail(),
 			request.getName(),
 			request.getSocialType(),
-			request.getMockSocialId());
+			request.getMockSocialId(),
+			null); // Mock user는 프로필 이미지 URL 없음
 
 		memberRepository.save(mockUser);
 

@@ -65,4 +65,8 @@ public class OAuthAttributes {
 	public String getSocialUniqueId() {
 		return socialType.name() + "_" + oauth2UserInfo.getId();
 	}
+
+	public String getImageUrl() {
+		return oauth2UserInfo.getImageUrl();
+	}
 }
