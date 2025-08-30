@@ -1,7 +1,6 @@
-# 운영 환경 설정
 spring:
   datasource:
-    url: jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5432}/${DB_NAME:HabiDB}
+    url: jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5432}/${DB_NAME:habiglow-db}
     driver-class-name: org.postgresql.Driver
     username: ${DB_USERNAME}
     password: ${DB_PASSWORD}
@@ -10,26 +9,22 @@ spring:
       minimum-idle: 10
       connection-timeout: 30000
 
-
   jpa:
     hibernate:
-      ddl-auto: validate  # 운영환경에서는 validate 사용
+      ddl-auto: validate
     show-sql: false
     properties:
       hibernate:
         format_sql: false
 
-# 운영환경 쿠키 설정 (보안 강화)
 cookie:
   secure: true
 
-# 운영환경 Swagger 설정
 swagger:
   server:
-    url: ${SWAGGER_SERVER_URL:https://api.yourdomain.com}
+    url: ${SWAGGER_SERVER_URL:https://habiglow.duckdns.org}
     description: 운영 서버
 
-# 운영환경 로깅 (ERROR 레벨만)
 logging:
   level:
     org.hibernate.SQL: warn
