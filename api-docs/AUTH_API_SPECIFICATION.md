@@ -193,7 +193,8 @@ Authorization: Bearer {access_token}
     "id": 1,
     "memberName": "홍길동", 
     "memberEmail": "hong@example.com",
-    "socialType": "GOOGLE"
+    "socialType": "GOOGLE",
+    "profileImageUrl": "https://lh3.googleusercontent.com/a/example"
   }
 }
 ```

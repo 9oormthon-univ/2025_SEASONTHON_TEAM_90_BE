@@ -51,18 +51,26 @@ public class MemberEntity extends BaseTimeEntity {
 	@Column(unique = true, nullable = true)
 	private String socialUniqueId;
 
+	@Column(nullable = true)
+	private String profileImageUrl;
 
-	public static MemberEntity createSocialMember(String email, String name, SocialType socialType, String socialId) {
+
+	public static MemberEntity createSocialMember(String email, String name, SocialType socialType, String socialId, String profileImageUrl) {
 		return MemberEntity.builder()
 			.memberEmail(email)
 			.memberName(name)
 			.socialType(socialType)
 			.socialId(socialId)
+			.profileImageUrl(profileImageUrl)
 			.build();
 	}
 
 	public void updateMemberName(String name) {
 		this.memberName = name;
+	}
+
+	public void updateProfileImageUrl(String profileImageUrl) {
+		this.profileImageUrl = profileImageUrl;
 	}
 
 

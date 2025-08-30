@@ -30,6 +30,9 @@ public class MemberResponse {
 	@Schema(description = "회원 소셜 타입", example = "GOOGLE")
 	private SocialType socialType;
 
+	@Schema(description = "프로필 이미지 URL", example = "https://example.com/profile.jpg")
+	private String profileImageUrl;
+
 
 	public static MemberResponse fromEntity(MemberEntity memberEntity) {
 		return MemberResponse.builder()
@@ -37,6 +40,7 @@ public class MemberResponse {
 			.memberName(memberEntity.getMemberName())
 			.memberEmail(memberEntity.getMemberEmail())
 			.socialType(memberEntity.getSocialType())
+			.profileImageUrl(memberEntity.getProfileImageUrl())
 			.build();
 	}
 }
