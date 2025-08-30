@@ -12,7 +12,11 @@ import org.springframework.web.bind.annotation.RestController;
 import com.groomthon.habiglow.domain.member.dto.response.MemberResponse;
 import com.groomthon.habiglow.domain.member.service.MemberService;
 import com.groomthon.habiglow.global.response.AutoApiResponse;
+<<<<<<< HEAD
 import com.groomthon.habiglow.global.response.ApiSuccessCode;
+=======
+import com.groomthon.habiglow.global.response.MemberSuccessCode;
+>>>>>>> 803266e19157d4b2789d0538cff2c8d75a3a0abd
 import com.groomthon.habiglow.global.response.SuccessCode;
 import com.groomthon.habiglow.global.swagger.CustomExceptionDescription;
 import com.groomthon.habiglow.global.swagger.SwaggerResponseDescription;
@@ -42,7 +46,11 @@ public class UserApiController {
 	@GetMapping
 	@PreAuthorize("isAuthenticated()")
 	@CustomExceptionDescription(SwaggerResponseDescription.MEMBER_ERROR)
+<<<<<<< HEAD
 	@SuccessCode(ApiSuccessCode.MEMBER_VIEW)
+=======
+	@SuccessCode(MemberSuccessCode.MEMBER_VIEW)
+>>>>>>> 803266e19157d4b2789d0538cff2c8d75a3a0abd
 	public List<MemberResponse> findAll() {
 		return memberService.findAll();
 	}
@@ -59,7 +67,11 @@ public class UserApiController {
 	@GetMapping("/{id}")
 	@PreAuthorize("isAuthenticated()")
 	@CustomExceptionDescription(SwaggerResponseDescription.MEMBER_ERROR)
+<<<<<<< HEAD
 	@SuccessCode(ApiSuccessCode.MEMBER_VIEW)
+=======
+	@SuccessCode(MemberSuccessCode.MEMBER_VIEW)
+>>>>>>> 803266e19157d4b2789d0538cff2c8d75a3a0abd
 	public MemberResponse findById(@PathVariable Long id) {
 		return memberService.findById(id);
 	}
@@ -77,9 +89,17 @@ public class UserApiController {
 	@DeleteMapping("/{id}")
 	@PreAuthorize("isAuthenticated()")
 	@CustomExceptionDescription(SwaggerResponseDescription.MEMBER_ERROR)
+<<<<<<< HEAD
 	@SuccessCode(ApiSuccessCode.MEMBER_DELETED)
 	public void delete(@PathVariable Long id) {
 		memberService.deleteById(id);
 	}
 }
 
+=======
+	@SuccessCode(MemberSuccessCode.MEMBER_DELETED)
+	public void delete(@PathVariable Long id) {
+		memberService.deleteById(id);
+	}
+}
+>>>>>>> 803266e19157d4b2789d0538cff2c8d75a3a0abd

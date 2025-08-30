@@ -7,7 +7,11 @@ import org.springframework.web.bind.annotation.RestController;
 import com.groomthon.habiglow.domain.auth.dto.response.TokenResponse;
 import com.groomthon.habiglow.domain.auth.service.AuthenticationService;
 import com.groomthon.habiglow.global.response.AutoApiResponse;
+<<<<<<< HEAD
 import com.groomthon.habiglow.global.response.ApiSuccessCode;
+=======
+import com.groomthon.habiglow.global.response.MemberSuccessCode;
+>>>>>>> 803266e19157d4b2789d0538cff2c8d75a3a0abd
 import com.groomthon.habiglow.global.response.SuccessCode;
 import com.groomthon.habiglow.global.swagger.CustomExceptionDescription;
 import com.groomthon.habiglow.global.swagger.SwaggerResponseDescription;
@@ -36,7 +40,11 @@ public class AuthApiController {
 	})
 	@PostMapping("/token/refresh")
 	@CustomExceptionDescription(SwaggerResponseDescription.AUTH_ERROR)
+<<<<<<< HEAD
 	@SuccessCode(ApiSuccessCode.TOKEN_REISSUE_SUCCESS)
+=======
+	@SuccessCode(MemberSuccessCode.TOKEN_REISSUE_SUCCESS)
+>>>>>>> 803266e19157d4b2789d0538cff2c8d75a3a0abd
 	public TokenResponse refreshAccessToken(
 		HttpServletRequest request,
 		HttpServletResponse response) {
@@ -51,7 +59,11 @@ public class AuthApiController {
 	})
 	@PostMapping("/token/refresh/full")
 	@CustomExceptionDescription(SwaggerResponseDescription.AUTH_ERROR)
+<<<<<<< HEAD
 	@SuccessCode(ApiSuccessCode.TOKEN_REISSUE_FULL_SUCCESS)
+=======
+	@SuccessCode(MemberSuccessCode.TOKEN_REISSUE_FULL_SUCCESS)
+>>>>>>> 803266e19157d4b2789d0538cff2c8d75a3a0abd
 	public TokenResponse refreshAllTokens(
 		HttpServletRequest request,
 		HttpServletResponse response) {
@@ -65,11 +77,19 @@ public class AuthApiController {
 	})
 	@PostMapping("/logout")
 	@CustomExceptionDescription(SwaggerResponseDescription.AUTH_ERROR)
+<<<<<<< HEAD
 	@SuccessCode(ApiSuccessCode.LOGOUT_SUCCESS)
+=======
+	@SuccessCode(MemberSuccessCode.LOGOUT_SUCCESS)
+>>>>>>> 803266e19157d4b2789d0538cff2c8d75a3a0abd
 	public void logout(
 		HttpServletRequest request,
 		HttpServletResponse response) {
 
 		authenticationService.logout(request, response);
 	}
+<<<<<<< HEAD
 }
+=======
+}
+>>>>>>> 803266e19157d4b2789d0538cff2c8d75a3a0abd

@@ -11,7 +11,11 @@ import com.groomthon.habiglow.global.dto.CommonApiResponse;
 import com.groomthon.habiglow.global.oauth2.dto.OAuthLoginResponse;
 import com.groomthon.habiglow.global.oauth2.service.OAuth2TokenService;
 import com.groomthon.habiglow.global.oauth2.user.CustomOAuth2User;
+<<<<<<< HEAD
 import com.groomthon.habiglow.global.response.ApiSuccessCode;
+=======
+import com.groomthon.habiglow.global.response.MemberSuccessCode;
+>>>>>>> 803266e19157d4b2789d0538cff2c8d75a3a0abd
 
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -73,7 +77,11 @@ public class OAuth2LoginSuccessHandler implements AuthenticationSuccessHandler {
 			.build();
 
 		CommonApiResponse<OAuthLoginResponse> apiResponse = CommonApiResponse.success(
+<<<<<<< HEAD
 			ApiSuccessCode.SOCIAL_LOGIN_SUCCESS, oAuthLoginResponse);
+=======
+			MemberSuccessCode.SOCIAL_LOGIN_SUCCESS, oAuthLoginResponse);
+>>>>>>> 803266e19157d4b2789d0538cff2c8d75a3a0abd
 
 		sendJsonResponse(response, apiResponse);
 
@@ -85,4 +93,8 @@ public class OAuth2LoginSuccessHandler implements AuthenticationSuccessHandler {
 		response.setContentType("application/json; charset=UTF-8");
 		response.getWriter().write(objectMapper.writeValueAsString(data));
 	}
+<<<<<<< HEAD
 }
+=======
+}
+>>>>>>> 803266e19157d4b2789d0538cff2c8d75a3a0abd

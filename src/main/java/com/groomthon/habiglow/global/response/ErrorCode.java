@@ -22,12 +22,15 @@ public enum ErrorCode implements ErrorType {
 	OAUTH2_LOGIN_FAILED("E401", "소셜 로그인에 실패했습니다. 다시 시도해주세요.", HttpStatus.UNAUTHORIZED.value()),
 
 	MEMBER_NOT_FOUND("E404", "회원을 찾을 수 없습니다", HttpStatus.NOT_FOUND.value()),
+<<<<<<< HEAD
 	ROUTINE_NOT_FOUND("E404", "루틴을 찾을 수 없습니다", HttpStatus.NOT_FOUND.value()),
 	ROUTINE_GROWTH_MODE_DISABLED("E400", "성장 모드가 비활성화된 루틴입니다", HttpStatus.BAD_REQUEST.value()),
 	ROUTINE_INVALID_TITLE("E400", "루틴 제목은 필수이며 100자 이하여야 합니다", HttpStatus.BAD_REQUEST.value()),
 	ROUTINE_INVALID_CATEGORY("E400", "루틴 카테고리는 필수입니다", HttpStatus.BAD_REQUEST.value()),
 	ROUTINE_INVALID_GROWTH_SETTINGS("E400", "성장 모드 설정이 올바르지 않습니다", HttpStatus.BAD_REQUEST.value()),
 	ROUTINE_CANNOT_INCREASE_TARGET("E400", "목표치를 증가시킬 수 없는 상태입니다", HttpStatus.BAD_REQUEST.value()),
+=======
+>>>>>>> 803266e19157d4b2789d0538cff2c8d75a3a0abd
 
 	TOO_MANY_REQUESTS("E429", "너무 많은 요청입니다. 잠시 후 다시 시도해주세요.", HttpStatus.TOO_MANY_REQUESTS.value()),
 
@@ -43,4 +46,8 @@ public enum ErrorCode implements ErrorType {
 	public int getHttpCode() {
 		return this.status;
 	}
+<<<<<<< HEAD
 }
+=======
+}
+>>>>>>> 803266e19157d4b2789d0538cff2c8d75a3a0abd
