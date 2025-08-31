@@ -21,7 +21,7 @@ public interface DailyReflectionRepository extends JpaRepository<DailyReflection
     // 주간 매핑용
     List<DailyReflectionEntity> findByMember_IdAndReflectionDateBetween(Long memberId, LocalDate start, LocalDate end);
 
-    // ⬇️ 서비스가 호출하는 이름을 그대로 맞춰줌
+    // 서비스가 호출하는 이름을 그대로 맞춰줌
     @Query("select r from DailyReflectionEntity r " +
             "where r.member.id = :memberId and r.reflectionDate = :date")
     Optional<DailyReflectionEntity> findByMemberIdAndReflectionDate(@Param("memberId") Long memberId,

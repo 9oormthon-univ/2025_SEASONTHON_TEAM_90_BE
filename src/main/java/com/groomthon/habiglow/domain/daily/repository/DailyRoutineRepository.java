@@ -17,7 +17,7 @@ public interface DailyRoutineRepository extends JpaRepository<DailyRoutineEntity
     // 주간 매핑용
     List<DailyRoutineEntity> findByMember_IdAndPerformedDateBetween(Long memberId, LocalDate start, LocalDate end);
 
-    // ⬇️ 서비스가 호출하는 이름을 그대로 맞춰줌 (파생쿼리 대신 JPQL)
+    // 서비스가 호출하는 이름을 그대로 맞춰줌 (파생쿼리 대신 JPQL)
     @Modifying(clearAutomatically = true, flushAutomatically = true)
     @Query("delete from DailyRoutineEntity r where r.member.id = :memberId and r.performedDate = :date")
     void deleteByMemberIdAndPerformedDate(@Param("memberId") Long memberId,

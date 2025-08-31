@@ -52,7 +52,7 @@ public class WeeklyDataCollector {
     private boolean hasWeekData(Long memberId, LocalDate weekStart) {
         LocalDate weekEnd = weekStart.plusDays(6);
         boolean hasReflections =
-                reflectionRepository.existsByMember_IdAndReflectionDateBetween(memberId, weekStart, weekEnd); // ✅ 여기!
+                reflectionRepository.existsByMember_IdAndReflectionDateBetween(memberId, weekStart, weekEnd);
         boolean hasRoutines =
                 dailyRoutineRepository.existsByMember_IdAndPerformedDateBetween(memberId, weekStart, weekEnd);
         return hasReflections || hasRoutines;
