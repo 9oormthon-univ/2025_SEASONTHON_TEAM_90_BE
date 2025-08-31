@@ -13,6 +13,7 @@ import com.fasterxml.jackson.databind.exc.InvalidFormatException;
 import com.groomthon.habiglow.global.advice.ParameterData;
 import com.groomthon.habiglow.global.dto.CommonApiResponse;
 import com.groomthon.habiglow.global.response.ErrorCode;
+import com.groomthon.habiglow.domain.daily.exception.DailyRecordValidationException;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -85,7 +86,20 @@ public class GlobalExceptionHandler {
 			.body(CommonApiResponse.fail(ErrorCode.INTERNAL_SERVER_ERROR));
 	}
 
-	// 7. 모든 예외의 최종 핸들러
+	// 7. 일일 기록 검증 예외
+	@ExceptionHandler(DailyRecordValidationException.class)
+	public ResponseEntity<?> handleDailyRecordValidation(DailyRecordValidationException e) {
+		log.warn("Daily record validation failed for routines: {}", 
+			e.getInvalidRoutines().stream()
+				.map(error -> error.getRoutineId() + ":" + error.getReason())
+				.collect(Collectors.toList()));
+		
+		return ResponseEntity
+			.status(e.getErrorCode().getStatus())
+			.body(CommonApiResponse.failWithDetails(e.getErrorCode(), e.getInvalidRoutines()));
+	}
+
+	// 8. 모든 예외의 최종 핸들러
 	@ExceptionHandler(Exception.class)
 	public ResponseEntity<?> handleGeneralException(Exception e) {
 		log.error("Unexpected Exception", e);

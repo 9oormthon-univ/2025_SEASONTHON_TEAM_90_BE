@@ -2,7 +2,6 @@ package com.groomthon.habiglow.domain.daily.facade;
 
 import java.time.LocalDate;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -26,6 +25,8 @@ import com.groomthon.habiglow.domain.member.entity.MemberEntity;
 import com.groomthon.habiglow.domain.member.repository.MemberRepository;
 import com.groomthon.habiglow.domain.routine.entity.RoutineEntity;
 import com.groomthon.habiglow.domain.routine.service.RoutineService;
+import com.groomthon.habiglow.domain.daily.dto.error.InvalidRoutineError;
+import com.groomthon.habiglow.domain.daily.exception.DailyRecordValidationException;
 import com.groomthon.habiglow.global.exception.BaseException;
 import com.groomthon.habiglow.global.response.ErrorCode;
 
@@ -98,12 +99,25 @@ public class DailyRecordFacade {
             .stream()
             .collect(Collectors.toMap(RoutineEntity::getRoutineId, Function.identity()));
         
+        // 유효하지 않은 루틴 ID 수집
+        List<InvalidRoutineError> invalidRoutines = new ArrayList<>();
+        
+        for (RoutineRecordRequest record : records) {
+            RoutineEntity routine = routineMap.get(record.getRoutineId());
+            if (routine == null) {
+                invalidRoutines.add(InvalidRoutineError.notFound(record.getRoutineId()));
+            } else if (!routine.isOwnedBy(memberId)) {
+                invalidRoutines.add(InvalidRoutineError.accessDenied(record.getRoutineId()));
+            }
+        }
+
+        if (!invalidRoutines.isEmpty()) {
+            throw new DailyRecordValidationException(invalidRoutines);
+        }
+        
         return records.stream()
             .map(record -> {
                 RoutineEntity routine = routineMap.get(record.getRoutineId());
-                if (routine == null) {
-                    throw new BaseException(ErrorCode.ROUTINE_NOT_FOUND);
-                }
                 return RoutinePerformanceRequest.of(routine, member, record.getPerformanceLevel());
             })
             .collect(Collectors.toList());

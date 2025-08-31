@@ -43,6 +43,7 @@ public enum ErrorCode implements ErrorType {
 	DAILY_RECORD_FUTURE_DATE_NOT_ALLOWED("DAILY001", "미래 날짜는 수정할 수 없습니다", HttpStatus.BAD_REQUEST.value()),
 	DAILY_RECORD_INVALID_PERFORMANCE_LEVEL("DAILY002", "올바르지 않은 수행 정도입니다", HttpStatus.BAD_REQUEST.value()),
 	DAILY_RECORD_INVALID_EMOTION_TYPE("DAILY003", "올바르지 않은 감정 타입입니다", HttpStatus.BAD_REQUEST.value()),
+	DAILY_RECORD_INVALID_ROUTINES("DAILY004", "유효하지 않은 루틴이 포함되어 있습니다", HttpStatus.BAD_REQUEST.value()),
 
 	// 보안 관련 오류 (SECURITY)
 	TOO_MANY_REQUESTS("SECURITY001", "너무 많은 요청입니다. 잠시 후 다시 시도해주세요.", HttpStatus.TOO_MANY_REQUESTS.value());
