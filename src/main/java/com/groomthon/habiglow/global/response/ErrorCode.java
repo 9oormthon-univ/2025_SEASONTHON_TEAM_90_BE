@@ -38,6 +38,11 @@ public enum ErrorCode implements ErrorType {
 	ROUTINE_INVALID_CATEGORY("ROUTINE004", "루틴 카테고리는 필수입니다", HttpStatus.BAD_REQUEST.value()),
 	ROUTINE_INVALID_GROWTH_SETTINGS("ROUTINE005", "성장 모드 설정이 올바르지 않습니다", HttpStatus.BAD_REQUEST.value()),
 	ROUTINE_CANNOT_INCREASE_TARGET("ROUTINE006", "목표치를 증가시킬 수 없는 상태입니다", HttpStatus.BAD_REQUEST.value()),
+	
+	// 일일 기록 관련 오류 (DAILY)
+	DAILY_RECORD_FUTURE_DATE_NOT_ALLOWED("DAILY001", "미래 날짜는 수정할 수 없습니다", HttpStatus.BAD_REQUEST.value()),
+	DAILY_RECORD_INVALID_PERFORMANCE_LEVEL("DAILY002", "올바르지 않은 수행 정도입니다", HttpStatus.BAD_REQUEST.value()),
+	DAILY_RECORD_INVALID_EMOTION_TYPE("DAILY003", "올바르지 않은 감정 타입입니다", HttpStatus.BAD_REQUEST.value()),
 
 	// 보안 관련 오류 (SECURITY)
 	TOO_MANY_REQUESTS("SECURITY001", "너무 많은 요청입니다. 잠시 후 다시 시도해주세요.", HttpStatus.TOO_MANY_REQUESTS.value());

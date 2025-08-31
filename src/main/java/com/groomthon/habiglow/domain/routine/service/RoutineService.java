@@ -18,6 +18,8 @@ import com.groomthon.habiglow.domain.routine.facade.RoutineManagementFacade;
 import com.groomthon.habiglow.domain.routine.facade.RoutineQueryFacade;
 import com.groomthon.habiglow.domain.routine.helper.RoutineHelper;
 import com.groomthon.habiglow.domain.routine.repository.RoutineRepository;
+import com.groomthon.habiglow.global.exception.BaseException;
+import com.groomthon.habiglow.global.response.ErrorCode;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -81,7 +83,7 @@ public class RoutineService {
     
     public RoutineEntity findById(Long routineId) {
         return routineRepository.findById(routineId)
-            .orElseThrow(() -> new RuntimeException("루틴을 찾을 수 없습니다: " + routineId));
+            .orElseThrow(() -> new BaseException(ErrorCode.ROUTINE_NOT_FOUND));
     }
     
     public List<RoutineEntity> getUserRoutines(Long memberId) {

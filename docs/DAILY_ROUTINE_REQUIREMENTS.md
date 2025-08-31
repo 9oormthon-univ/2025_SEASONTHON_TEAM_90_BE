@@ -401,7 +401,7 @@ public class DailyRecordFacade {
     private void validateDateModifiable(LocalDate date) {
         LocalDate today = LocalDate.now();
         if (date.isAfter(today)) {
-            throw new IllegalArgumentException("미래 날짜는 수정할 수 없습니다.");
+            throw new BaseException(ErrorCode.DAILY_RECORD_FUTURE_DATE_NOT_ALLOWED);
         }
     }
     
@@ -750,9 +750,10 @@ Authorization: Bearer {token}
 ## 7. 추가 구현 고려사항
 
 ### 7.1 예외 처리
-- **미래 날짜 수정 시도**: `IllegalArgumentException`
-- **존재하지 않는 루틴**: `RoutineNotFoundException`
-- **권한 없음**: `AccessDeniedException`
+- **미래 날짜 수정 시도**: `BaseException(DAILY_RECORD_FUTURE_DATE_NOT_ALLOWED)` - 400 BAD_REQUEST
+- **존재하지 않는 루틴**: `BaseException(ROUTINE_NOT_FOUND)` - 404 NOT_FOUND  
+- **회원 없음**: `BaseException(MEMBER_NOT_FOUND)` - 404 NOT_FOUND
+- **인증 실패**: Spring Security가 401/403 처리
 
 ### 7.2 로깅 전략
 - **수행 기록 변경**: INFO 레벨로 로깅
