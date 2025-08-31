@@ -8,10 +8,13 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import org.springframework.format.annotation.DateTimeFormat;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDate;
+import java.time.DayOfWeek;
+import java.time.temporal.TemporalAdjusters;
 import java.util.List;
 
 @RestController
@@ -35,12 +38,24 @@ public class DashboardController {
     @ApiResponse(responseCode = "200", description = "성공")
     @PostMapping("/insight/weekly/specific")
     @PreAuthorize("isAuthenticated()")
-    public WeeklyInsightResponse generateSpecificWeekInsight(
+    public ResponseEntity<WeeklyInsightResponse> generateSpecificWeekInsight(
             HttpServletRequest request,
             @RequestParam("weekStart") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate weekStart
     ) {
         Long memberId = jwtMemberExtractor.extractMemberId(request);
-        return weeklyInsightService.generateSpecificWeekInsight(memberId, weekStart);
+
+        LocalDate lastWeekMonday = LocalDate.now()
+                .with(TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY))
+                .minusWeeks(1);
+
+        // 지난주가 아니고, 실데이터가 없으면 204(No Content)
+        if (!weekStart.equals(lastWeekMonday)
+                && !weeklyInsightService.hasRealWeekData(memberId, weekStart)) {
+            return ResponseEntity.noContent().build();
+        }
+
+        WeeklyInsightResponse body = weeklyInsightService.generateSpecificWeekInsight(memberId, weekStart);
+        return ResponseEntity.ok(body);
     }
 
     @Operation(summary = "이번주 진행상황 AI 분석")

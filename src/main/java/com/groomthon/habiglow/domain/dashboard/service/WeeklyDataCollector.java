@@ -12,22 +12,16 @@ import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.TemporalAdjusters;
-import java.util.*;
-import java.util.stream.Collectors;
+import java.util.ArrayList;
+import java.util.LinkedHashSet;
+import java.util.List;
 
-/**
- * 규칙
- * - 지난주(월~일): 실데이터가 있으면 실데이터, 없으면 더미
- * - 특정 주차: 지난주면 위 규칙 동일, 그 외는 실데이터만
- * - 이번주: 실데이터만 (더미 미적용)
- * - last-week-completed: 더미 프로필이면 true, 아니면 지난주 실데이터 존재 여부
- * - available-weeks: 실주차 + (더미이면) 지난주 더미 주차 합집합
- */
 @Component
 @RequiredArgsConstructor
 public class WeeklyDataCollector {
 
     private final DailyReflectionRepository reflectionRepository;
+    // 추후 실제 매핑 시 사용할 예정이라 주입만 유지
     private final DailyRoutineRepository dailyRoutineRepository;
     private final WeeklyDummyDataGenerator dummyGenerator;
 
@@ -48,35 +42,41 @@ public class WeeklyDataCollector {
         return thisMonday().minusWeeks(1);
     }
 
-    /** 주차에 실데이터(회고/루틴)가 존재하는지 체크 */
-    private boolean hasWeekData(Long memberId, LocalDate weekStart) {
-        LocalDate weekEnd = weekStart.plusDays(6);
-        boolean hasReflections =
-                reflectionRepository.existsByMember_IdAndReflectionDateBetween(memberId, weekStart, weekEnd);
-        boolean hasRoutines =
-                dailyRoutineRepository.existsByMember_IdAndPerformedDateBetween(memberId, weekStart, weekEnd);
-        return hasReflections || hasRoutines;
+    private String toRange(LocalDate monday) {
+        return DF.format(monday) + " ~ " + DF.format(monday.plusDays(6));
     }
 
+    /** 특정 날짜에 리플렉션 실데이터가 있는지(단건 조회로) */
+    private boolean hasReflectionOn(Long memberId, LocalDate date) {
+        return reflectionRepository.findByMemberIdAndReflectionDate(memberId, date).isPresent();
+    }
 
-    /** 지난주 데이터 수집: 실우선, 없으면 더미 */
+    /** 외부에서 주차 실데이터 존재 여부가 필요할 때 사용 (월~일 7일 검사) */
+    public boolean hasRealWeekData(Long memberId, LocalDate weekStart) {
+        for (int i = 0; i < 7; i++) {
+            if (hasReflectionOn(memberId, weekStart.plusDays(i))) return true;
+        }
+        return false;
+    }
+
+    /** 지난주: 실데이터 우선, 없으면 더미 */
     public WeeklyAnalysisData collectLastWeekData(Long memberId) {
         LocalDate start = lastWeekMonday();
-        if (isDummyProfile() && !hasWeekData(memberId, start)) {
+        if (isDummyProfile() && !hasRealWeekData(memberId, start)) {
             return dummyGenerator.generate(memberId, start);
         }
         return collectWeeklyData(memberId, start);
     }
 
-    /** 특정 주차 데이터 수집: 지난주면 실우선/없으면 더미, 그 외는 실데이터만 */
+    /** 특정 주차: 지난주면 실우선/없으면 더미, 그 외 주차는 실데이터만 */
     public WeeklyAnalysisData collectSpecificWeekData(Long memberId, LocalDate weekStart) {
-        if (isDummyProfile() && weekStart.equals(lastWeekMonday()) && !hasWeekData(memberId, weekStart)) {
+        if (isDummyProfile() && weekStart.equals(lastWeekMonday()) && !hasRealWeekData(memberId, weekStart)) {
             return dummyGenerator.generate(memberId, weekStart);
         }
         return collectWeeklyData(memberId, weekStart);
     }
 
-    /** 이번주 수집: 더미 미적용 */
+    /** 이번주: 더미 미적용(실데이터만) */
     public WeeklyAnalysisData collectThisWeekData(Long memberId) {
         return collectWeeklyData(memberId, thisMonday());
     }
@@ -84,36 +84,45 @@ public class WeeklyDataCollector {
     /** 지난주 완료 여부 */
     public boolean isLastWeekCompleted(Long memberId) {
         if (isDummyProfile()) return true;
-        return hasWeekData(memberId, lastWeekMonday());
+        return hasRealWeekData(memberId, lastWeekMonday());
     }
 
-    /** 분석 가능한 주차: 실주차 + (더미일 때) 지난주 더미 주차 포함 */
+    /**
+     * 분석 가능한 주차 목록
+     * - 더미 프로필이면: 지난주 더미 주차 1개를 무조건 포함(실데이터가 생겨도 유지)
+     * - 최근 12주를 뒤로 훑으면서 실데이터가 있는 주차만 포함
+     */
     public List<String> getAvailableWeeks(Long memberId) {
-        Set<String> weeks = reflectionRepository.findAllDatesByMemberId(memberId).stream()
-                .map(d -> d.with(TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY)))
-                .map(monday -> DF.format(monday) + " ~ " + DF.format(monday.plusDays(6)))
-                .collect(Collectors.toCollection(LinkedHashSet::new));
+        LinkedHashSet<String> result = new LinkedHashSet<>();
 
+        LocalDate last = lastWeekMonday();
         if (isDummyProfile()) {
-            LocalDate last = lastWeekMonday();
-            weeks.add(DF.format(last) + " ~ " + DF.format(last.plusDays(6)));
+            result.add(toRange(last)); // 지난주 더미 엔트리 고정 포함
         }
-        return new ArrayList<>(weeks);
+
+        final int LOOKBACK_WEEKS = 12;
+        for (int i = 0; i < LOOKBACK_WEEKS; i++) {
+            LocalDate monday = last.minusWeeks(i);
+            if (hasRealWeekData(memberId, monday)) {
+                result.add(toRange(monday));
+            }
+        }
+        return new ArrayList<>(result);
     }
 
-    /** 실제 DB 기반 주간 데이터 수집(현재 스켈레톤; 빈 배열로 NPE 방지) */
+    /** 실제 DB 기반 주간 데이터 수집 (현재 스켈레톤; 빈 배열로 NPE 방지) */
     public WeeklyAnalysisData collectWeeklyData(Long memberId, LocalDate weekStart) {
         LocalDate weekEnd = weekStart.plusDays(6);
 
-        // 필요 시 실제 매핑 구현:
-        // var reflections = reflectionRepository.findByMember_IdAndDateBetween(memberId, weekStart, weekEnd);
-        // var routines    = dailyRoutineRepository.findByMember_IdAndPerformedDateBetween(memberId, weekStart, weekEnd);
-        // TODO: reflections/routines → 날짜별 집계 → weekly.days 채우기
+        // 추후 실제 매핑 시:
+        // var reflections = reflectionRepository.findByMemberIdAndDateBetween(memberId, weekStart, weekEnd);
+        // var routines    = dailyRoutineRepository.findByMemberIdAndPerformedDateBetween(memberId, weekStart, weekEnd);
+        // (리플렉션은 단건 메서드만 있으므로 날짜 루프 기반으로 집계하면 됩니다)
 
         return WeeklyAnalysisData.builder()
                 .weekStart(DF.format(weekStart))
                 .weekEnd(DF.format(weekEnd))
-                .days(Collections.emptyList())
+                .days(java.util.Collections.emptyList())
                 .build();
     }
 }
