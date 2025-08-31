@@ -30,8 +30,7 @@ public class DailyRecordCommandService {
         
         return DailyRecordResponse.of(reflection, routineRecords);
     }
-    
-    
+
     private DailyReflectionEntity saveReflectionIfPresent(Long memberId, LocalDate date, 
                                                          SaveDailyRecordRequest request) {
         if (request.getReflection() == null) {

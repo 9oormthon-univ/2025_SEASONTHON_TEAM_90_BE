@@ -32,8 +32,4 @@ public class DailyRecordQueryService {
         return DailyRecordResponse.of(reflection.orElse(null), routineRecords, allUserRoutines);
     }
     
-    public DailyRecordResponse getTodayRecord(Long memberId) {
-        return getDailyRecord(memberId, LocalDate.now());
-    }
-    
 }

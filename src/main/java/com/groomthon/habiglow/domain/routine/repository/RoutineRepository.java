@@ -17,6 +17,4 @@ public interface RoutineRepository extends JpaRepository<RoutineEntity, Long> {
     List<RoutineEntity> findByMember_IdAndDetails_Category(Long memberId, RoutineCategory category);
     
     Optional<RoutineEntity> findByRoutineIdAndMember_Id(Long routineId, Long memberId);
-    
-    Boolean existsByRoutineIdAndMember_Id(Long routineId, Long memberId);
 }

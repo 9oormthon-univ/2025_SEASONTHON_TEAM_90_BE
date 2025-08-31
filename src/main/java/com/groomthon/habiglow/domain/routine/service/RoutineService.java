@@ -8,18 +8,13 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.groomthon.habiglow.domain.routine.dto.request.CreateRoutineRequest;
 import com.groomthon.habiglow.domain.routine.dto.request.UpdateRoutineRequest;
-import com.groomthon.habiglow.domain.routine.dto.response.GrowthAnalysisResponse;
 import com.groomthon.habiglow.domain.routine.dto.response.RoutineListResponse;
 import com.groomthon.habiglow.domain.routine.dto.response.RoutineResponse;
 import com.groomthon.habiglow.domain.routine.entity.RoutineCategory;
 import com.groomthon.habiglow.domain.routine.entity.RoutineEntity;
-import com.groomthon.habiglow.domain.routine.facade.RoutineGrowthFacade;
 import com.groomthon.habiglow.domain.routine.facade.RoutineManagementFacade;
 import com.groomthon.habiglow.domain.routine.facade.RoutineQueryFacade;
-import com.groomthon.habiglow.domain.routine.helper.RoutineHelper;
 import com.groomthon.habiglow.domain.routine.repository.RoutineRepository;
-import com.groomthon.habiglow.global.exception.BaseException;
-import com.groomthon.habiglow.global.response.ErrorCode;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -31,10 +26,8 @@ import lombok.extern.slf4j.Slf4j;
 public class RoutineService {
     
     private final RoutineManagementFacade managementFacade;
-    private final RoutineGrowthFacade growthFacade;
     private final RoutineQueryFacade queryFacade;
     private final RoutineRepository routineRepository;
-    private final RoutineHelper routineHelper;
     
     @Transactional
     public RoutineResponse createRoutine(Long memberId, CreateRoutineRequest request) {
@@ -53,10 +46,6 @@ public class RoutineService {
         return queryFacade.getRoutineById(memberId, routineId);
     }
     
-    public RoutineListResponse getGrowthEnabledRoutines(Long memberId) {
-        return queryFacade.getGrowthEnabledRoutines(memberId);
-    }
-    
     @Transactional
     public RoutineResponse updateRoutine(Long memberId, Long routineId, UpdateRoutineRequest request) {
         return managementFacade.updateRoutineWithValidation(memberId, routineId, request);
@@ -67,23 +56,8 @@ public class RoutineService {
         managementFacade.deleteRoutine(memberId, routineId);
     }
     
-    @Transactional
-    public RoutineResponse increaseRoutineTarget(Long memberId, Long routineId) {
-        return growthFacade.forceTargetIncrease(memberId, routineId);
-    }
-    
-    @Transactional(readOnly = true)
-    public GrowthAnalysisResponse analyzeRoutineGrowth(Long memberId, Long routineId) {
-        return growthFacade.analyzeGrowthStatus(memberId, routineId);
-    }
-    
     public List<RoutineEntity> findAllByIds(Collection<Long> routineIds) {
         return routineRepository.findAllById(routineIds);
-    }
-    
-    public RoutineEntity findById(Long routineId) {
-        return routineRepository.findById(routineId)
-            .orElseThrow(() -> new BaseException(ErrorCode.ROUTINE_NOT_FOUND));
     }
     
     public List<RoutineEntity> getUserRoutines(Long memberId) {

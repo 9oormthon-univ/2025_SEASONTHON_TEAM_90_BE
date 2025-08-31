@@ -65,18 +65,4 @@ public class RoutineQueryFacade {
         return RoutineResponse.from(routine);
     }
 
-    /**
-     * 성장 모드가 활성화된 루틴들만 조회
-     */
-    public RoutineListResponse getGrowthEnabledRoutines(Long memberId) {
-        List<RoutineResponse> routines = routineRepository.findByMember_Id(memberId)
-                .stream()
-                .filter(routine -> routine.isGrowthModeEnabled())
-                .map(RoutineResponse::from)
-                .toList();
-        
-        log.debug("Retrieved {} growth-enabled routines for member: {}", routines.size(), memberId);
-        return RoutineListResponse.of(routines);
-    }
-
 }
