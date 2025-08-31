@@ -1,7 +1,8 @@
 # Daily 도메인 API 명세서
 
 > **최신 업데이트**: 2025-01-31  
-> **버전**: 1.2.0  
+> **버전**: 1.3.0  
+> **신규 기능**: 성장 주기 관리 시스템 (currentCycleDays)  
 > **리팩토링 적용**: CQS 패턴, Domain Service 분리  
 
 ---
@@ -14,6 +15,7 @@ Daily 도메인은 사용자의 **일일 루틴 수행 기록**과 **회고**를
 - 특정 날짜의 루틴 수행 기록 저장 및 조회
 - 일일 회고(감정 포함) 기록 관리  
 - 연속 수행 일수 자동 계산
+- **🆕 성장 주기 관리**: currentCycleDays 자동 업데이트
 - 루틴 성장 모드 스냅샷 저장
 
 ### 아키텍처 개선사항 (v1.2.0)
@@ -124,6 +126,7 @@ POST /api/daily-records/{date}
         "category": "HEALTH",
         "performanceLevel": "FULL_SUCCESS",
         "consecutiveDays": 5,
+        "currentCycleDays": 2,
         "isGrowthMode": true,
         "targetType": "COUNT",
         "targetValue": 30,
@@ -142,7 +145,10 @@ POST /api/daily-records/{date}
 2. **루틴 권한 검증**: 본인 소유 루틴만 기록 가능
 3. **중복 처리**: 동일 날짜 기록 시 **업데이트** (덮어쓰기)
 4. **연속 일수 계산**: `FULL_SUCCESS`인 경우만 연속 일수 증가
-5. **스냅샷 저장**: 루틴의 성장 모드 설정값을 기록 시점에 저장
+5. **🆕 성장 주기 관리**: 
+   - `FULL_SUCCESS`: currentCycleDays 증가 (+1)
+   - `PARTIAL_SUCCESS` / `NOT_PERFORMED`: currentCycleDays 리셋 (0)
+6. **스냅샷 저장**: 루틴의 성장 모드 설정값을 기록 시점에 저장
 
 ---
 
@@ -179,6 +185,7 @@ GET /api/daily-records/{date}
         "category": "HEALTH",
         "performanceLevel": "FULL_SUCCESS",
         "consecutiveDays": 5,
+        "currentCycleDays": 2,
         "isGrowthMode": true,
         "targetType": "COUNT",
         "targetValue": 30,
@@ -310,7 +317,8 @@ GET /api/daily-records/today
 | `routineTitle` | String | 루틴 제목 |
 | `category` | RoutineCategory | 루틴 카테고리 |
 | `performanceLevel` | PerformanceLevel | 수행 정도 |
-| `consecutiveDays` | Integer | 연속 수행 일수 |
+| `consecutiveDays` | Integer | 연속 수행 일수 (총 누적) |
+| `currentCycleDays` | Integer | 🆕 현재 주기 내 연속 성공 일수 |
 | `isGrowthMode` | Boolean | 성장 모드 여부 |
 | `targetType` | TargetType | 목표 타입 |
 | `targetValue` | Integer | 목표값 |
@@ -386,6 +394,54 @@ POST /api/daily-records/2025-01-29
   ]
 }
 ```
+
+---
+
+## 🔄 성장 주기 관리 시스템 🆕
+
+### 개요
+일일 기록 저장 시 성장 모드 루틴의 `currentCycleDays`를 자동으로 관리합니다.
+
+### 동작 원리
+1. **FULL_SUCCESS 기록**: `currentCycleDays += 1`
+2. **실패 기록 (PARTIAL_SUCCESS, NOT_PERFORMED)**: `currentCycleDays = 0`
+3. **성장 조건**: `currentCycleDays >= growthCycleDays`
+4. **목표 증가 후**: `currentCycleDays = 0` (성장 루틴 API에서 처리)
+
+### 예시 시나리오
+
+**푸쉬업 루틴 (목표: 10개, 성장주기: 3일)**
+
+```
+Day 1: FULL_SUCCESS 기록
+  → consecutiveDays: 1, currentCycleDays: 1
+
+Day 2: FULL_SUCCESS 기록  
+  → consecutiveDays: 2, currentCycleDays: 2
+
+Day 3: FULL_SUCCESS 기록
+  → consecutiveDays: 3, currentCycleDays: 3
+  → 성장 조건 만족! (currentCycleDays >= 3)
+
+사용자 선택:
+- 목표 증가: 12개 목표, currentCycleDays → 0
+- 주기 리셋: 10개 목표 유지, currentCycleDays → 0
+
+Day 4: PARTIAL_SUCCESS 기록
+  → consecutiveDays: 3 (유지), currentCycleDays: 0 (리셋)
+```
+
+### 필드 비교
+
+| 필드 | 설명 | 리셋 조건 |
+|------|------|----------|
+| `consecutiveDays` | 전체 연속 성공 일수 | FULL_SUCCESS 외의 기록 시 |
+| `currentCycleDays` | 현재 주기 내 연속 성공 일수 | FULL_SUCCESS 외의 기록 또는 성장/리셋 시 |
+
+### 관련 API
+- **성장 확인**: `GET /api/routines/growth-check`
+- **목표 증가**: `PATCH /api/routines/{id}/increase-target`  
+- **주기 리셋**: `PATCH /api/routines/{id}/reset-growth-cycle`
 
 ---
 
