@@ -1,5 +1,8 @@
 package com.groomthon.habiglow.domain.routine.service;
 
+import java.util.Collection;
+import java.util.List;
+
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -9,9 +12,12 @@ import com.groomthon.habiglow.domain.routine.dto.response.GrowthAnalysisResponse
 import com.groomthon.habiglow.domain.routine.dto.response.RoutineListResponse;
 import com.groomthon.habiglow.domain.routine.dto.response.RoutineResponse;
 import com.groomthon.habiglow.domain.routine.entity.RoutineCategory;
+import com.groomthon.habiglow.domain.routine.entity.RoutineEntity;
 import com.groomthon.habiglow.domain.routine.facade.RoutineGrowthFacade;
 import com.groomthon.habiglow.domain.routine.facade.RoutineManagementFacade;
 import com.groomthon.habiglow.domain.routine.facade.RoutineQueryFacade;
+import com.groomthon.habiglow.domain.routine.helper.RoutineHelper;
+import com.groomthon.habiglow.domain.routine.repository.RoutineRepository;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -25,6 +31,8 @@ public class RoutineService {
     private final RoutineManagementFacade managementFacade;
     private final RoutineGrowthFacade growthFacade;
     private final RoutineQueryFacade queryFacade;
+    private final RoutineRepository routineRepository;
+    private final RoutineHelper routineHelper;
     
     @Transactional
     public RoutineResponse createRoutine(Long memberId, CreateRoutineRequest request) {
@@ -65,5 +73,18 @@ public class RoutineService {
     @Transactional(readOnly = true)
     public GrowthAnalysisResponse analyzeRoutineGrowth(Long memberId, Long routineId) {
         return growthFacade.analyzeGrowthStatus(memberId, routineId);
+    }
+    
+    public List<RoutineEntity> findAllByIds(Collection<Long> routineIds) {
+        return routineRepository.findAllById(routineIds);
+    }
+    
+    public RoutineEntity findById(Long routineId) {
+        return routineRepository.findById(routineId)
+            .orElseThrow(() -> new RuntimeException("루틴을 찾을 수 없습니다: " + routineId));
+    }
+    
+    public List<RoutineEntity> getUserRoutines(Long memberId) {
+        return routineRepository.findByMember_Id(memberId);
     }
 }
