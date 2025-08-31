@@ -70,7 +70,18 @@ public enum SwaggerResponseDescription {
 		ErrorCode.INTERNAL_SERVER_ERROR,
 		ErrorCode.INVALID_INPUT_VALUE,
 		ErrorCode.PARAMETER_VALIDATION_ERROR
+	)),
+
+	// AI 관련 에러
+	AI_ANALYSIS_ERROR(Set.of(
+			ErrorCode.INVALID_WEEK_START,
+			ErrorCode.FUTURE_WEEK_NOT_ALLOWED,
+			ErrorCode.NO_WEEKLY_DATA_FOUND,
+			ErrorCode.INSUFFICIENT_DATA_FOR_ANALYSIS,
+			ErrorCode.AI_ANALYSIS_FAILED,
+			ErrorCode.AI_RESPONSE_PARSE_FAILED
 	));
+
 
 	private final Set<ErrorCode> errorCodeList;
 
