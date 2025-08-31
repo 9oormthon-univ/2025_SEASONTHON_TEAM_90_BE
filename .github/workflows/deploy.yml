@@ -89,7 +89,7 @@ jobs:
             sudo pkill -f "java -jar" || true # 기존 애플리케이션 종료
           
             # 새 애플리케이션 시작 (환경 변수 적용)
-            nohup java -jar -Dspring.profiles.active=prod -Dspring.datasource.url=jdbc:postgresql://${{ secrets.DB_HOST }}:${{ vars.DB_PORT }}/${{ secrets.DB_NAME }} -Dspring.datasource.username=${{ secrets.DB_USERNAME }} -Dspring.datasource.password=${{ secrets.DB_PASSWORD }} -DJWT_SECRET_KEY=${{ secrets.JWT_SECRET_KEY }} ~/habiglow-0.0.1-SNAPSHOT.jar > ~/nohup.out 2>&1 &
+            nohup java -jar -Dspring.profiles.active=prod -Dspring.datasource.url=jdbc:postgresql://${{ secrets.DB_HOST }}:${{ vars.DB_PORT }}/${{ secrets.DB_NAME }} -Dspring.datasource.username=${{ secrets.DB_USERNAME }} -Dspring.datasource.password=${{ secrets.DB_PASSWORD }} -DJWT_SECRET_KEY=${{ secrets.JWT_SECRET_KEY }} -DOPENAI_API_KEY=${{ secrets.OPENAI_API_KEY }} ~/habiglow-0.0.1-SNAPSHOT.jar > ~/nohup.out 2>&1 &
           
             # Nginx 재시작
             sudo systemctl restart nginx

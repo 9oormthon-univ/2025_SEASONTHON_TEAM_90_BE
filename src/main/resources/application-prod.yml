@@ -17,6 +17,15 @@ spring:
       hibernate:
         format_sql: false
 
+# OpenAI 설정 (운영환경)
+openai:
+  api:
+    key: ${OPENAI_API_KEY}
+    base-url: https://api.openai.com/v1
+    model: gpt-4o-mini
+    timeout: 30s
+    max-retries: 3
+
 cookie:
   secure: true
 
@@ -29,5 +38,6 @@ logging:
   level:
     org.hibernate.SQL: warn
     org.hibernate.type.descriptor.sql.BasicBinder: warn
-    com.example.login: info
+    com.groomthon.habiglow: info
+    org.springframework.web.reactive.function.client: warn
     root: warn

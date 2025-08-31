@@ -6,7 +6,6 @@ spring:
     username: ${DB_USERNAME}
     password: ${DB_PASSWORD}
 
-
   jpa:
     hibernate:
       ddl-auto: update
@@ -14,6 +13,15 @@ spring:
     properties:
       hibernate:
         format_sql: true
+
+# OpenAI 설정
+openai:
+  api:
+    key: ${OPENAI_API_KEY:your-dev-api-key-here}
+    base-url: https://api.openai.com/v1
+    model: gpt-4o-mini
+    timeout: 30s
+    max-retries: 3
 
 # 개발환경 쿠키 설정
 cookie:
@@ -30,4 +38,6 @@ logging:
   level:
     org.hibernate.SQL: debug
     org.hibernate.type.descriptor.sql.BasicBinder: trace
-    com.example.login: debug
+    com.groomthon.habiglow: debug
+    # OpenAI API 호출 로깅용
+    org.springframework.web.reactive.function.client: debug
