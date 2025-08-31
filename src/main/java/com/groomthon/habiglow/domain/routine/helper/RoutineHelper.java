@@ -45,16 +45,4 @@ public class RoutineHelper {
         return routineRepository.findByRoutineIdAndMember_Id(routineId, memberId)
                 .orElseThrow(() -> new BaseException(ErrorCode.ROUTINE_NOT_FOUND));
     }
-
-    /**
-     * 루틴이 특정 멤버에게 속하는지 검증합니다.
-     * @param routine 검증할 루틴
-     * @param memberId 멤버 ID
-     * @throws BaseException 루틴의 소유자가 아닌 경우
-     */
-    public void validateRoutineOwnership(RoutineEntity routine, Long memberId) {
-        if (!routine.isOwnedBy(memberId)) {
-            throw new BaseException(ErrorCode.ROUTINE_NOT_FOUND);
-        }
-    }
 }

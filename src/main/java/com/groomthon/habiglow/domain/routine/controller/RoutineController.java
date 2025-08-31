@@ -21,6 +21,8 @@ import com.groomthon.habiglow.global.jwt.JwtMemberExtractor;
 import com.groomthon.habiglow.global.response.ApiSuccessCode;
 import com.groomthon.habiglow.global.response.AutoApiResponse;
 import com.groomthon.habiglow.global.response.SuccessCode;
+import com.groomthon.habiglow.global.swagger.CustomExceptionDescription;
+import com.groomthon.habiglow.global.swagger.SwaggerResponseDescription;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -47,6 +49,7 @@ public class RoutineController {
         description = "새로운 루틴을 생성합니다."
     )
     @ApiResponse(responseCode = "200", description = "생성 성공")
+    @CustomExceptionDescription(SwaggerResponseDescription.ROUTINE_ERROR)
     @PostMapping
     @PreAuthorize("isAuthenticated()")
     @SuccessCode(ApiSuccessCode.ROUTINE_CREATED)
@@ -62,6 +65,7 @@ public class RoutineController {
         description = "현재 로그인한 사용자의 모든 루틴을 조회합니다."
     )
     @ApiResponse(responseCode = "200", description = "조회 성공")
+    @CustomExceptionDescription(SwaggerResponseDescription.ROUTINE_ERROR)
     @GetMapping
     @PreAuthorize("isAuthenticated()")
     @SuccessCode(ApiSuccessCode.ROUTINE_LIST_VIEW)
@@ -75,6 +79,7 @@ public class RoutineController {
         description = "현재 로그인한 사용자의 특정 카테고리 루틴을 조회합니다."
     )
     @ApiResponse(responseCode = "200", description = "조회 성공")
+    @CustomExceptionDescription(SwaggerResponseDescription.ROUTINE_ERROR)
     @GetMapping("/category")
     @PreAuthorize("isAuthenticated()")
     @SuccessCode(ApiSuccessCode.ROUTINE_LIST_VIEW)
@@ -93,6 +98,7 @@ public class RoutineController {
         @ApiResponse(responseCode = "200", description = "조회 성공"),
         @ApiResponse(responseCode = "404", description = "루틴이 존재하지 않음", content = @Content)
     })
+    @CustomExceptionDescription(SwaggerResponseDescription.ROUTINE_ERROR)
     @GetMapping("/{routineId}")
     @PreAuthorize("isAuthenticated()")
     @SuccessCode(ApiSuccessCode.ROUTINE_VIEW)
@@ -111,6 +117,7 @@ public class RoutineController {
         @ApiResponse(responseCode = "200", description = "수정 성공"),
         @ApiResponse(responseCode = "404", description = "루틴이 존재하지 않음", content = @Content)
     })
+    @CustomExceptionDescription(SwaggerResponseDescription.ROUTINE_ERROR)
     @PutMapping("/{routineId}")
     @PreAuthorize("isAuthenticated()")
     @SuccessCode(ApiSuccessCode.ROUTINE_UPDATED)
@@ -130,6 +137,7 @@ public class RoutineController {
         @ApiResponse(responseCode = "200", description = "삭제 성공"),
         @ApiResponse(responseCode = "404", description = "루틴이 존재하지 않음", content = @Content)
     })
+    @CustomExceptionDescription(SwaggerResponseDescription.ROUTINE_ERROR)
     @DeleteMapping("/{routineId}")
     @PreAuthorize("isAuthenticated()")
     @SuccessCode(ApiSuccessCode.ROUTINE_DELETED)
