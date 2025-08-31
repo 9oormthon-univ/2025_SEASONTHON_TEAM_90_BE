@@ -16,6 +16,8 @@ import com.groomthon.habiglow.domain.daily.dto.response.DailyRecordResponse;
 import com.groomthon.habiglow.domain.daily.facade.DailyRecordFacade;
 import com.groomthon.habiglow.global.jwt.JwtMemberExtractor;
 import com.groomthon.habiglow.global.response.AutoApiResponse;
+import com.groomthon.habiglow.global.swagger.CustomExceptionDescription;
+import com.groomthon.habiglow.global.swagger.SwaggerResponseDescription;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -39,6 +41,7 @@ public class DailyRecordController {
         description = "특정 날짜의 루틴 수행 기록과 회고를 저장합니다. 미래 날짜는 수정 불가합니다."
     )
     @ApiResponse(responseCode = "200", description = "저장 성공")
+    @CustomExceptionDescription(SwaggerResponseDescription.DAILY_RECORD_ERROR)
     @PostMapping("/{date}")
     @PreAuthorize("hasRole('USER')")
     public DailyRecordResponse saveDailyRecord(
@@ -55,6 +58,7 @@ public class DailyRecordController {
         description = "특정 날짜의 루틴 수행 기록과 회고를 조회합니다."
     )
     @ApiResponse(responseCode = "200", description = "조회 성공")
+    @CustomExceptionDescription(SwaggerResponseDescription.DAILY_RECORD_ERROR)
     @GetMapping("/{date}")
     @PreAuthorize("hasRole('USER')")
     public DailyRecordResponse getDailyRecord(
@@ -70,6 +74,7 @@ public class DailyRecordController {
         description = "오늘 날짜의 루틴 수행 기록과 회고를 조회합니다. (편의 API)"
     )
     @ApiResponse(responseCode = "200", description = "조회 성공")
+    @CustomExceptionDescription(SwaggerResponseDescription.DAILY_RECORD_ERROR)
     @GetMapping("/today")
     @PreAuthorize("hasRole('USER')")
     public DailyRecordResponse getTodayRecord(HttpServletRequest httpRequest) {
