@@ -128,7 +128,7 @@ public class OpenAiClient {
                 ),
                 "required", List.of(
                         "week_range", "mood_daily", "mood_trend", "weekly_summary",
-                        "good_points", "empathy", "encouragement"
+                        "good_points","failure_patterns", "empathy", "encouragement"
                 ),
                 "additionalProperties", false
         );
