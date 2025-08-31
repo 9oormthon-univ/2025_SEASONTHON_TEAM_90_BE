@@ -79,8 +79,8 @@ public class DailyRecordFacade {
     
     private void validateDateModifiable(LocalDate date) {
         LocalDate today = LocalDate.now();
-        if (!date.equals(today)) {
-            throw new IllegalArgumentException("당일 데이터만 수정 가능합니다.");
+        if (date.isAfter(today)) {
+            throw new IllegalArgumentException("미래 날짜는 수정할 수 없습니다.");
         }
     }
     

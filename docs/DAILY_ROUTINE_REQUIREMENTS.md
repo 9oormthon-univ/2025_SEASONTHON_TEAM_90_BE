@@ -12,14 +12,14 @@
 #### 루틴 수행 기록
 - **수행 상태**: 완전성공, 부분성공, 미수행 (3단계)
 - **연속성 계산**: 완전성공만 연속으로 인정, 부분성공/미수행 시 0으로 초기화
-- **수정 권한**: 당일 데이터만 수정 가능 (과거/미래 불가)
+- **수정 권한**: 과거 데이터 수정 가능, 미래 날짜만 제한
 - **기본값**: 미수행 상태로 초기화
 - **데이터 보존**: 루틴 삭제되어도 수행 기록은 영구 보존
 
 #### 회고 시스템
 - **회고 단위**: 유저별 일일 단위 (하루 하나의 회고)
 - **감정 상태**: HAPPY, SOSO, SAD, MAD (4가지)
-- **수정 권한**: 당일만 수정 가능
+- **수정 권한**: 과거 데이터 수정 가능, 미래 날짜만 제한
 - **필수 여부**: 회고 내용과 감정 모두 선택적 입력
 
 #### UI/UX 동작
@@ -357,7 +357,7 @@ public class DailyRecordFacade {
     
     public DailyRecordResponse saveDailyRecord(Long memberId, LocalDate date, SaveDailyRecordRequest request) {
         
-        // 당일 데이터만 수정 가능 검증
+        // 미래 날짜 수정 제한 검증
         validateDateModifiable(date);
         
         // 회고 저장
@@ -400,8 +400,8 @@ public class DailyRecordFacade {
     
     private void validateDateModifiable(LocalDate date) {
         LocalDate today = LocalDate.now();
-        if (!date.equals(today)) {
-            throw new IllegalArgumentException("당일 데이터만 수정 가능합니다.");
+        if (date.isAfter(today)) {
+            throw new IllegalArgumentException("미래 날짜는 수정할 수 없습니다.");
         }
     }
     
@@ -750,7 +750,7 @@ Authorization: Bearer {token}
 ## 7. 추가 구현 고려사항
 
 ### 7.1 예외 처리
-- **당일 외 수정 시도**: `IllegalArgumentException`
+- **미래 날짜 수정 시도**: `IllegalArgumentException`
 - **존재하지 않는 루틴**: `RoutineNotFoundException`
 - **권한 없음**: `AccessDeniedException`
 

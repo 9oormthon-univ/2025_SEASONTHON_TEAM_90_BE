@@ -36,7 +36,7 @@ public class DailyRecordController {
     
     @Operation(
         summary = "일일 기록 저장",
-        description = "특정 날짜의 루틴 수행 기록과 회고를 저장합니다. 당일 데이터만 수정 가능합니다."
+        description = "특정 날짜의 루틴 수행 기록과 회고를 저장합니다. 미래 날짜는 수정 불가합니다."
     )
     @ApiResponse(responseCode = "200", description = "저장 성공")
     @PostMapping("/{date}")
