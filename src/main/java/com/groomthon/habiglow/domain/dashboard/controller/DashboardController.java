@@ -5,6 +5,8 @@ import com.groomthon.habiglow.domain.dashboard.service.WeeklyInsightService;
 import com.groomthon.habiglow.global.jwt.JwtMemberExtractor;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import org.springframework.format.annotation.DateTimeFormat;
@@ -20,6 +22,11 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/dashboard")
 @RequiredArgsConstructor
+@Tag(
+        name = "대시보드 인사이트 API",
+        description = "주간 AI 인사이트, 통계를 관리하는 api"
+)
+@SecurityRequirement(name = "bearerAuth") // Swagger UI에 자물쇠/인증 표시
 public class DashboardController {
 
     private final WeeklyInsightService weeklyInsightService;
@@ -34,8 +41,12 @@ public class DashboardController {
         return weeklyInsightService.generateLastWeekInsight(memberId);
     }
 
-    @Operation(summary = "특정 주차 AI 분석 생성", description = "weekStart는 해당 주차의 월요일(yyyy-MM-dd)")
+    @Operation(
+            summary = "특정 주차 AI 분석 생성",
+            description = "weekStart는 해당 주차의 월요일(yyyy-MM-dd). 지난주가 아니고 실데이터가 없으면 204(No Content)."
+    )
     @ApiResponse(responseCode = "200", description = "성공")
+    @ApiResponse(responseCode = "204", description = "해당 주차에 실데이터가 없어 분석을 생성하지 않음")
     @PostMapping("/insight/weekly/specific")
     @PreAuthorize("isAuthenticated()")
     public ResponseEntity<WeeklyInsightResponse> generateSpecificWeekInsight(
@@ -48,7 +59,7 @@ public class DashboardController {
                 .with(TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY))
                 .minusWeeks(1);
 
-        // 지난주가 아니고, 실데이터가 없으면 204(No Content)
+        // 지난주가 아니고, 실데이터가 없으면 204
         if (!weekStart.equals(lastWeekMonday)
                 && !weeklyInsightService.hasRealWeekData(memberId, weekStart)) {
             return ResponseEntity.noContent().build();
