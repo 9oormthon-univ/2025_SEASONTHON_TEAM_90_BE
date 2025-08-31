@@ -75,7 +75,7 @@ public class OpenAiClient {
 
             Map<String, Object> requestBody = buildChatCompletionRequest(userMessage);
 
-            log.info("OpenAI API 호출 시작 - 주간 분석 ({})", weeklyData.getWeekStart());
+            log.info("OpenAI API 호출 시작 - 주간 분석 ({} ~ {})", weeklyData.getWeekStart(), weeklyData.getWeekEnd());
 
             String response = webClient.post()
                     .uri("/chat/completions")
@@ -88,10 +88,11 @@ public class OpenAiClient {
             return parseResponse(response);
 
         } catch (WebClientResponseException e) {
-            log.error("OpenAI API 호출 실패 - Status: {}, Body: {}", e.getStatusCode(), e.getResponseBodyAsString());
+            log.error("❌ OpenAI API 호출 실패 - Status: {}, Headers: {}, Body: {}",
+                    e.getStatusCode(), e.getHeaders(), e.getResponseBodyAsString(), e);
             throw new BaseException(ErrorCode.AI_ANALYSIS_FAILED);
         } catch (Exception e) {
-            log.error("AI 분석 중 예외 발생", e);
+            log.error("❌ AI 분석 중 예외 발생 - 원인: {}", e.getMessage(), e);
             throw new BaseException(ErrorCode.AI_ANALYSIS_FAILED);
         }
     }
@@ -156,6 +157,7 @@ public class OpenAiClient {
             JsonNode choices = root.path("choices");
 
             if (choices.isEmpty()) {
+                log.error("❌ OpenAI 응답에 choices가 없음 - Raw Response: {}", response);
                 throw new RuntimeException("OpenAI 응답에 choices가 없습니다");
             }
 
@@ -167,7 +169,7 @@ public class OpenAiClient {
             return objectMapper.readValue(content, WeeklyInsightResponse.class);
 
         } catch (Exception e) {
-            log.error("OpenAI 응답 파싱 실패", e);
+            log.error("❌ OpenAI 응답 파싱 실패 - Raw Response: {}", response, e);
             throw new BaseException(ErrorCode.AI_RESPONSE_PARSE_FAILED);
         }
     }
