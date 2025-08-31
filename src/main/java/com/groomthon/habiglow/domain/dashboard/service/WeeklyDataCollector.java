@@ -8,6 +8,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+import com.groomthon.habiglow.domain.dashboard.util.WeeklyDummyDataGenerator;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -66,12 +67,20 @@ public class WeeklyDataCollector {
     /**
      * 지난주 데이터를 수집 (이번주 월요일 기준 지난주 월~일)
      */
+    /**
+     * 지난주 데이터를 수집 (이번주 월요일 기준 지난주 월~일)
+     */
     public WeeklyAnalysisData collectLastWeekData(Long memberId) {
         LocalDate thisMonday = LocalDate.now().with(TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY));
         LocalDate lastWeekMonday = thisMonday.minusWeeks(1);
 
-        return collectWeeklyData(memberId, lastWeekMonday);
+        // ✅ 실제 DB 대신 더미 데이터 반환 (Swagger 테스트용)
+        return WeeklyDummyDataGenerator.generate(memberId, lastWeekMonday);
+
+        // 🔽 실제 DB 쓰려면 기존 코드 사용
+        // return collectWeeklyData(memberId, lastWeekMonday);
     }
+
 
     /**
      * 이번주 데이터를 수집 (월~현재까지)

@@ -8,6 +8,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Random;
 
+import com.groomthon.habiglow.domain.dashboard.dto.WeeklyAnalysisData;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Component;
@@ -82,6 +83,58 @@ public class WeeklyDummyDataGenerator implements CommandLineRunner {
             // 루틴 기록 생성
             generateRoutineRecords(user, routines, currentDate, dayOfWeek);
         }
+    }
+
+    public static WeeklyAnalysisData generate(Long memberId, LocalDate weekStart) {
+        LocalDate weekEnd = weekStart.plusDays(6);
+        Random random = new Random();
+        List<WeeklyAnalysisData.DayData> days = new ArrayList<>();
+
+        for (int i = 0; i < 7; i++) {
+            LocalDate date = weekStart.plusDays(i);
+
+            // 감정 이모지 랜덤
+            String[] emojis = {"😀","🙂","😐","☁️"};
+            String emotion = emojis[random.nextInt(emojis.length)];
+
+            // 회고 더미
+            String note = switch (date.getDayOfWeek()) {
+                case MONDAY -> "월요일은 의욕 충만!";
+                case FRIDAY -> "금요일은 행복!";
+                case SUNDAY -> "일요일은 아쉬움";
+                default -> "기록 없음";
+            };
+
+            // 루틴 결과 더미
+            List<WeeklyAnalysisData.RoutineResult> routines = List.of(
+                    WeeklyAnalysisData.RoutineResult.builder()
+                            .name("아침 운동")
+                            .result(pickRandomResult(random))
+                            .build(),
+                    WeeklyAnalysisData.RoutineResult.builder()
+                            .name("물 2L 마시기")
+                            .result(pickRandomResult(random))
+                            .build()
+            );
+
+            days.add(WeeklyAnalysisData.DayData.builder()
+                    .date(date.toString())
+                    .emotion(emotion)
+                    .note(note)
+                    .routines(routines)
+                    .build());
+        }
+
+        return WeeklyAnalysisData.builder()
+                .weekStart(weekStart.toString())
+                .weekEnd(weekEnd.toString())
+                .days(days)
+                .build();
+    }
+
+    private static String pickRandomResult(Random random) {
+        String[] results = {"SUCCESS","PARTIAL","FAIL"};
+        return results[random.nextInt(results.length)];
     }
 
     private void generateDailyReflection(MemberEntity user, LocalDate date, DayOfWeek dayOfWeek) {
