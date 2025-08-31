@@ -38,7 +38,7 @@ import lombok.RequiredArgsConstructor;
 @RequestMapping("/api/dashboard")
 @RequiredArgsConstructor
 @AutoApiResponse
-@Tag(name = "AI 대시보드 API", description = "HabiGlow AI 기반 주간 습관 분석 및 인사이트 제공")
+@Tag(name = "대시보드 API", description = "HabiGlow AI 기반 주간 습관 분석 및 인사이트 제공과 주간 통계")
 public class DashboardController {
 
     private final WeeklyInsightService weeklyInsightService;
