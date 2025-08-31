@@ -1,196 +1,119 @@
 package com.groomthon.habiglow.domain.dashboard.service;
 
-import java.time.DayOfWeek;
-import java.time.LocalDate;
-import java.time.temporal.TemporalAdjusters;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.stream.Collectors;
-
+import com.groomthon.habiglow.domain.dashboard.dto.WeeklyAnalysisData;
 import com.groomthon.habiglow.domain.dashboard.util.WeeklyDummyDataGenerator;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-
-import com.groomthon.habiglow.domain.daily.entity.DailyReflectionEntity;
-import com.groomthon.habiglow.domain.daily.entity.DailyRoutineEntity;
-import com.groomthon.habiglow.domain.daily.entity.EmotionType;
-import com.groomthon.habiglow.domain.daily.entity.PerformanceLevel;
 import com.groomthon.habiglow.domain.daily.repository.DailyReflectionRepository;
 import com.groomthon.habiglow.domain.daily.repository.DailyRoutineRepository;
-import com.groomthon.habiglow.domain.dashboard.dto.WeeklyAnalysisData;
-import com.groomthon.habiglow.domain.dashboard.dto.WeeklyAnalysisData.DayData;
-import com.groomthon.habiglow.domain.dashboard.dto.WeeklyAnalysisData.RoutineResult;
-
 import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Component;
+
+import java.time.DayOfWeek;
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
+import java.time.temporal.TemporalAdjusters;
+import java.util.*;
+import java.util.stream.Collectors;
 
 /**
- * 주간 AI 분석을 위한 데이터 수집 서비스
- * 월~일 7일 주기로 회고 및 루틴 데이터를 수집하여 AI 분석용 JSON 포맷으로 변환
+ * 규칙
+ * - 지난주(월~일): 실데이터가 있으면 실데이터, 없으면 더미
+ * - 특정 주차: 지난주면 위 규칙 동일, 그 외는 실데이터만
+ * - 이번주: 실데이터만 (더미 미적용)
+ * - last-week-completed: 더미 프로필이면 true, 아니면 지난주 실데이터 존재 여부
+ * - available-weeks: 실주차 + (더미이면) 지난주 더미 주차 합집합
  */
-@Slf4j
-@Service
+@Component
 @RequiredArgsConstructor
-@Transactional(readOnly = true)
 public class WeeklyDataCollector {
 
     private final DailyReflectionRepository reflectionRepository;
-    private final DailyRoutineRepository routineRepository;
+    private final DailyRoutineRepository dailyRoutineRepository;
+    private final WeeklyDummyDataGenerator dummyGenerator;
 
-    /**
-     * 특정 주의 데이터를 수집 (월-일)
-     */
-    public WeeklyAnalysisData collectWeeklyData(Long memberId, LocalDate weekStart) {
-        validateWeekStart(weekStart);
+    @Value("${spring.profiles.active:}")
+    private String activeProfiles;
 
+    private static final DateTimeFormatter DF = DateTimeFormatter.ISO_LOCAL_DATE;
+
+    private boolean isDummyProfile() {
+        return activeProfiles != null && activeProfiles.contains("dummy-data");
+    }
+
+    private LocalDate thisMonday() {
+        return LocalDate.now().with(TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY));
+    }
+
+    private LocalDate lastWeekMonday() {
+        return thisMonday().minusWeeks(1);
+    }
+
+    /** 주차에 실데이터(회고/루틴)가 존재하는지 체크 */
+    private boolean hasWeekData(Long memberId, LocalDate weekStart) {
         LocalDate weekEnd = weekStart.plusDays(6);
-        List<DayData> days = new ArrayList<>();
+        boolean hasReflections =
+                reflectionRepository.existsByMember_IdAndReflectionDateBetween(memberId, weekStart, weekEnd); // ✅ 여기!
+        boolean hasRoutines =
+                dailyRoutineRepository.existsByMember_IdAndPerformedDateBetween(memberId, weekStart, weekEnd);
+        return hasReflections || hasRoutines;
+    }
 
-        log.info("주간 데이터 수집 시작: {} ~ {} (회원ID: {})", weekStart, weekEnd, memberId);
 
-        for (int dayOffset = 0; dayOffset < 7; dayOffset++) {
-            LocalDate currentDate = weekStart.plusDays(dayOffset);
-            DayData dayData = collectDayData(memberId, currentDate);
-            days.add(dayData);
+    /** 지난주 데이터 수집: 실우선, 없으면 더미 */
+    public WeeklyAnalysisData collectLastWeekData(Long memberId) {
+        LocalDate start = lastWeekMonday();
+        if (isDummyProfile() && !hasWeekData(memberId, start)) {
+            return dummyGenerator.generate(memberId, start);
         }
+        return collectWeeklyData(memberId, start);
+    }
 
-        log.info("주간 데이터 수집 완료: 총 {}일 데이터", days.size());
+    /** 특정 주차 데이터 수집: 지난주면 실우선/없으면 더미, 그 외는 실데이터만 */
+    public WeeklyAnalysisData collectSpecificWeekData(Long memberId, LocalDate weekStart) {
+        if (isDummyProfile() && weekStart.equals(lastWeekMonday()) && !hasWeekData(memberId, weekStart)) {
+            return dummyGenerator.generate(memberId, weekStart);
+        }
+        return collectWeeklyData(memberId, weekStart);
+    }
+
+    /** 이번주 수집: 더미 미적용 */
+    public WeeklyAnalysisData collectThisWeekData(Long memberId) {
+        return collectWeeklyData(memberId, thisMonday());
+    }
+
+    /** 지난주 완료 여부 */
+    public boolean isLastWeekCompleted(Long memberId) {
+        if (isDummyProfile()) return true;
+        return hasWeekData(memberId, lastWeekMonday());
+    }
+
+    /** 분석 가능한 주차: 실주차 + (더미일 때) 지난주 더미 주차 포함 */
+    public List<String> getAvailableWeeks(Long memberId) {
+        Set<String> weeks = reflectionRepository.findAllDatesByMemberId(memberId).stream()
+                .map(d -> d.with(TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY)))
+                .map(monday -> DF.format(monday) + " ~ " + DF.format(monday.plusDays(6)))
+                .collect(Collectors.toCollection(LinkedHashSet::new));
+
+        if (isDummyProfile()) {
+            LocalDate last = lastWeekMonday();
+            weeks.add(DF.format(last) + " ~ " + DF.format(last.plusDays(6)));
+        }
+        return new ArrayList<>(weeks);
+    }
+
+    /** 실제 DB 기반 주간 데이터 수집(현재 스켈레톤; 빈 배열로 NPE 방지) */
+    public WeeklyAnalysisData collectWeeklyData(Long memberId, LocalDate weekStart) {
+        LocalDate weekEnd = weekStart.plusDays(6);
+
+        // 필요 시 실제 매핑 구현:
+        // var reflections = reflectionRepository.findByMember_IdAndDateBetween(memberId, weekStart, weekEnd);
+        // var routines    = dailyRoutineRepository.findByMember_IdAndPerformedDateBetween(memberId, weekStart, weekEnd);
+        // TODO: reflections/routines → 날짜별 집계 → weekly.days 채우기
 
         return WeeklyAnalysisData.builder()
-                .weekStart(weekStart.toString())
-                .weekEnd(weekEnd.toString())
-                .days(days)
+                .weekStart(DF.format(weekStart))
+                .weekEnd(DF.format(weekEnd))
+                .days(Collections.emptyList())
                 .build();
-    }
-
-    /**
-     * 지난주 데이터를 수집 (이번주 월요일 기준 지난주 월~일)
-     */
-    /**
-     * 지난주 데이터를 수집 (이번주 월요일 기준 지난주 월~일)
-     */
-    public WeeklyAnalysisData collectLastWeekData(Long memberId) {
-        LocalDate thisMonday = LocalDate.now().with(TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY));
-        LocalDate lastWeekMonday = thisMonday.minusWeeks(1);
-
-        // ✅ 실제 DB 대신 더미 데이터 반환 (Swagger 테스트용)
-        return WeeklyDummyDataGenerator.generate(memberId, lastWeekMonday);
-
-        // 🔽 실제 DB 쓰려면 기존 코드 사용
-        // return collectWeeklyData(memberId, lastWeekMonday);
-    }
-
-
-    /**
-     * 이번주 데이터를 수집 (월~현재까지)
-     */
-    public WeeklyAnalysisData collectThisWeekData(Long memberId) {
-        LocalDate thisMonday = LocalDate.now().with(TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY));
-        return collectWeeklyData(memberId, thisMonday);
-    }
-
-    private DayData collectDayData(Long memberId, LocalDate date) {
-        // 하루 회고 데이터
-        DailyReflectionEntity reflection = reflectionRepository
-                .findByMemberIdAndReflectionDate(memberId, date)
-                .orElse(null);
-
-        // 하루 루틴 기록들
-        List<DailyRoutineEntity> routineRecords = routineRepository
-                .findByMemberIdAndPerformedDateWithRoutine(memberId, date);
-
-        String emotion = mapEmotionToEmoji(reflection != null ? reflection.getEmotion() : EmotionType.SOSO);
-        String note = reflection != null ? reflection.getReflectionContent() : "기록 없음";
-
-        List<RoutineResult> routines = routineRecords.stream()
-                .map(this::mapRoutineToResult)
-                .collect(Collectors.toList());
-
-        return DayData.builder()
-                .date(date.toString())
-                .emotion(emotion)
-                .routines(routines)
-                .note(note)
-                .build();
-    }
-
-    private RoutineResult mapRoutineToResult(DailyRoutineEntity routineRecord) {
-        String result = mapPerformanceToResult(routineRecord.getPerformanceLevel());
-        String routineName = routineRecord.getRoutineTitle();
-
-        return RoutineResult.builder()
-                .name(routineName)
-                .result(result)
-                .build();
-    }
-
-    /**
-     * 감정 타입을 이모지로 변환
-     */
-    private String mapEmotionToEmoji(EmotionType emotionType) {
-        return switch (emotionType) {
-            case HAPPY -> "😀";
-            case SOSO -> "🙂";
-            case SAD -> "😐";
-            case MAD -> "☁️";
-        };
-    }
-
-    /**
-     * 성과 레벨을 결과로 변환
-     */
-    private String mapPerformanceToResult(PerformanceLevel performanceLevel) {
-        return switch (performanceLevel) {
-            case FULL_SUCCESS -> "SUCCESS";
-            case PARTIAL_SUCCESS -> "PARTIAL";
-            case NOT_PERFORMED -> "FAIL";
-        };
-    }
-
-    private void validateWeekStart(LocalDate weekStart) {
-        if (weekStart.getDayOfWeek() != DayOfWeek.MONDAY) {
-            throw new IllegalArgumentException("주간 데이터는 월요일부터 시작해야 합니다. 입력된 날짜: " + weekStart);
-        }
-    }
-
-    /**
-     * 회원의 분석 가능한 주차 목록 조회 (최근 4주)
-     */
-    public List<LocalDate> getAvailableWeeks(Long memberId) {
-        LocalDate currentMonday = LocalDate.now().with(TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY));
-        List<LocalDate> weeks = new ArrayList<>();
-
-        // 최근 4주치 월요일 날짜 생성
-        for (int i = 0; i < 4; i++) {
-            LocalDate weekStart = currentMonday.minusWeeks(i);
-
-            // 해당 주에 데이터가 있는지 간단 체크
-            boolean hasData = hasWeeklyData(memberId, weekStart);
-            if (hasData) {
-                weeks.add(weekStart);
-            }
-        }
-
-        return weeks;
-    }
-
-    private boolean hasWeeklyData(Long memberId, LocalDate weekStart) {
-        LocalDate weekEnd = weekStart.plusDays(6);
-
-        // 해당 주차에 회고나 루틴 기록이 하나라도 있는지 확인
-        long reflectionCount = reflectionRepository.findAll().stream()
-                .filter(r -> r.getMember().getId().equals(memberId))
-                .filter(r -> !r.getReflectionDate().isBefore(weekStart))
-                .filter(r -> !r.getReflectionDate().isAfter(weekEnd))
-                .count();
-
-        long routineCount = routineRepository.findAll().stream()
-                .filter(r -> r.getMember().getId().equals(memberId))
-                .filter(r -> !r.getPerformedDate().isBefore(weekStart))
-                .filter(r -> !r.getPerformedDate().isAfter(weekEnd))
-                .count();
-
-        return reflectionCount > 0 || routineCount > 0;
     }
 }
