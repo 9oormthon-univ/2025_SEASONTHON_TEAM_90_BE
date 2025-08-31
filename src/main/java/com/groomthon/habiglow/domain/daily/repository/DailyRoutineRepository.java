@@ -10,6 +10,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 import com.groomthon.habiglow.domain.daily.entity.DailyRoutineEntity;
+import com.groomthon.habiglow.domain.daily.entity.PerformanceLevel;
 
 public interface DailyRoutineRepository extends JpaRepository<DailyRoutineEntity, Long> {
     
@@ -25,5 +26,23 @@ public interface DailyRoutineRepository extends JpaRepository<DailyRoutineEntity
     @Modifying
     @Query("DELETE FROM DailyRoutineEntity dr WHERE dr.member.id = :memberId AND dr.performedDate = :date")
     void deleteByMemberIdAndPerformedDate(@Param("memberId") Long memberId, @Param("date") LocalDate date);
+    
+    @Query("SELECT dr FROM DailyRoutineEntity dr WHERE dr.routine.routineId = :routineId " +
+           "AND dr.member.id = :memberId AND dr.performedDate = :date " +
+           "AND dr.performanceLevel = :level")
+    Optional<DailyRoutineEntity> findSuccessRecordByRoutineAndMemberAndDate(
+        @Param("routineId") Long routineId,
+        @Param("memberId") Long memberId, 
+        @Param("date") LocalDate date,
+        @Param("level") PerformanceLevel level);
+
+    @Query("SELECT dr FROM DailyRoutineEntity dr WHERE dr.routine.routineId IN :routineIds " +
+           "AND dr.member.id = :memberId AND dr.performedDate = :date " +
+           "AND dr.performanceLevel = :level")
+    List<DailyRoutineEntity> findSuccessRecordsByRoutinesAndMemberAndDate(
+        @Param("routineIds") List<Long> routineIds,
+        @Param("memberId") Long memberId,
+        @Param("date") LocalDate date,
+        @Param("level") PerformanceLevel level);
 
 }
