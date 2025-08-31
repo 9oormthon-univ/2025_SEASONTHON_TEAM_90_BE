@@ -46,7 +46,13 @@ public enum ErrorCode implements ErrorType {
 	DAILY_RECORD_INVALID_ROUTINES("DAILY004", "유효하지 않은 루틴이 포함되어 있습니다", HttpStatus.BAD_REQUEST.value()),
 
 	// 보안 관련 오류 (SECURITY)
-	TOO_MANY_REQUESTS("SECURITY001", "너무 많은 요청입니다. 잠시 후 다시 시도해주세요.", HttpStatus.TOO_MANY_REQUESTS.value());
+	TOO_MANY_REQUESTS("SECURITY001", "너무 많은 요청입니다. 잠시 후 다시 시도해주세요.", HttpStatus.TOO_MANY_REQUESTS.value()),
+
+	// AI 관련
+	AI_ANALYSIS_FAILED("AI001", "AI 주간 인사이트 분석에 실패했습니다.", HttpStatus.SERVICE_UNAVAILABLE.value()),
+	AI_RESPONSE_PARSE_FAILED("AI002", "AI 응답 파싱에 실패했습니다.", HttpStatus.INTERNAL_SERVER_ERROR.value());
+
+
 
 	private final String code;
 	private final String message;
