@@ -19,38 +19,37 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 @Transactional
 public class DailyRoutineService {
-    
+
     private final DailyRoutineRepository dailyRoutineRepository;
     private final ConsecutiveDaysCalculator consecutiveDaysCalculator;
-    
-    public List<DailyRoutineEntity> saveRoutineRecords(Long memberId, LocalDate date, 
-                                                      List<RoutinePerformanceRequest> records) {
-        
+
+    public List<DailyRoutineEntity> saveRoutineRecords(Long memberId, LocalDate date,
+                                                       List<RoutinePerformanceRequest> records) {
+
         dailyRoutineRepository.deleteByMemberIdAndPerformedDate(memberId, date);
-        
+
         List<DailyRoutineEntity> entities = new ArrayList<>();
-        
+
         for (RoutinePerformanceRequest record : records) {
             int consecutiveDays = consecutiveDaysCalculator.calculate(
                 record.getRoutineId(), memberId, date, record.getPerformanceLevel());
             
             // 루틴의 성장 모드인 경우 currentCycleDays 업데이트
             updateCurrentCycleDays(record.getRoutine(), record.getPerformanceLevel());
-            
             DailyRoutineEntity entity = DailyRoutineEntity.create(
-                record.getRoutine(),
-                record.getMember(),
-                record.getPerformanceLevel(),
-                date,
-                consecutiveDays
+                    record.getRoutine(),
+                    record.getMember(),
+                    record.getPerformanceLevel(),
+                    date,
+                    consecutiveDays
             );
-            
+
             entities.add(entity);
         }
-        
+
         return dailyRoutineRepository.saveAll(entities);
     }
-    
+
     @Transactional(readOnly = true)
     public List<DailyRoutineEntity> getTodayRoutines(Long memberId, LocalDate date) {
         return dailyRoutineRepository.findByMemberIdAndPerformedDateWithRoutine(memberId, date);

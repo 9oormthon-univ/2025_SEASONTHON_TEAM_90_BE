@@ -13,16 +13,16 @@ import com.groomthon.habiglow.domain.daily.entity.DailyRoutineEntity;
 import com.groomthon.habiglow.domain.daily.entity.PerformanceLevel;
 
 public interface DailyRoutineRepository extends JpaRepository<DailyRoutineEntity, Long> {
-    
+
     @Query("SELECT dr FROM DailyRoutineEntity dr " +
-           "LEFT JOIN FETCH dr.routine " +
-           "WHERE dr.member.id = :memberId AND dr.performedDate = :date")
-    List<DailyRoutineEntity> findByMemberIdAndPerformedDateWithRoutine(@Param("memberId") Long memberId, 
+            "LEFT JOIN FETCH dr.routine " +
+            "WHERE dr.member.id = :memberId AND dr.performedDate = :date")
+    List<DailyRoutineEntity> findByMemberIdAndPerformedDateWithRoutine(@Param("memberId") Long memberId,
                                                                        @Param("date") LocalDate date);
-    
+
     Optional<DailyRoutineEntity> findByRoutineRoutineIdAndMemberIdAndPerformedDate(
-        Long routineId, Long memberId, LocalDate date);
-    
+            Long routineId, Long memberId, LocalDate date);
+
     @Modifying
     @Query("DELETE FROM DailyRoutineEntity dr WHERE dr.member.id = :memberId AND dr.performedDate = :date")
     void deleteByMemberIdAndPerformedDate(@Param("memberId") Long memberId, @Param("date") LocalDate date);

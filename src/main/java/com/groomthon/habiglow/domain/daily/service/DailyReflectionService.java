@@ -20,29 +20,29 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 @Transactional
 public class DailyReflectionService {
-    
+
     private final DailyReflectionRepository reflectionRepository;
     private final MemberRepository memberRepository;
-    
-    public DailyReflectionEntity saveReflection(Long memberId, LocalDate date, 
-                                               String content, EmotionType emotion) {
-        
+
+    public DailyReflectionEntity saveReflection(Long memberId, LocalDate date,
+                                                String content, EmotionType emotion) {
+
         MemberEntity member = memberRepository.findById(memberId)
-            .orElseThrow(() -> new BaseException(ErrorCode.MEMBER_NOT_FOUND));
-        
+                .orElseThrow(() -> new BaseException(ErrorCode.MEMBER_NOT_FOUND));
+
         Optional<DailyReflectionEntity> existing = reflectionRepository
-            .findByMemberIdAndReflectionDate(memberId, date);
-        
+                .findByMemberIdAndReflectionDate(memberId, date);
+
         if (existing.isPresent()) {
             DailyReflectionEntity entity = existing.get();
             entity.updateReflection(content, emotion);
             return entity;
         }
-        
+
         DailyReflectionEntity entity = DailyReflectionEntity.create(member, content, emotion, date);
         return reflectionRepository.save(entity);
     }
-    
+
     @Transactional(readOnly = true)
     public Optional<DailyReflectionEntity> getReflection(Long memberId, LocalDate date) {
         return reflectionRepository.findByMemberIdAndReflectionDate(memberId, date);

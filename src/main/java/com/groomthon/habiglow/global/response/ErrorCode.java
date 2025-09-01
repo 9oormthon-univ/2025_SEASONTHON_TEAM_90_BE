@@ -48,7 +48,22 @@ public enum ErrorCode implements ErrorType {
 	DAILY_RECORD_INVALID_ROUTINES("DAILY004", "유효하지 않은 루틴이 포함되어 있습니다", HttpStatus.BAD_REQUEST.value()),
 
 	// 보안 관련 오류 (SECURITY)
-	TOO_MANY_REQUESTS("SECURITY001", "너무 많은 요청입니다. 잠시 후 다시 시도해주세요.", HttpStatus.TOO_MANY_REQUESTS.value());
+	TOO_MANY_REQUESTS("SECURITY001", "너무 많은 요청입니다. 잠시 후 다시 시도해주세요.", HttpStatus.TOO_MANY_REQUESTS.value()),
+
+	// AI 관련
+	AI_ANALYSIS_FAILED("AI001", "AI 주간 인사이트 분석에 실패했습니다.", HttpStatus.SERVICE_UNAVAILABLE.value()),
+	AI_RESPONSE_PARSE_FAILED("AI002", "AI 응답 파싱에 실패했습니다.", HttpStatus.INTERNAL_SERVER_ERROR.value()),
+	AI_API_CLIENT_ERROR("AI003", "AI API 요청이 잘못되었습니다.", HttpStatus.BAD_REQUEST.value()), // 새로 추가
+
+
+	// AI 주간 분석 관련 오류
+	INVALID_WEEK_START("WEEKLY001", "주차 시작일은 월요일이어야 합니다.", HttpStatus.BAD_REQUEST.value()),
+	FUTURE_WEEK_NOT_ALLOWED("WEEKLY002", "미래 주차 데이터는 분석할 수 없습니다.", HttpStatus.BAD_REQUEST.value()),
+	NO_WEEKLY_DATA_FOUND("WEEKLY003", "해당 주차에 기록된 데이터가 없습니다.", HttpStatus.NOT_FOUND.value()),
+	INSUFFICIENT_DATA_FOR_ANALYSIS("WEEKLY004", "분석에 필요한 충분한 데이터가 없습니다.", HttpStatus.BAD_REQUEST.value());
+
+
+
 
 	private final String code;
 	private final String message;

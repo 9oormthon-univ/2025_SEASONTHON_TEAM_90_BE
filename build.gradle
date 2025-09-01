@@ -40,6 +40,10 @@ dependencies {
 	// OAuth2 클라이언트 (소셜 로그인 등 외부 인증 제공자와의 연동)
 	implementation 'org.springframework.boot:spring-boot-starter-oauth2-client'
 
+	// WebClient (Reactive WebFlux)
+	implementation 'org.springframework.boot:spring-boot-starter-webflux'
+
+
 	// === API 문서화 및 유효성 검사 ===
 
 	// Swagger(OpenAPI) 문서 자동 생성

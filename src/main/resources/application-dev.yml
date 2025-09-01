@@ -6,7 +6,6 @@ spring:
     username: ${DB_USERNAME}
     password: ${DB_PASSWORD}
 
-
   jpa:
     hibernate:
       ddl-auto: update
@@ -15,19 +14,52 @@ spring:
       hibernate:
         format_sql: true
 
-# 개발환경 쿠키 설정
+openai:
+  api:
+    key: ${OPENAI_API_KEY}
+    base-url: https://api.openai.com/v1
+    model: gpt-4o-mini
+    timeout: 30s
+    max-retries: 3
+
 cookie:
   secure: false
 
-# 개발환경 Swagger 설정
 swagger:
   server:
-    url: http://localhost:8080
+    url: ${SWAGGER_SERVER_URL:http://localhost:8080}
     description: 개발 서버
 
-# 개발환경 로깅
 logging:
   level:
     org.hibernate.SQL: debug
     org.hibernate.type.descriptor.sql.BasicBinder: trace
-    com.example.login: debug
+    com.groomthon.habiglow: debug
+    org.springframework.web.reactive.function.client: debug
+    root: info
+
+# ===== 대시보드/프롬프트 설정 (추가) =====
+dashboard:
+  weekly:
+    lookback-weeks: 12
+    include-dummy-last-week: true
+  ai:
+    prompt:
+      system-prompt: >
+        You are HabiGlow Weekly Analyst.
+        Purpose
+        - Summarize Mon–Sun habit successes/failures and mood changes.
+        - Provide exactly ONE empathy sentence and ONE encouragement sentence.
+        - No blame; describe failures as patterns.
+        Style (Korean, 존댓말)
+        - Always write in Korean (formal, 존댓말).
+        - Be concise and concrete (numbers, counts).
+        - Emojis only in mood fields; others: 0–1 emoji at most.
+        Output rules
+        - Must follow the provided JSON schema exactly (no extra fields).
+        - Length guide: weekly_summary ≤ 80 chars, empathy ≤ 80 chars, encouragement ≤ 80 chars.
+      user-template: |
+        아래는 사용자의 주간 스냅샷(JSON)입니다.
+        반드시 스키마에 맞춘 JSON만 출력하세요.
+
+        {snapshot}
