@@ -1,68 +1,52 @@
 package com.groomthon.habiglow.domain.dashboard.dto;
 
-import java.util.List;
-
-import com.fasterxml.jackson.annotation.JsonProperty;
-
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
-import lombok.Getter;
+import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.time.LocalDate;
+import java.util.List;
+
 /**
- * AI 분석을 위한 주간 데이터 구조체
- * 기획서의 JSON 포맷을 그대로 따라 구현
+ * 주간 입력 스냅샷(정규화 형태)
  */
-@Getter
+@Data
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-@Schema(description = "AI 분석을 위한 주간 데이터")
+@Schema(name = "WeeklyAnalysisData", description = "AI 분석 입력을 위한 주간 스냅샷")
 public class WeeklyAnalysisData {
 
-    @JsonProperty("week_start")
-    @Schema(description = "주간 시작일 (월요일)", example = "2025-08-25")
-    private String weekStart;
+    @Schema(description = "사용자 ID", example = "1")
+    private Long memberId;
 
-    @JsonProperty("week_end")
-    @Schema(description = "주간 종료일 (일요일)", example = "2025-08-31")
-    private String weekEnd;
+    @Schema(description = "주 시작일(월요일)", format = "date", example = "2025-08-25")
+    private LocalDate weekStart;
 
-    @Schema(description = "7일간의 일별 데이터")
-    private List<DayData> days;
+    @Schema(description = "주 종료일(일요일)", format = "date", example = "2025-08-31")
+    private LocalDate weekEnd;
 
-    @Getter
+    @Schema(description = "요일별 기록 목록")
+    private List<DayStat> days;
+
+    @Data
     @Builder
     @NoArgsConstructor
     @AllArgsConstructor
-    @Schema(description = "하루 데이터")
-    public static class DayData {
+    @Schema(name = "WeeklyAnalysisData.DayStat", description = "개별 일자 통계")
+    public static class DayStat {
+        @Schema(description = "날짜", format = "date", example = "2025-08-25")
+        private LocalDate date;
 
-        @Schema(description = "날짜", example = "2025-08-25")
-        private String date;
+        @Schema(description = "성공 여부", example = "true")
+        private Boolean success;
 
-        @Schema(description = "감정 이모지", example = "🙂")
-        private String emotion;
+        @Schema(description = "감정(이모지)", example = "🙂")
+        private String mood;
 
-        @Schema(description = "루틴 수행 결과 목록")
-        private List<RoutineResult> routines;
-
-        @Schema(description = "하루 회고 메모", example = "회의가 길어 영어 학습을 못 함")
+        @Schema(description = "메모/노트", example = "출근 전 20분 루틴 완료")
         private String note;
-    }
-
-    @Getter
-    @Builder
-    @NoArgsConstructor
-    @AllArgsConstructor
-    @Schema(description = "루틴 수행 결과")
-    public static class RoutineResult {
-
-        @Schema(description = "루틴 이름", example = "물 마시기")
-        private String name;
-
-        @Schema(description = "수행 결과", example = "SUCCESS", allowableValues = {"SUCCESS", "PARTIAL", "FAIL"})
-        private String result;
     }
 }
