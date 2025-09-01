@@ -51,6 +51,8 @@ public enum ErrorCode implements ErrorType {
 	// AI 관련
 	AI_ANALYSIS_FAILED("AI001", "AI 주간 인사이트 분석에 실패했습니다.", HttpStatus.SERVICE_UNAVAILABLE.value()),
 	AI_RESPONSE_PARSE_FAILED("AI002", "AI 응답 파싱에 실패했습니다.", HttpStatus.INTERNAL_SERVER_ERROR.value()),
+	AI_API_CLIENT_ERROR("AI003", "AI API 요청이 잘못되었습니다.", HttpStatus.BAD_REQUEST.value()), // 새로 추가
+
 
 	// AI 주간 분석 관련 오류
 	INVALID_WEEK_START("WEEKLY001", "주차 시작일은 월요일이어야 합니다.", HttpStatus.BAD_REQUEST.value()),

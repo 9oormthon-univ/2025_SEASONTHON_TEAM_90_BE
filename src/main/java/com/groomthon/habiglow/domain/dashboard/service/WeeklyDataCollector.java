@@ -1,5 +1,6 @@
 package com.groomthon.habiglow.domain.dashboard.service;
 
+import com.groomthon.habiglow.domain.dashboard.config.DashboardProperties;
 import com.groomthon.habiglow.domain.dashboard.dto.WeeklyAnalysisData;
 import com.groomthon.habiglow.domain.dashboard.util.WeeklyDummyDataGenerator;
 import com.groomthon.habiglow.domain.daily.repository.DailyReflectionRepository;
@@ -24,6 +25,7 @@ public class WeeklyDataCollector {
     // 추후 실제 매핑 시 사용할 예정이라 주입만 유지
     private final DailyRoutineRepository dailyRoutineRepository;
     private final WeeklyDummyDataGenerator dummyGenerator;
+    private final DashboardProperties dashboardProperties; // 추가된 의존성
 
     @Value("${spring.profiles.active:}")
     private String activeProfiles;
@@ -88,25 +90,32 @@ public class WeeklyDataCollector {
     }
 
     /**
-     * 분석 가능한 주차 목록
-     * - 더미 프로필이면: 지난주 더미 주차 1개를 무조건 포함(실데이터가 생겨도 유지)
-     * - 최근 12주를 뒤로 훑으면서 실데이터가 있는 주차만 포함
+     * 분석 가능한 주차 목록 (하드코딩 제거)
+     * - 더미 프로필이면: 설정된 더미 주차 수만큼 포함
+     * - 설정된 기간만큼 뒤로 훑으면서 실데이터가 있는 주차만 포함
      */
     public List<String> getAvailableWeeks(Long memberId) {
         LinkedHashSet<String> result = new LinkedHashSet<>();
 
         LocalDate last = lastWeekMonday();
+
+        // 더미 프로필인 경우 설정된 더미 주차 수만큼 포함
         if (isDummyProfile()) {
-            result.add(toRange(last)); // 지난주 더미 엔트리 고정 포함
+            int dummyWeeks = dashboardProperties.getWeek().getDummyWeeks();
+            for (int i = 0; i < dummyWeeks; i++) {
+                result.add(toRange(last.minusWeeks(i)));
+            }
         }
 
-        final int LOOKBACK_WEEKS = 12;
-        for (int i = 0; i < LOOKBACK_WEEKS; i++) {
+        // 설정된 기간만큼 실데이터 주차 검색
+        int lookbackWeeks = dashboardProperties.getWeek().getLookbackWeeks();
+        for (int i = 0; i < lookbackWeeks; i++) {
             LocalDate monday = last.minusWeeks(i);
             if (hasRealWeekData(memberId, monday)) {
                 result.add(toRange(monday));
             }
         }
+
         return new ArrayList<>(result);
     }
 
