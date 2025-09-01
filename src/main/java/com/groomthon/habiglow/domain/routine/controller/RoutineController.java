@@ -20,7 +20,6 @@ import com.groomthon.habiglow.domain.routine.dto.response.ResetGrowthCycleRespon
 import com.groomthon.habiglow.domain.routine.dto.response.RoutineListResponse;
 import com.groomthon.habiglow.domain.routine.dto.response.RoutineResponse;
 import com.groomthon.habiglow.domain.routine.entity.RoutineCategory;
-import com.groomthon.habiglow.domain.routine.service.RoutineGrowthCheckService;
 import com.groomthon.habiglow.domain.routine.service.RoutineGrowthService;
 import com.groomthon.habiglow.domain.routine.service.RoutineService;
 import com.groomthon.habiglow.global.jwt.JwtMemberExtractor;
@@ -48,7 +47,6 @@ import lombok.RequiredArgsConstructor;
 public class RoutineController {
     
     private final RoutineService routineService;
-    private final RoutineGrowthCheckService growthCheckService;
     private final RoutineGrowthService routineGrowthService;
     private final JwtMemberExtractor jwtMemberExtractor;
 
@@ -167,7 +165,7 @@ public class RoutineController {
     @SuccessCode(ApiSuccessCode.SUCCESS)
     public GrowthCheckResponse checkGrowthReadyRoutines(HttpServletRequest request) {
         Long userId = jwtMemberExtractor.extractMemberId(request);
-        return growthCheckService.checkGrowthReadyRoutines(userId);
+        return routineGrowthService.checkGrowthReadyRoutines(userId);
     }
     
     @Operation(

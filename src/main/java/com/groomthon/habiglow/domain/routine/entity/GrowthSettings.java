@@ -100,7 +100,7 @@ public class GrowthSettings {
         if (!isEnabled() || currentCycleDays == null || growthCycleDays == null) {
             return false;
         }
-        return currentCycleDays > 0 && currentCycleDays % growthCycleDays == 0;
+        return currentCycleDays >= growthCycleDays;
     }
     
     /**
