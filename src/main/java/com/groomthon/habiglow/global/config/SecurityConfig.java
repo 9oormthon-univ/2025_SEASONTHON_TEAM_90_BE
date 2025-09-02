@@ -14,8 +14,9 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 import com.google.common.util.concurrent.RateLimiter;
 import com.groomthon.habiglow.global.config.properties.SecurityProperties;
 import com.groomthon.habiglow.global.jwt.JwtAuthenticationFilter;
+import com.groomthon.habiglow.global.security.JwtAccessDeniedHandler;
+import com.groomthon.habiglow.global.security.JwtAuthenticationEntryPoint;
 
-import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 
 @Configuration
@@ -34,7 +35,9 @@ public class SecurityConfig {
 	@Bean
 	public SecurityFilterChain securityFilterChain(HttpSecurity http,
 		JwtAuthenticationFilter jwtAuthenticationFilter,
-		RateLimitFilter rateLimitFilter) throws Exception {
+		RateLimitFilter rateLimitFilter,
+		JwtAuthenticationEntryPoint jwtAuthenticationEntryPoint,
+		JwtAccessDeniedHandler jwtAccessDeniedHandler) throws Exception {
 
 		http
 			.csrf(AbstractHttpConfigurer::disable)
@@ -45,14 +48,16 @@ public class SecurityConfig {
 				.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
 			.authorizeHttpRequests(auth -> auth
 				.requestMatchers(securityProperties.getPublicUrlsArray()).permitAll()
+				.requestMatchers("/error").permitAll() // 에러 페이지 재귀 방지
 				.anyRequest().authenticated())
 			.exceptionHandling(except -> except
-				.authenticationEntryPoint((request, response, authException) ->
-					response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Unauthorized")));
+				.authenticationEntryPoint(jwtAuthenticationEntryPoint) // 커스텀 EntryPoint
+				.accessDeniedHandler(jwtAccessDeniedHandler)); // 커스텀 AccessDeniedHandler
 
 		http.addFilterBefore(rateLimitFilter, UsernamePasswordAuthenticationFilter.class);
 		http.addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
 
 		return http.build();
 	}
+	
 }
