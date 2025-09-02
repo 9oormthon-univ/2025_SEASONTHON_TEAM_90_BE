@@ -1,20 +1,16 @@
 package com.groomthon.habiglow.global.jwt;
 
 import java.io.IOException;
-import java.io.PrintWriter;
 import java.util.Collections;
-
-import org.springframework.http.MediaType;
+import java.util.Optional;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.filter.OncePerRequestFilter;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.groomthon.habiglow.domain.auth.service.BlacklistService;
-import com.groomthon.habiglow.global.dto.CommonApiResponse;
-import com.groomthon.habiglow.global.response.ErrorCode;
+import com.groomthon.habiglow.global.config.properties.SecurityProperties;
 
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
@@ -29,65 +25,73 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
 	private final JWTUtil jwtUtil;
 	private final BlacklistService blacklistService;
-	private final ObjectMapper objectMapper = new ObjectMapper();
+	private final SecurityProperties securityProperties;
+
+	@Override
+	protected boolean shouldNotFilter(HttpServletRequest request) {
+		String requestURI = request.getRequestURI();
+		
+		// Public URL인 경우 JWT 필터 건너뛰기
+		for (String publicUrl : securityProperties.getPublicUrlsArray()) {
+			if (requestURI.matches(publicUrl.replace("/**", "/.*").replace("*", ".*"))) {
+				return true;
+			}
+		}
+		
+		return false;
+	}
 
 	@Override
 	protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
 		throws ServletException, IOException {
 
-		jwtUtil.extractAccessToken(request)
-			.filter(token -> validateAccessToken(token, response))
-			.ifPresent(token -> {
-				try {
-					String email = jwtUtil.getEmail(token).orElse("");
-					String userId = jwtUtil.getId(token).orElse("");
-
-					Authentication authentication = new UsernamePasswordAuthenticationToken(
-						userId, // principal: 사용자 ID
-						null,   // credentials: JWT 토큰 기반이므로 null
-						Collections.singletonList(new SimpleGrantedAuthority("SOCIAL_USER")) // authorities
-					);
-					SecurityContextHolder.getContext().setAuthentication(authentication);
-					log.info("JWT 기반 SecurityContext 저장 완료: email={}, userId={}", email, userId);
-				} catch (Exception e) {
-					log.warn("JWT 인증 처리 실패: {}", e.getMessage());
-					sendErrorResponse(response, ErrorCode.INVALID_TOKEN);
-				}
-			});
-
+		Optional<String> tokenOpt = jwtUtil.extractAccessToken(request);
+		
+		if (tokenOpt.isPresent()) {
+			String token = tokenOpt.get();
+			
+			// 토큰 검증 실패 시 필터 체인 중단
+			if (!validateAccessToken(token, response)) {
+				return;
+			}
+			
+			// 인증 정보 설정
+			setAuthentication(token);
+		}
+		
+		// 토큰이 없거나 유효한 경우에만 필터 체인 계속 진행
 		filterChain.doFilter(request, response);
 	}
 
 	private boolean validateAccessToken(String token, HttpServletResponse response) {
 		if (!jwtUtil.validateToken(token, "access")) {
 			log.warn("토큰 검증 실패");
-			sendErrorResponse(response, ErrorCode.INVALID_TOKEN);
 			return false;
 		}
 
 		if (blacklistService.isBlacklisted(token)) {
 			log.warn("블랙리스트에 등록된 토큰입니다.");
-			sendErrorResponse(response, ErrorCode.TOKEN_BLACKLISTED);
 			return false;
 		}
 
 		return true;
 	}
 
-	private void sendErrorResponse(HttpServletResponse response, ErrorCode errorCode) {
+	private void setAuthentication(String token) {
 		try {
-			response.setStatus(errorCode.getStatus());
-			response.setContentType(MediaType.APPLICATION_JSON_VALUE);
-			response.setCharacterEncoding("UTF-8");
-			
-			CommonApiResponse<Void> errorResponse = CommonApiResponse.fail(errorCode);
-			String jsonResponse = objectMapper.writeValueAsString(errorResponse);
-			
-			PrintWriter writer = response.getWriter();
-			writer.write(jsonResponse);
-			writer.flush();
-		} catch (IOException e) {
-			log.error("JWT 필터에서 에러 응답 전송 실패", e);
+			String email = jwtUtil.getEmail(token).orElse("");
+			String userId = jwtUtil.getId(token).orElse("");
+
+			Authentication authentication = new UsernamePasswordAuthenticationToken(
+				userId, // principal: 사용자 ID
+				null,   // credentials: JWT 토큰 기반이므로 null
+				Collections.singletonList(new SimpleGrantedAuthority("SOCIAL_USER")) // authorities
+			);
+			SecurityContextHolder.getContext().setAuthentication(authentication);
+			log.info("JWT 기반 SecurityContext 저장 완료: email={}, userId={}", email, userId);
+		} catch (Exception e) {
+			log.warn("JWT 인증 처리 실패: {}", e.getMessage());
+			SecurityContextHolder.clearContext();
 		}
 	}
 }

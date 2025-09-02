@@ -46,7 +46,8 @@ public enum ErrorCode implements ErrorType {
 	DAILY_RECORD_INVALID_ROUTINES("DAILY004", "유효하지 않은 루틴이 포함되어 있습니다", HttpStatus.BAD_REQUEST.value()),
 
 	// 보안 관련 오류 (SECURITY)
-	TOO_MANY_REQUESTS("SECURITY001", "너무 많은 요청입니다. 잠시 후 다시 시도해주세요.", HttpStatus.TOO_MANY_REQUESTS.value());
+	TOO_MANY_REQUESTS("SECURITY001", "너무 많은 요청입니다. 잠시 후 다시 시도해주세요.", HttpStatus.TOO_MANY_REQUESTS.value()),
+	ACCESS_DENIED("SECURITY002", "접근이 거부되었습니다", HttpStatus.FORBIDDEN.value());
 
 	private final String code;
 	private final String message;
