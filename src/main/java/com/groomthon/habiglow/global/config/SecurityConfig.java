@@ -56,6 +56,28 @@ public class SecurityConfig {
 			.cors(cors -> cors.configurationSource(corsConfig.corsConfigurationSource()))
 			.sessionManagement(session -> session
 				.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+			.headers(headers -> headers
+				// X-Frame-Options: DENY (클릭재킹 방지)
+				.frameOptions(frameOptions -> frameOptions.deny())
+				// X-Content-Type-Options: nosniff (MIME 타입 스니핑 방지)
+				.contentTypeOptions(contentTypeOptions -> {})
+				// HSTS 헤더 설정 (HTTPS 강제)
+				.httpStrictTransportSecurity(hsts -> hsts
+					.maxAgeInSeconds(31536000) // 1년
+					.includeSubDomains(true)
+					.preload(true)
+				)
+				// 추가 보안 헤더들
+				.addHeaderWriter((request, response) -> {
+					// X-XSS-Protection 헤더 (레거시 브라우저 지원용)
+					response.setHeader("X-XSS-Protection", "1; mode=block");
+					// Referrer Policy 헤더
+					response.setHeader("Referrer-Policy", "strict-origin-when-cross-origin");
+					// Permissions Policy 헤더 (보안 강화)
+					response.setHeader("Permissions-Policy", 
+						"camera=(), microphone=(), geolocation=(), interest-cohort=()");
+				})
+			)
 			.authorizeHttpRequests(auth -> auth
 				.requestMatchers(securityProperties.getPublicUrlsArray()).permitAll()
 				.requestMatchers("/error").permitAll() // 에러 페이지 재귀 방지
