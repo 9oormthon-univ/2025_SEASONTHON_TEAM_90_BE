@@ -47,7 +47,8 @@ public class AuthApiController {
 		return socialAuthService.authenticateWithSocialToken(request);
 	}
 
-	@Operation(summary = "Access Token 재발급")
+	@Operation(summary = "토큰 재발급 (RTR 적용)", 
+			description = "Refresh Token을 사용하여 Access Token과 Refresh Token을 모두 재발급합니다. 보안을 위해 기존 Refresh Token은 무효화됩니다.")
 	@ApiResponses(value = {
 		@ApiResponse(responseCode = "200", description = "성공"),
 		@ApiResponse(responseCode = "401", description = "유효하지 않은 토큰")
@@ -55,26 +56,11 @@ public class AuthApiController {
 	@PostMapping("/token/refresh")
 	@CustomExceptionDescription(SwaggerResponseDescription.AUTH_ERROR)
 	@SuccessCode(ApiSuccessCode.TOKEN_REISSUE_SUCCESS)
-	public TokenResponse refreshAccessToken(
+	public TokenResponse refreshToken(
 		HttpServletRequest request,
 		HttpServletResponse response) {
 
-		return authenticationService.refreshAccessToken(request, response);
-	}
-
-	@Operation(summary = "Access + Refresh Token 모두 재발급")
-	@ApiResponses(value = {
-		@ApiResponse(responseCode = "200", description = "성공"),
-		@ApiResponse(responseCode = "401", description = "유효하지 않은 토큰")
-	})
-	@PostMapping("/token/refresh/full")
-	@CustomExceptionDescription(SwaggerResponseDescription.AUTH_ERROR)
-	@SuccessCode(ApiSuccessCode.TOKEN_REISSUE_FULL_SUCCESS)
-	public TokenResponse refreshAllTokens(
-		HttpServletRequest request,
-		HttpServletResponse response) {
-
-		return authenticationService.refreshAllTokens(request, response);
+		return authenticationService.refreshTokens(request, response);
 	}
 
 	@Operation(summary = "로그아웃")

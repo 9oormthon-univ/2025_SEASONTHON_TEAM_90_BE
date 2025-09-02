@@ -42,6 +42,7 @@ public class JwtTokenService {
 		return TokenResponse.accessOnly(accessToken, jwtUtil.getAccessTokenExpiration() / 1000);
 	}
 
+
 	public TokenResponse reissueAllTokens(HttpServletResponse response, String memberId, String email, String socialUniqueId) {
 		TokenPair tokens = createTokenPair(memberId, email, socialUniqueId);
 
