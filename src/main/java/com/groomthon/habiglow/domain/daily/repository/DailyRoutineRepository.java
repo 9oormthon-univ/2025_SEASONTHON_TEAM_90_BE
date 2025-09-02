@@ -20,7 +20,7 @@ public interface DailyRoutineRepository extends JpaRepository<DailyRoutineEntity
     List<DailyRoutineEntity> findByMemberIdAndPerformedDateWithRoutine(@Param("memberId") Long memberId,
                                                                        @Param("date") LocalDate date);
 
-    Optional<DailyRoutineEntity> findByRoutineRoutineIdAndMemberIdAndPerformedDate(
+    Optional<DailyRoutineEntity> findByRoutine_RoutineIdAndMemberIdAndPerformedDate(
             Long routineId, Long memberId, LocalDate date);
 
     @Modifying
@@ -50,7 +50,7 @@ public interface DailyRoutineRepository extends JpaRepository<DailyRoutineEntity
             "WHERE dr.member.id = :memberId " +
             "AND dr.performedDate BETWEEN :start AND :end " +
             "ORDER BY dr.performedDate ASC")
-    List<DailyRoutineEntity> findByMember_IdAndPerformedDateBetween(
+    List<DailyRoutineEntity> findByMemberIdAndPerformedDateBetween(
             @Param("memberId") Long memberId,
             @Param("start") LocalDate start,
             @Param("end") LocalDate end);

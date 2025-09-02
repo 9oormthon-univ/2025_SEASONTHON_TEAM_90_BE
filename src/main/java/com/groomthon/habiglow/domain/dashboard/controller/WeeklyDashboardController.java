@@ -22,10 +22,7 @@ import java.time.LocalDate;
 @RestController
 @RequestMapping("/v1/dashboard/weekly")
 @RequiredArgsConstructor
-@Tag(
-        name = "Dashboard - Weekly View",
-        description = "주간 대시보드(통계/감정/네비). 지난 주는 dummy-data 프로필 시 더미, 그 외 실데이터."
-)
+@Tag(name = "주간 대시보드 API", description = "주간 AI 인사이트 및 통계를 관리하는 API")
 public class WeeklyDashboardController {
     private final WeeklyDashboardService weeklyDashboardService;
 

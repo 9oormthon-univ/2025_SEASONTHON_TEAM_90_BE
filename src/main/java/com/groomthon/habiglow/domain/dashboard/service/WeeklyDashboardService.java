@@ -59,15 +59,24 @@ public class WeeklyDashboardService {
 
         // 사용자의 설정된 루틴들
         List<RoutineEntity> myRoutines = routineRepository.findByMember_Id(memberId);
+        if (myRoutines == null) {
+            myRoutines = new ArrayList<>();
+        }
         int totalRoutines = myRoutines.size();
 
         // 실데이터 조회 (필드/메서드명 교정)
         List<DailyRoutineEntity> routineRecords =
-                dailyRoutineRepository.findByMember_IdAndPerformedDateBetween(memberId, weekMon, weekSun);
+                dailyRoutineRepository.findByMemberIdAndPerformedDateBetween(memberId, weekMon, weekSun);
+        if (routineRecords == null) {
+            routineRecords = new ArrayList<>();
+        }
 
         List<DailyReflectionEntity> reflections =
-                dailyReflectionRepository.findByMember_IdAndReflectionDateBetweenOrderByReflectionDateAsc(
+                dailyReflectionRepository.findByMemberIdAndReflectionDateBetweenOrderByReflectionDateAsc(
                         memberId, weekMon, weekSun);
+        if (reflections == null) {
+            reflections = new ArrayList<>();
+        }
 
         boolean dummyOn = activeProfiles != null && activeProfiles.contains("dummy-data");
         boolean isLastWeek = weekMon.equals(thisMon.minusWeeks(1));
@@ -121,11 +130,13 @@ public class WeeklyDashboardService {
 
                 for (DailyRoutineEntity rec : dayRecords) {
                     RoutineCategory cat = rec.getRoutineCategory();
-                    catAgg.computeIfAbsent(cat, k -> new int[2]);
-                    if (rec.getPerformanceLevel() != PerformanceLevel.NOT_PERFORMED) {
-                        catAgg.get(cat)[0] += 1; // done
+                    if (cat != null) {
+                        catAgg.computeIfAbsent(cat, k -> new int[2]);
+                        if (rec.getPerformanceLevel() != PerformanceLevel.NOT_PERFORMED) {
+                            catAgg.get(cat)[0] += 1; // done
+                        }
+                        catAgg.get(cat)[1] += 1;     // total
                     }
-                    catAgg.get(cat)[1] += 1;     // total
                 }
             }
 
@@ -172,7 +183,7 @@ public class WeeklyDashboardService {
                 LocalDate d = day.getDate();
                 boolean success = Boolean.TRUE.equals(day.getSuccess());
                 int total = totalRoutines;
-                int done = (int) Math.round(total * (success ? 0.7 : 0.3));
+                int done = Math.max(0, (int) Math.round(total * (success ? 0.7 : 0.3)));
                 double rate = total == 0 ? 0.0 : round1(100.0 * done / total);
 
                 dailyCompletion.add(DailyCompletionInfo.builder()
@@ -190,17 +201,23 @@ public class WeeklyDashboardService {
                 int remaining = done;
                 for (var entry : routineCountByCat.entrySet()) {
                     RoutineCategory cat = entry.getKey();
-                    int share = totalRoutines == 0 ? 0
-                            : (int) Math.floor((entry.getValue() * (long) done) / (double) totalRoutines);
-                    catAgg.computeIfAbsent(cat, k -> new int[2]);
-                    catAgg.get(cat)[0] += share;                       // done
-                    catAgg.get(cat)[1] += entry.getValue().intValue(); // total
-                    remaining -= share;
+                    if (cat != null) {
+                        int share = totalRoutines == 0 ? 0
+                                : Math.max(0, (int) Math.floor((entry.getValue() * (long) done) / (double) totalRoutines));
+                        catAgg.computeIfAbsent(cat, k -> new int[2]);
+                        catAgg.get(cat)[0] += share;                       // done
+                        catAgg.get(cat)[1] += entry.getValue().intValue(); // total
+                        remaining = Math.max(0, remaining - share);
+                    }
                 }
                 if (remaining > 0 && !routineCountByCat.isEmpty()) {
-                    var firstCat = routineCountByCat.keySet().stream()
-                            .sorted(Comparator.comparing(Enum::name)).findFirst().get();
-                    catAgg.get(firstCat)[0] += remaining;
+                    var firstCatOpt = routineCountByCat.keySet().stream()
+                            .filter(Objects::nonNull)
+                            .sorted(Comparator.comparing(Enum::name))
+                            .findFirst();
+                    if (firstCatOpt.isPresent()) {
+                        catAgg.get(firstCatOpt.get())[0] += remaining;
+                    }
                 }
             }
 

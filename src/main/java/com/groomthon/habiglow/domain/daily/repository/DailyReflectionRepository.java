@@ -13,14 +13,14 @@ import com.groomthon.habiglow.domain.daily.entity.DailyReflectionEntity;
 public interface DailyReflectionRepository extends JpaRepository<DailyReflectionEntity, Long> {
 
     // 단일 날짜 조회 (member.id + reflectionDate)
-    Optional<DailyReflectionEntity> findByMember_IdAndReflectionDate(Long memberId, LocalDate date);
+    Optional<DailyReflectionEntity> findByMemberIdAndReflectionDate(Long memberId, LocalDate date);
 
     // 주간 범위 조회 (member.id + reflectionDate BETWEEN, ASC 정렬)
     @Query("SELECT r FROM DailyReflectionEntity r " +
             "WHERE r.member.id = :memberId " +
             "AND r.reflectionDate BETWEEN :start AND :end " +
             "ORDER BY r.reflectionDate ASC")
-    List<DailyReflectionEntity> findByMember_IdAndReflectionDateBetweenOrderByReflectionDateAsc(
+    List<DailyReflectionEntity> findByMemberIdAndReflectionDateBetweenOrderByReflectionDateAsc(
             @Param("memberId") Long memberId,
             @Param("start") LocalDate start,
             @Param("end") LocalDate end);
