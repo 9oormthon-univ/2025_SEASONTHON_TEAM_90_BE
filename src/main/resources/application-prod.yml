@@ -42,6 +42,16 @@ logging:
     org.springframework.web.reactive.function.client: warn
     root: warn
 
+# ===== Actuator 설정 (운영환경) =====
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health
+  endpoint:
+    health:
+      show-details: never
+
 # ===== 대시보드/프롬프트 설정 (추가) =====
 dashboard:
   weekly:

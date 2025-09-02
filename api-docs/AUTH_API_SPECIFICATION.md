@@ -70,15 +70,16 @@
 ```yaml
 Access Token:
   - 유효시간: 1시간
-  - 저장위치: Authorization header
-  - 형식: Bearer {token}
+  - 수신방법: Response Body 내 accessToken 필드
+  - 사용방법: Authorization header에 Bearer {token} 형태로 설정
   - 용도: API 인증
+  - 보안: 응답 헤더 노출 방지, Response Body 전용 전달
 
 Refresh Token:
   - 유효시간: 24시간  
   - 저장위치: HttpOnly Cookie
   - 용도: Access Token 갱신
-  - 보안: XSS 공격 방지
+  - 보안: XSS 공격 방지, SameSite 속성 적용
 ```
 
 ### 인증 헤더
@@ -156,6 +157,7 @@ Cookie: refresh={refresh_token}
 - ✅ 새로운 Access Token + Refresh Token 모두 발급
 - ✅ 토큰 탈취 시 공격 시간 최소화
 - ✅ 한 번 사용된 Refresh Token으로는 영구 접근 불가
+- ✅ **Access Token은 Response Body로만 전달** (응답 헤더 노출 방지)
 
 ### 1.2 로그아웃
 현재 토큰을 무효화하고 로그아웃합니다.
@@ -616,8 +618,9 @@ pm.sendRequest(mockLoginRequest, function (err, response) {
 ### 🛡️ 시스템 보안
 1. **소셜 로그인 전용**: 일반 회원가입/로그인은 지원하지 않습니다.
 2. **토큰 보안**: Refresh Token은 HttpOnly Cookie로 관리되어 XSS 공격을 방지합니다.
-3. **토큰 블랙리스트**: 로그아웃 시 Access Token이 블랙리스트에 등록되어 재사용을 방지합니다.
-4. **Rate Limiting**: OAuth2 로그인 엔드포인트는 5회/분 제한이 적용됩니다.
+3. **🔒 Access Token 응답 보안**: JWT 토큰은 Response Body로만 전달되며, 응답 헤더에 노출되지 않아 로그 유출 위험을 차단합니다.
+4. **토큰 블랙리스트**: 로그아웃 시 Access Token이 블랙리스트에 등록되어 재사용을 방지합니다.
+5. **Rate Limiting**: OAuth2 로그인 엔드포인트는 5회/분 제한이 적용됩니다.
 
 ### 🔧 기술적 사항
 1. **개발용 API**: `/api/dev/` 경로의 API는 dev, local 프로파일에서만 사용 가능합니다.
