@@ -1,7 +1,5 @@
 package com.groomthon.habiglow.domain.dashboard.service;
 
-import com.groomthon.habiglow.domain.daily.entity.EmotionType;
-import com.groomthon.habiglow.domain.daily.entity.PerformanceLevel;
 import com.groomthon.habiglow.domain.dashboard.dto.*;
 import com.groomthon.habiglow.domain.dashboard.util.WeeklyDummyDataGenerator;
 import com.groomthon.habiglow.domain.daily.entity.DailyReflectionEntity;
@@ -11,7 +9,7 @@ import com.groomthon.habiglow.domain.daily.repository.DailyRoutineRepository;
 import com.groomthon.habiglow.domain.routine.entity.RoutineCategory;
 import com.groomthon.habiglow.domain.routine.entity.RoutineEntity;
 import com.groomthon.habiglow.domain.routine.repository.RoutineRepository;
-
+import com.groomthon.habiglow.domain.daily.entity.PerformanceLevel; // 엔티티 패키지와 일치!
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -38,6 +36,7 @@ public class WeeklyDashboardService {
     private String activeProfiles;
 
     private static final ZoneId KST = ZoneId.of("Asia/Seoul");
+    private static final int DUMMY_MIN_TOTAL_ROUTINES = 6; // 루틴 0개여도 더미 주차를 빈 값으로 만들지 않기 위한 최소 표시 개수
 
     public WeeklyDashboardDto getView(Long memberId, LocalDate weekStart) {
         LocalDate thisMon = LocalDate.now(KST).with(TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY));
@@ -47,6 +46,8 @@ public class WeeklyDashboardService {
         boolean isCurrentWeek = weekMon.equals(thisMon);
         boolean isComplete = weekMon.isBefore(thisMon);
         boolean isFutureWeek = weekMon.isAfter(thisMon);
+        boolean dummyOn = activeProfiles != null && activeProfiles.contains("dummy-data");
+        boolean isLastWeek = weekMon.equals(thisMon.minusWeeks(1));
 
         NavInfo nav = NavInfo.builder()
                 .hasPrev(true)
@@ -57,36 +58,24 @@ public class WeeklyDashboardService {
 
         String label = weekMon.getMonthValue() + "월 " + ordinalOfWeekInMonth(weekMon) + "째 주";
 
-        // 사용자의 설정된 루틴들
+        // 사용자 설정 루틴
         List<RoutineEntity> myRoutines = routineRepository.findByMember_Id(memberId);
-        if (myRoutines == null) {
-            myRoutines = new ArrayList<>();
-        }
-        int totalRoutines = myRoutines.size();
+        int realTotalRoutines = myRoutines.size();
 
-        // 실데이터 조회 (필드/메서드명 교정)
-        List<DailyRoutineEntity> routineRecords =
-                dailyRoutineRepository.findByMemberIdAndPerformedDateBetween(memberId, weekMon, weekSun);
-        if (routineRecords == null) {
-            routineRecords = new ArrayList<>();
-        }
-
-        List<DailyReflectionEntity> reflections =
-                dailyReflectionRepository.findByMemberIdAndReflectionDateBetweenOrderByReflectionDateAsc(
-                        memberId, weekMon, weekSun);
-        if (reflections == null) {
-            reflections = new ArrayList<>();
-        }
-
-        boolean dummyOn = activeProfiles != null && activeProfiles.contains("dummy-data");
-        boolean isLastWeek = weekMon.equals(thisMon.minusWeeks(1));
-
+        // 지난 주 + dummy ON → 더미, 그 외 → 실데이터
         List<DailyCompletionInfo> dailyCompletion;
         Map<String, Integer> emotionDist;
         MetricsInfo metrics;
 
         if (!(dummyOn && isLastWeek)) {
-            // === 지난 주가 아니거나,dummy 프로필이 꺼져있다면 ===
+            // ===== 실데이터 경로 =====
+            List<DailyRoutineEntity> routineRecords =
+                    dailyRoutineRepository.findByMemberIdAndPerformedDateBetween(memberId, weekMon, weekSun);
+
+            List<DailyReflectionEntity> reflections =
+                    dailyReflectionRepository.findByMemberIdAndReflectionDateBetweenOrderByReflectionDateAsc(
+                            memberId, weekMon, weekSun);
+
             var byDate = routineRecords.stream()
                     .collect(Collectors.groupingBy(DailyRoutineEntity::getPerformedDate));
 
@@ -110,10 +99,7 @@ public class WeeklyDashboardService {
                 boolean isFuture = isCurrentWeek && d.isAfter(LocalDate.now(KST));
 
                 String moodName = Optional.ofNullable(reflectionsByDate.get(d))
-                        .map(r -> {
-                            EmotionType e = r.getEmotion();
-                            return e != null ? e.name() : null;
-                        })
+                        .map(r -> r.getEmotion() == null ? null : r.getEmotion().name())
                         .orElse(null);
 
                 dailyCompletion.add(DailyCompletionInfo.builder()
@@ -130,13 +116,11 @@ public class WeeklyDashboardService {
 
                 for (DailyRoutineEntity rec : dayRecords) {
                     RoutineCategory cat = rec.getRoutineCategory();
-                    if (cat != null) {
-                        catAgg.computeIfAbsent(cat, k -> new int[2]);
-                        if (rec.getPerformanceLevel() != PerformanceLevel.NOT_PERFORMED) {
-                            catAgg.get(cat)[0] += 1; // done
-                        }
-                        catAgg.get(cat)[1] += 1;     // total
+                    catAgg.computeIfAbsent(cat, k -> new int[2]);
+                    if (rec.getPerformanceLevel() != PerformanceLevel.NOT_PERFORMED) {
+                        catAgg.get(cat)[0] += 1; // done
                     }
+                    catAgg.get(cat)[1] += 1;     // total
                 }
             }
 
@@ -160,30 +144,41 @@ public class WeeklyDashboardService {
                     .toList();
 
             metrics = MetricsInfo.builder()
-                    .totalRoutines(totalRoutines)
+                    .totalRoutines(realTotalRoutines)
                     .overall(overall)
                     .categories(categories)
                     .build();
 
         } else {
-            // === 더미 기반 (지난 주 + dummy on + 실데이터 없음) ===
+            // ===== 더미 경로(지난 주 + dummy ON) =====
             var snap = WeeklyDummyDataGenerator.generate(memberId, weekMon);
+
+            // 더미 주차가 비어 보이지 않도록 total이 0이면 기본 6개로 채움
+            int displayTotal = (realTotalRoutines > 0 ? realTotalRoutines : DUMMY_MIN_TOTAL_ROUTINES);
+
+            // 사용자의 카테고리 분포(없으면 라운드로빈으로 더미 분포 생성)
+            Map<RoutineCategory, Long> routineCountByCat = myRoutines.stream()
+                    .collect(Collectors.groupingBy(RoutineEntity::getCategory, Collectors.counting()));
+            if (routineCountByCat.isEmpty()) {
+                routineCountByCat = new EnumMap<>(RoutineCategory.class);
+                RoutineCategory[] cats = RoutineCategory.values();
+                for (int i = 0; i < displayTotal; i++) {
+                    RoutineCategory c = cats[i % cats.length];
+                    routineCountByCat.merge(c, 1L, Long::sum);
+                }
+            }
 
             dailyCompletion = new ArrayList<>();
             int overallDone = 0, overallTotal = 0;
-
-            // 사용자가 설정한 루틴의 카테고리 구성
-            Map<RoutineCategory, Long> routineCountByCat = myRoutines.stream()
-                    .collect(Collectors.groupingBy(RoutineEntity::getCategory, Collectors.counting()));
-
             Map<RoutineCategory, int[]> catAgg = new EnumMap<>(RoutineCategory.class);
 
             for (int i = 0; i < 7; i++) {
                 var day = snap.getDays().get(i);
                 LocalDate d = day.getDate();
                 boolean success = Boolean.TRUE.equals(day.getSuccess());
-                int total = totalRoutines;
-                int done = Math.max(0, (int) Math.round(total * (success ? 0.7 : 0.3)));
+
+                int total = displayTotal;
+                int done = (int) Math.round(total * (success ? 0.7 : 0.3));
                 double rate = total == 0 ? 0.0 : round1(100.0 * done / total);
 
                 dailyCompletion.add(DailyCompletionInfo.builder()
@@ -198,26 +193,21 @@ public class WeeklyDashboardService {
                 overallDone += done;
                 overallTotal += total;
 
+                // 카테고리별로 done 분배 (총합 보존)
                 int remaining = done;
                 for (var entry : routineCountByCat.entrySet()) {
                     RoutineCategory cat = entry.getKey();
-                    if (cat != null) {
-                        int share = totalRoutines == 0 ? 0
-                                : Math.max(0, (int) Math.floor((entry.getValue() * (long) done) / (double) totalRoutines));
-                        catAgg.computeIfAbsent(cat, k -> new int[2]);
-                        catAgg.get(cat)[0] += share;                       // done
-                        catAgg.get(cat)[1] += entry.getValue().intValue(); // total
-                        remaining = Math.max(0, remaining - share);
-                    }
+                    int share = total == 0 ? 0
+                            : (int) Math.floor((entry.getValue() * (long) done) / (double) total);
+                    catAgg.computeIfAbsent(cat, k -> new int[2]);
+                    catAgg.get(cat)[0] += share;                       // done
+                    catAgg.get(cat)[1] += entry.getValue().intValue(); // total
+                    remaining -= share;
                 }
                 if (remaining > 0 && !routineCountByCat.isEmpty()) {
-                    var firstCatOpt = routineCountByCat.keySet().stream()
-                            .filter(Objects::nonNull)
-                            .sorted(Comparator.comparing(Enum::name))
-                            .findFirst();
-                    if (firstCatOpt.isPresent()) {
-                        catAgg.get(firstCatOpt.get())[0] += remaining;
-                    }
+                    var firstCat = routineCountByCat.keySet().stream()
+                            .sorted(Comparator.comparing(Enum::name)).findFirst().get();
+                    catAgg.get(firstCat)[0] += remaining;
                 }
             }
 
@@ -241,7 +231,7 @@ public class WeeklyDashboardService {
                     .toList();
 
             metrics = MetricsInfo.builder()
-                    .totalRoutines(totalRoutines)
+                    .totalRoutines(displayTotal) // 더미 주차는 표시용 총 루틴 수를 사용
                     .overall(overall)
                     .categories(categories)
                     .build();
