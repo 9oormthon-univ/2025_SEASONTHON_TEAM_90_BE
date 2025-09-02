@@ -8,6 +8,10 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
+/**
+ * @deprecated RoutineAdaptationCheckResponse<GrowthReadyRoutineResponse>를 사용하세요.
+ */
+@Deprecated
 @Getter
 @NoArgsConstructor
 @AllArgsConstructor
@@ -20,4 +24,11 @@ public class GrowthCheckResponse {
     
     @Schema(description = "성장 가능한 루틴 총 개수", example = "2")
     private Integer totalGrowthReadyCount;
+    
+    /**
+     * 새로운 제네릭 응답으로 변환
+     */
+    public RoutineAdaptationCheckResponse<GrowthReadyRoutineResponse> toUnifiedResponse() {
+        return RoutineAdaptationCheckResponse.growth(this.growthReadyRoutines);
+    }
 }

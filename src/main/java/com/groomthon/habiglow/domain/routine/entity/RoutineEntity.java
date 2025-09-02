@@ -153,4 +153,41 @@ public class RoutineEntity extends BaseTimeEntity {
     public Integer getCurrentCycleDays() {
         return growthSettings.getCurrentCycleDays();
     }
+    
+    /**
+     * 새로운 GrowthConfiguration 업데이트 메서드
+     * 기존 GrowthSettings에서 새로운 구조로 점진적 마이그레이션
+     */
+    public void updateGrowthConfiguration(GrowthConfiguration newConfig) {
+        // 새로운 GrowthConfiguration을 기존 GrowthSettings 형태로 변환
+        // 이는 임시적 호환성 메서드입니다
+        this.growthSettings = GrowthSettings.builder()
+            .isGrowthMode(newConfig.getIsGrowthMode())
+            .targetType(newConfig.getTargetType())
+            .targetValue(newConfig.getTargetValue())
+            .growthCycleDays(newConfig.getGrowthCycleDays())
+            .targetIncrement(newConfig.getTargetIncrement())
+            .currentCycleDays(newConfig.getCurrentCycleDays())
+            .targetDecrement(newConfig.getTargetDecrement())
+            .minimumTargetValue(newConfig.getMinimumTargetValue())
+            .lastAdjustedDate(newConfig.getLastAdjustedDate())
+            .build();
+    }
+    
+    /**
+     * 기존 GrowthSettings를 새로운 GrowthConfiguration으로 변환
+     */
+    public GrowthConfiguration getGrowthConfiguration() {
+        return GrowthConfiguration.builder()
+            .isGrowthMode(growthSettings.getIsGrowthMode())
+            .targetType(growthSettings.getTargetType())
+            .targetValue(growthSettings.getTargetValue())
+            .growthCycleDays(growthSettings.getGrowthCycleDays())
+            .targetIncrement(growthSettings.getTargetIncrement())
+            .currentCycleDays(growthSettings.getCurrentCycleDays())
+            .targetDecrement(growthSettings.getTargetDecrement())
+            .minimumTargetValue(growthSettings.getMinimumTargetValue())
+            .lastAdjustedDate(growthSettings.getLastAdjustedDate())
+            .build();
+    }
 }

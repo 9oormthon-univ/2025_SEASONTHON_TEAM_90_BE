@@ -1,5 +1,6 @@
 package com.groomthon.habiglow.domain.routine.facade;
 
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -11,6 +12,12 @@ import com.groomthon.habiglow.domain.routine.entity.RoutineEntity;
 import com.groomthon.habiglow.domain.routine.helper.RoutineHelper;
 import com.groomthon.habiglow.domain.routine.repository.RoutineRepository;
 import com.groomthon.habiglow.domain.routine.service.RoutineValidationService;
+import com.groomthon.habiglow.domain.routine.service.GrowthAnalysisService;
+import com.groomthon.habiglow.domain.routine.service.ReductionAnalysisService;
+import com.groomthon.habiglow.domain.routine.service.GrowthConfigurationService;
+import com.groomthon.habiglow.domain.routine.dto.response.RoutineAdaptationResultResponse;
+import com.groomthon.habiglow.domain.routine.dto.response.AdaptationAction;
+import com.groomthon.habiglow.domain.routine.event.RoutineTargetChangedEvent;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -23,6 +30,10 @@ public class RoutineManagementFacade {
     private final RoutineRepository routineRepository;
     private final RoutineHelper routineHelper;
     private final RoutineValidationService validationService;
+    private final GrowthAnalysisService growthAnalysisService;
+    private final ReductionAnalysisService reductionAnalysisService;
+    private final GrowthConfigurationService growthConfigurationService;
+    private final ApplicationEventPublisher eventPublisher;
 
     @Transactional
     public RoutineResponse createRoutineWithFullValidation(Long memberId, CreateRoutineRequest request) {
@@ -130,6 +141,74 @@ public class RoutineManagementFacade {
     private void logGrowthModeActivated(RoutineEntity routine, Long memberId) {
         log.info("New routine with growth mode created: {} for member: {} - Target: {}, Increment: {}", 
                 routine.getRoutineId(), memberId, routine.getTargetValue(), routine.getTargetIncrement());
+    }
+
+    /**
+     * 루틴 적응 실행 - 통합된 Facade 메서드 (CQRS Command 부분)
+     */
+    @Transactional
+    public RoutineAdaptationResultResponse executeRoutineAdaptation(Long memberId, Long routineId, AdaptationAction action) {
+        RoutineEntity routine = routineHelper.findRoutineByIdAndMemberId(routineId, memberId);
+        
+        return switch (action) {
+            case INCREASE -> executeGrowthAdaptation(routine, memberId);
+            case DECREASE -> executeReductionAdaptation(routine, memberId);
+            case RESET -> executeGrowthReset(routine, memberId);
+        };
+    }
+    
+    private RoutineAdaptationResultResponse executeGrowthAdaptation(RoutineEntity routine, Long memberId) {
+        growthAnalysisService.validateGrowthConditions(routine, memberId);
+        
+        Integer previousTarget = routine.getTargetValue();
+        Integer newTarget = growthConfigurationService.executeTargetIncrease(routine);
+        
+        // 도메인 이벤트 발행
+        RoutineTargetChangedEvent event = RoutineTargetChangedEvent.of(
+            routine.getRoutineId(), routine.getTitle(), memberId,
+            previousTarget, newTarget, AdaptationAction.INCREASE
+        );
+        eventPublisher.publishEvent(event);
+        
+        log.info("Growth adaptation executed for routine: {} from {} to {} by member: {}",
+            routine.getRoutineId(), previousTarget, newTarget, memberId);
+            
+        return RoutineAdaptationResultResponse.success(
+            routine.getRoutineId(), routine.getTitle(), 
+            previousTarget, newTarget, AdaptationAction.INCREASE);
+    }
+    
+    private RoutineAdaptationResultResponse executeReductionAdaptation(RoutineEntity routine, Long memberId) {
+        reductionAnalysisService.validateReductionConditions(routine, memberId);
+        
+        Integer previousTarget = routine.getTargetValue();
+        Integer newTarget = growthConfigurationService.executeTargetDecrease(routine);
+        
+        // 도메인 이벤트 발행
+        RoutineTargetChangedEvent event = RoutineTargetChangedEvent.of(
+            routine.getRoutineId(), routine.getTitle(), memberId,
+            previousTarget, newTarget, AdaptationAction.DECREASE
+        );
+        eventPublisher.publishEvent(event);
+        
+        log.info("Reduction adaptation executed for routine: {} from {} to {} by member: {}",
+            routine.getRoutineId(), previousTarget, newTarget, memberId);
+            
+        return RoutineAdaptationResultResponse.success(
+            routine.getRoutineId(), routine.getTitle(), 
+            previousTarget, newTarget, AdaptationAction.DECREASE);
+    }
+    
+    private RoutineAdaptationResultResponse executeGrowthReset(RoutineEntity routine, Long memberId) {
+        Integer previousCycleDays = routine.getCurrentCycleDays();
+        growthConfigurationService.resetGrowthCycle(routine);
+        
+        log.info("Growth cycle reset for routine: {} by member: {}, previous cycle days: {}",
+            routine.getRoutineId(), memberId, previousCycleDays);
+            
+        return RoutineAdaptationResultResponse.success(
+            routine.getRoutineId(), routine.getTitle(), 
+            previousCycleDays, 0, AdaptationAction.RESET);
     }
 
 }

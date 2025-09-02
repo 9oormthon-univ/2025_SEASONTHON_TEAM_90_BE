@@ -63,9 +63,9 @@ public class GrowthReadyRoutineResponse {
                 .nextTarget(routine.getTargetValue() + routine.getTargetIncrement())
                 .increment(routine.getTargetIncrement())
                 .completedCycleDays(routine.getGrowthCycleDays())
-                .consecutiveDays(lastRecord.getConsecutiveDays())
+                .consecutiveDays(lastRecord != null ? lastRecord.getConsecutiveDays() : 0)
                 .currentCycleDays(routine.getCurrentCycleDays())
-                .lastPerformedDate(lastRecord.getPerformedDate())
+                .lastPerformedDate(lastRecord != null ? lastRecord.getPerformedDate() : null)
                 .build();
     }
 }

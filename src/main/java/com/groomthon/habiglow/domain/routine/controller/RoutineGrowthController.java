@@ -8,9 +8,8 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.groomthon.habiglow.domain.routine.dto.response.AdaptiveRoutineCheckResponse;
-import com.groomthon.habiglow.domain.routine.dto.response.DecreaseTargetResponse;
-import com.groomthon.habiglow.domain.routine.dto.response.IncreaseTargetResponse;
 import com.groomthon.habiglow.domain.routine.dto.response.ResetGrowthCycleResponse;
+import com.groomthon.habiglow.domain.routine.dto.response.RoutineAdaptationResultResponse;
 import com.groomthon.habiglow.domain.routine.service.RoutineGrowthService;
 import com.groomthon.habiglow.global.jwt.JwtMemberExtractor;
 import com.groomthon.habiglow.global.response.ApiSuccessCode;
@@ -28,11 +27,16 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 
+/**
+ * @deprecated 이 컨트롤러는 제거 예정입니다. 
+ * 대신 RoutineController의 통합 엔드포인트를 사용하세요.
+ */
+@Deprecated
 @RestController
 @RequestMapping("/api/routines/growth")
 @RequiredArgsConstructor
 @AutoApiResponse
-@Tag(name = "루틴 성장 관리 API", description = "루틴 난이도 자동 조정 및 성장 관련 API")
+@Tag(name = "루틴 성장 관리 API (DEPRECATED)", description = "루틴 난이도 자동 조정 및 성장 관련 API - RoutineController로 이전됨")
 public class RoutineGrowthController {
 
 	private final RoutineGrowthService routineGrowthService;
@@ -65,7 +69,7 @@ public class RoutineGrowthController {
 	@PatchMapping("/{routineId}/increase-target")
 	@PreAuthorize("isAuthenticated()")
 	@SuccessCode(ApiSuccessCode.SUCCESS)
-	public IncreaseTargetResponse increaseTarget(
+	public RoutineAdaptationResultResponse increaseTarget(
 		HttpServletRequest request,
 		@Parameter(description = "루틴 ID", example = "1") @PathVariable Long routineId) {
 		Long userId = jwtMemberExtractor.extractMemberId(request);
@@ -105,7 +109,7 @@ public class RoutineGrowthController {
 	@PatchMapping("/{routineId}/decrease-target")
 	@PreAuthorize("isAuthenticated()")
 	@SuccessCode(ApiSuccessCode.SUCCESS)
-	public DecreaseTargetResponse decreaseTarget(
+	public RoutineAdaptationResultResponse decreaseTarget(
 		HttpServletRequest request,
 		@Parameter(description = "루틴 ID", example = "1") @PathVariable Long routineId) {
 		Long userId = jwtMemberExtractor.extractMemberId(request);

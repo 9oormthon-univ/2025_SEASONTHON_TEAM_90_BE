@@ -1,8 +1,11 @@
 package com.groomthon.habiglow.domain.routine.controller;
 
+import java.util.List;
+
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
@@ -13,9 +16,15 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.groomthon.habiglow.domain.routine.dto.request.CreateRoutineRequest;
 import com.groomthon.habiglow.domain.routine.dto.request.UpdateRoutineRequest;
+import com.groomthon.habiglow.domain.routine.dto.response.AdaptationAction;
+import com.groomthon.habiglow.domain.routine.dto.response.AdaptiveRoutineCheckResponse;
+import com.groomthon.habiglow.domain.routine.dto.response.ResetGrowthCycleResponse;
+import com.groomthon.habiglow.domain.routine.dto.response.RoutineAdaptationResultResponse;
+import com.groomthon.habiglow.domain.routine.dto.response.RoutineCategoryResponse;
 import com.groomthon.habiglow.domain.routine.dto.response.RoutineListResponse;
 import com.groomthon.habiglow.domain.routine.dto.response.RoutineResponse;
 import com.groomthon.habiglow.domain.routine.entity.RoutineCategory;
+import com.groomthon.habiglow.domain.routine.facade.RoutineManagementFacade;
 import com.groomthon.habiglow.domain.routine.service.RoutineGrowthService;
 import com.groomthon.habiglow.domain.routine.service.RoutineService;
 import com.groomthon.habiglow.global.jwt.JwtMemberExtractor;
@@ -44,6 +53,7 @@ public class RoutineController {
     
     private final RoutineService routineService;
     private final RoutineGrowthService routineGrowthService;
+    private final RoutineManagementFacade routineManagementFacade;
     private final JwtMemberExtractor jwtMemberExtractor;
 
     @Operation(
@@ -148,5 +158,77 @@ public class RoutineController {
             @PathVariable Long routineId) {
         Long userId = jwtMemberExtractor.extractMemberId(request);
         routineService.deleteRoutine(userId, routineId);
+    }
+    
+    // ==================== 카테고리 관련 API ====================
+    
+    @Operation(
+        summary = "루틴 카테고리 목록 조회",
+        description = "회원이 선택할 수 있는 모든 루틴 카테고리 목록을 조회합니다."
+    )
+    @ApiResponse(responseCode = "200", description = "조회 성공")
+    @GetMapping("/categories")
+    @SuccessCode(ApiSuccessCode.SUCCESS)
+    public List<RoutineCategoryResponse> getAllCategories() {
+        return RoutineCategoryResponse.fromAll();
+    }
+    
+    // ==================== 성장 모드 관련 API ====================
+    
+    @Operation(
+        summary = "적응형 루틴 조정 대상 조회",
+        description = "성장(증가) 대상과 감소 대상 루틴을 통합 조회합니다. 전날 기준으로 성장 주기 완료 루틴은 증가 대상, 성장 주기 동안 FULL_SUCCESS가 없는 루틴은 감소 대상입니다."
+    )
+    @ApiResponse(responseCode = "200", description = "조회 성공")
+    @CustomExceptionDescription(SwaggerResponseDescription.ROUTINE_ERROR)
+    @GetMapping("/adaptation-check")
+    @PreAuthorize("isAuthenticated()")
+    @SuccessCode(ApiSuccessCode.SUCCESS)
+    public AdaptiveRoutineCheckResponse checkAdaptiveRoutines(HttpServletRequest request) {
+        Long userId = jwtMemberExtractor.extractMemberId(request);
+        return routineGrowthService.checkAdaptiveRoutines(userId);
+    }
+    
+    @Operation(
+        summary = "루틴 목표 조정",
+        description = "루틴의 목표를 증가, 감소 또는 주기를 리셋합니다."
+    )
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "조정 성공"),
+        @ApiResponse(responseCode = "400", description = "조정 조건 미충족", content = @Content),
+        @ApiResponse(responseCode = "404", description = "루틴이 존재하지 않음", content = @Content)
+    })
+    @CustomExceptionDescription(SwaggerResponseDescription.ROUTINE_ERROR)
+    @PatchMapping("/{routineId}/target")
+    @PreAuthorize("isAuthenticated()")
+    @SuccessCode(ApiSuccessCode.SUCCESS)
+    public RoutineAdaptationResultResponse adjustRoutineTarget(
+        HttpServletRequest request,
+        @PathVariable Long routineId,
+        @Parameter(description = "조정 액션 (INCREASE, DECREASE, RESET)", example = "INCREASE") 
+        @RequestParam AdaptationAction action) {
+        Long userId = jwtMemberExtractor.extractMemberId(request);
+        return routineManagementFacade.executeRoutineAdaptation(userId, routineId, action);
+    }
+    
+    @Operation(
+        summary = "성장 주기 리셋 (레거시)",
+        description = "성장 주기가 완료된 루틴의 주기를 리셋합니다. 성장을 거부할 때 사용합니다."
+    )
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "리셋 성공"),
+        @ApiResponse(responseCode = "400", description = "리셋 조건 미충족", content = @Content),
+        @ApiResponse(responseCode = "404", description = "루틴이 존재하지 않음", content = @Content)
+    })
+    @CustomExceptionDescription(SwaggerResponseDescription.ROUTINE_ERROR)
+    @PatchMapping("/{routineId}/reset-cycle")
+    @PreAuthorize("isAuthenticated()")
+    @SuccessCode(ApiSuccessCode.SUCCESS)
+    @Deprecated
+    public ResetGrowthCycleResponse resetGrowthCycle(
+        HttpServletRequest request,
+        @Parameter(description = "루틴 ID", example = "1") @PathVariable Long routineId) {
+        Long userId = jwtMemberExtractor.extractMemberId(request);
+        return routineGrowthService.resetGrowthCycle(routineId, userId);
     }
 }
