@@ -39,8 +39,8 @@ logging:
   file:
     name: app.log
   level:
-    root: info
-    org.springframework: debug
+    root: warn
+    org.springframework: warn
 
 
 # ===== 대시보드/프롬프트 설정 (추가) =====
