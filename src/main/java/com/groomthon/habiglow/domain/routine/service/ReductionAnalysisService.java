@@ -46,9 +46,16 @@ public class ReductionAnalysisService {
                 LocalDate startDate = endDate.minusDays(routine.getGrowthCycleDays() - 1);
                 List<DailyRoutineEntity> recentRecords = dailyRoutineRepository
                     .findByRoutineAndMemberAndDateRange(routine.getRoutineId(), memberId, startDate, endDate);
+                
+                log.info("Checking reduction for routine {}: period={} to {}, records={}", 
+                    routine.getRoutineId(), startDate, endDate, recentRecords.size());
+                
+                boolean canAdapt = reductionStrategy.canAdapt(routine);
+                boolean cycleCompleted = reductionStrategy.isAdaptationCycleCompleted(routine, recentRecords);
+                
+                log.info("Routine {}: canAdapt={}, cycleCompleted={}", routine.getRoutineId(), canAdapt, cycleCompleted);
 
-                return reductionStrategy.canAdapt(routine) && 
-                       reductionStrategy.isAdaptationCycleCompleted(routine, recentRecords);
+                return canAdapt && cycleCompleted;
             })
             .map(routine -> {
                 Integer suggestedTarget = reductionStrategy.calculateNewTargetValue(routine);
