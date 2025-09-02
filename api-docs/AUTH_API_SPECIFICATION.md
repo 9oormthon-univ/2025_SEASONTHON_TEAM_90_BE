@@ -2,7 +2,17 @@
 
 > **소셜 로그인 전용 Spring Boot JWT 인증 시스템 API 문서**
 
-## 🔄 최근 업데이트 (v3.0)
+## 🔄 최근 업데이트 (v4.1)
+
+### 🔒 보안 강화 업데이트 (v4.1 - 2025-01-30)
+- **⚠️ Access Token 응답 헤더 노출 제거**: 보안 위험이 있는 Authorization 헤더 응답 완전 제거
+- **📦 Response Body 전용 토큰 전달**: 모든 JWT 토큰은 응답 본문(Response Body)을 통해서만 전달
+- **🛡️ 로그/캐시 보안 강화**: HTTP 응답 헤더의 민감 정보 노출 방지로 로그 유출 위험 제거
+- **🔄 RTR(Refresh Token Rotation) 완전 적용**: 모든 토큰 재발급에 RTR 보안 정책 통일 적용
+- **API 엔드포인트 통합**: `/api/auth/token/refresh/full` 제거, `/api/auth/token/refresh`로 통일
+- **토큰 재사용 공격 완전 차단**: Refresh Token 한 번 사용 시 즉시 무효화
+- **보안 헤더 강화**: XSS, 클릭재킹, MIME 스니핑 등 웹 공격 방어 헤더 추가
+- **일관된 인증 정책**: 혼란을 야기하던 두 가지 재발급 정책을 하나로 통일
 
 ### ⭐ 새로운 기능 (v3.0 - 2025-01-30)
 - **회원 정보 부분 업데이트**: `PATCH /api/members/me` - 이름, 프로필 이미지, 관심사 선택적 수정
@@ -60,15 +70,16 @@
 ```yaml
 Access Token:
   - 유효시간: 1시간
-  - 저장위치: Authorization header
-  - 형식: Bearer {token}
+  - 수신방법: Response Body 내 accessToken 필드
+  - 사용방법: Authorization header에 Bearer {token} 형태로 설정
   - 용도: API 인증
+  - 보안: 응답 헤더 노출 방지, Response Body 전용 전달
 
 Refresh Token:
   - 유효시간: 24시간  
   - 저장위치: HttpOnly Cookie
   - 용도: Access Token 갱신
-  - 보안: XSS 공격 방지
+  - 보안: XSS 공격 방지, SameSite 속성 적용
 ```
 
 ### 인증 헤더
@@ -106,8 +117,7 @@ Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
 | 메서드 | 경로 | 설명 | 인증 필요 |
 |--------|------|------|----------|
 | POST | `/api/auth/social/login` | 클라이언트 소셜 로그인 | ❌ |
-| POST | `/api/auth/token/refresh` | Access Token 재발급 | 🟡 Refresh Token |
-| POST | `/api/auth/token/refresh/full` | 전체 토큰 재발급 | 🟡 Refresh Token |
+| POST | `/api/auth/token/refresh` | 토큰 재발급 (RTR 적용) | 🟡 Refresh Token |
 | POST | `/api/auth/logout` | 로그아웃 | ✅ |
 | GET | `/api/users/me` | 내 정보 조회 | ✅ |
 | GET | `/api/users/me/interests` | 내 관심사 조회 | ✅ |
@@ -119,8 +129,8 @@ Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
 
 ## 1. 🔐 인증 관리 API
 
-### 1.1 Access Token 재발급
-Access Token만 새로 발급받습니다.
+### 1.1 토큰 재발급 (RTR 적용) 🔒
+RTR(Refresh Token Rotation)이 적용된 보안 강화 토큰 재발급입니다. Access Token과 Refresh Token을 모두 새로 발급하며, 기존 Refresh Token은 즉시 무효화됩니다.
 
 **요청**
 ```http
@@ -137,35 +147,19 @@ Cookie: refresh={refresh_token}
     "accessToken": "Bearer eyJhbGciOiJIUzI1NiIs...",
     "tokenType": "Bearer",
     "expiresIn": 3600,
-    "refreshTokenIncluded": false
-  }
-}
-```
-
-### 1.2 Access + Refresh Token 모두 재발급
-Access Token과 Refresh Token을 모두 새로 발급받습니다.
-
-**요청**
-```http
-POST /api/auth/token/refresh/full
-Cookie: refresh={refresh_token}
-```
-
-**응답**
-```json
-{
-  "code": "S203", 
-  "message": "Access/Refresh 토큰 재발급 성공",
-  "data": {
-    "accessToken": "Bearer eyJhbGciOiJIUzI1NiIs...",
-    "tokenType": "Bearer", 
-    "expiresIn": 3600,
     "refreshTokenIncluded": true
   }
 }
 ```
 
-### 1.3 로그아웃
+**🔒 RTR 보안 특징**
+- ✅ 기존 Refresh Token 즉시 무효화 (재사용 불가)
+- ✅ 새로운 Access Token + Refresh Token 모두 발급
+- ✅ 토큰 탈취 시 공격 시간 최소화
+- ✅ 한 번 사용된 Refresh Token으로는 영구 접근 불가
+- ✅ **Access Token은 Response Body로만 전달** (응답 헤더 노출 방지)
+
+### 1.2 로그아웃
 현재 토큰을 무효화하고 로그아웃합니다.
 
 **요청**
@@ -598,10 +592,11 @@ pm.sendRequest(mockLoginRequest, function (err, response) {
 
 ### 테스트 시나리오
 1. **기본 인증 플로우**: Mock 로그인 → 내 정보 조회 → 로그아웃
-2. **토큰 갱신 플로우**: 로그인 → Access Token 갱신 → 전체 토큰 갱신
+2. **RTR 토큰 갱신 플로우**: 로그인 → 토큰 재발급 (RTR 적용) → 기존 토큰 무효화 확인
 3. **회원 관리 플로우**: 내 정보 조회 → 내 계정 삭제
-4. **보안 테스트**: 토큰 없이 접근 시도 → 401 에러 확인
-5. **에러 케이스**: 잘못된 토큰, 만료된 토큰, 블랙리스트 토큰
+4. **RTR 보안 테스트**: 토큰 재발급 후 기존 Refresh Token으로 재시도 → 401 에러 확인
+5. **보안 테스트**: 토큰 없이 접근 시도 → 401 에러 확인
+6. **에러 케이스**: 잘못된 토큰, 만료된 토큰, 블랙리스트 토큰, 재사용된 Refresh Token
 
 ---
 
@@ -623,14 +618,16 @@ pm.sendRequest(mockLoginRequest, function (err, response) {
 ### 🛡️ 시스템 보안
 1. **소셜 로그인 전용**: 일반 회원가입/로그인은 지원하지 않습니다.
 2. **토큰 보안**: Refresh Token은 HttpOnly Cookie로 관리되어 XSS 공격을 방지합니다.
-3. **토큰 블랙리스트**: 로그아웃 시 Access Token이 블랙리스트에 등록되어 재사용을 방지합니다.
-4. **Rate Limiting**: OAuth2 로그인 엔드포인트는 5회/분 제한이 적용됩니다.
+3. **🔒 Access Token 응답 보안**: JWT 토큰은 Response Body로만 전달되며, 응답 헤더에 노출되지 않아 로그 유출 위험을 차단합니다.
+4. **토큰 블랙리스트**: 로그아웃 시 Access Token이 블랙리스트에 등록되어 재사용을 방지합니다.
+5. **Rate Limiting**: OAuth2 로그인 엔드포인트는 5회/분 제한이 적용됩니다.
 
 ### 🔧 기술적 사항
 1. **개발용 API**: `/api/dev/` 경로의 API는 dev, local 프로파일에서만 사용 가능합니다.
 2. **사용자 분리**: 플랫폼별 사용자는 socialUniqueId로 완전 분리 관리됩니다.
 3. **트랜잭션 최적화**: 읽기 전용 트랜잭션을 기본으로 사용하여 성능을 최적화했습니다.
 4. **예외 처리 강화**: 포괄적인 예외 처리로 안정적인 에러 응답을 제공합니다.
+5. **RTR(Refresh Token Rotation)**: 모든 토큰 재발급에 RTR이 적용되어 토큰 재사용 공격을 완전 차단합니다.
 
 ---
 

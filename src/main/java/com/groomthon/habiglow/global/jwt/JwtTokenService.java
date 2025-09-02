@@ -26,7 +26,6 @@ public class JwtTokenService {
 
 		refreshTokenService.saveRefreshToken(memberId, tokens.refreshToken);
 
-		setAccessToken(response, tokens.accessToken);
 		setRefreshCookie(response, tokens.refreshToken);
 
 		log.info("Access / Refresh 토큰 발급 완료 - Member: {}", member.getMemberEmail());
@@ -36,18 +35,17 @@ public class JwtTokenService {
 
 	public TokenResponse reissueAccessToken(HttpServletResponse response, String memberId, String email, String socialUniqueId) {
 		String accessToken = jwtUtil.createAccessTokenSafe(memberId, email, socialUniqueId);
-		setAccessToken(response, accessToken);
 		log.info("Access 토큰 재발급 완료 - Member: {}", email);
 		
 		return TokenResponse.accessOnly(accessToken, jwtUtil.getAccessTokenExpiration() / 1000);
 	}
+
 
 	public TokenResponse reissueAllTokens(HttpServletResponse response, String memberId, String email, String socialUniqueId) {
 		TokenPair tokens = createTokenPair(memberId, email, socialUniqueId);
 
 		refreshTokenService.saveRefreshToken(memberId, tokens.refreshToken);
 
-		setAccessToken(response, tokens.accessToken);
 		setRefreshCookie(response, tokens.refreshToken);
 
 		log.info("Access / Refresh 토큰 모두 재발급 완료 - Member: {}", email);
@@ -61,9 +59,6 @@ public class JwtTokenService {
 		response.setHeader(HttpHeaders.SET_COOKIE, expired.toString());
 	}
 
-	private void setAccessToken(HttpServletResponse response, String accessToken) {
-		response.setHeader(HttpHeaders.AUTHORIZATION, "Bearer " + accessToken);
-	}
 
 	private void setRefreshCookie(HttpServletResponse response, String refreshToken) {
 		ResponseCookie cookie = jwtUtil.createRefreshTokenCookie(refreshToken);
