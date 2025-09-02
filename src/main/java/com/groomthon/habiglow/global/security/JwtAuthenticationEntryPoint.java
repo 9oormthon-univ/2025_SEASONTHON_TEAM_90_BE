@@ -27,10 +27,24 @@ public class JwtAuthenticationEntryPoint implements AuthenticationEntryPoint {
 	public void commence(HttpServletRequest request, HttpServletResponse response, 
 	                    AuthenticationException authException) throws IOException, ServletException {
 		
-		log.warn("Authentication failed: {}", authException.getMessage());
+		// JWT Filter에서 설정한 예외가 있는지 확인
+		JwtAuthenticationException jwtException = 
+			(JwtAuthenticationException) request.getAttribute("jwtAuthenticationException");
 		
-		ErrorCode errorCode = determineErrorCode(authException);
-		responseUtils.sendErrorResponse(response, errorCode);
+		if (jwtException != null) {
+			log.warn("JWT Authentication failed: {}", jwtException.getMessage());
+			ErrorCode errorCode = determineJwtErrorCode(jwtException);
+			responseUtils.sendErrorResponse(response, errorCode);
+		} else {
+			log.warn("Authentication failed: {}", authException.getMessage());
+			ErrorCode errorCode = determineErrorCode(authException);
+			responseUtils.sendErrorResponse(response, errorCode);
+		}
+	}
+	
+	private ErrorCode determineJwtErrorCode(JwtAuthenticationException jwtException) {
+		log.debug("JWT authentication failed with specific error: {}", jwtException.getErrorCode().getCode());
+		return jwtException.getErrorCode();
 	}
 	
 	private ErrorCode determineErrorCode(AuthenticationException authException) {

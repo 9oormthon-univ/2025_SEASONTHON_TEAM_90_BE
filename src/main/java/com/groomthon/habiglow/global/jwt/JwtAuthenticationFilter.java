@@ -39,9 +39,8 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 			try {
 				validateAndSetAuthentication(token.get());
 			} catch (JwtAuthenticationException e) {
-				// Spring Security가 처리하도록 예외 전파
 				SecurityContextHolder.clearContext();
-				throw e;
+				request.setAttribute("jwtAuthenticationException", e);
 			}
 		}
 		
