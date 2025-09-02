@@ -14,10 +14,12 @@ public enum ErrorCode implements ErrorType {
 	INTERNAL_SERVER_ERROR("COMMON999", "내부 서버 오류가 발생했습니다", HttpStatus.INTERNAL_SERVER_ERROR.value()),
 
 	// 인증 관련 오류 (AUTH)
-	LOGIN_FAIL("AUTH001", "이메일 또는 비밀번호가 틀렸습니다", HttpStatus.UNAUTHORIZED.value()),
-	INVALID_SOCIAL_TOKEN("AUTH002", "유효하지 않은 소셜 토큰입니다", HttpStatus.UNAUTHORIZED.value()),
-	SOCIAL_LOGIN_ERROR("AUTH003", "소셜 로그인 처리 중 오류가 발생했습니다", HttpStatus.UNAUTHORIZED.value()),
-	OAUTH2_LOGIN_FAILED("AUTH004", "소셜 로그인에 실패했습니다. 다시 시도해주세요.", HttpStatus.UNAUTHORIZED.value()),
+	UNAUTHORIZED("AUTH000", "인증이 필요합니다", HttpStatus.UNAUTHORIZED.value()),
+	ACCESS_DENIED("AUTH001", "접근 권한이 없습니다", HttpStatus.FORBIDDEN.value()),
+	LOGIN_FAIL("AUTH002", "이메일 또는 비밀번호가 틀렸습니다", HttpStatus.UNAUTHORIZED.value()),
+	INVALID_SOCIAL_TOKEN("AUTH003", "유효하지 않은 소셜 토큰입니다", HttpStatus.UNAUTHORIZED.value()),
+	SOCIAL_LOGIN_ERROR("AUTH004", "소셜 로그인 처리 중 오류가 발생했습니다", HttpStatus.UNAUTHORIZED.value()),
+	OAUTH2_LOGIN_FAILED("AUTH005", "소셜 로그인에 실패했습니다. 다시 시도해주세요.", HttpStatus.UNAUTHORIZED.value()),
 
 	// 토큰 관련 오류 (TOKEN)
 	TOKEN_MALFORMED("TOKEN001", "잘못된 형식의 토큰입니다", HttpStatus.BAD_REQUEST.value()),

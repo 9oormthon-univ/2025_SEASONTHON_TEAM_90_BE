@@ -32,11 +32,21 @@ swagger:
 
 logging:
   level:
-    org.hibernate.SQL: debug
-    org.hibernate.type.descriptor.sql.BasicBinder: trace
-    com.groomthon.habiglow: debug
-    org.springframework.web.reactive.function.client: debug
-    root: info
+    org.hibernate.SQL: warn
+    org.hibernate.type.descriptor.sql.BasicBinder: warn
+    com.groomthon.habiglow: info
+    org.springframework.web.reactive.function.client: warn
+    root: warn
+
+# ===== Actuator 설정 (개발환경) =====
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+  endpoint:
+    health:
+      show-details: always
 
 # ===== 대시보드/프롬프트 설정 (추가) =====
 dashboard:

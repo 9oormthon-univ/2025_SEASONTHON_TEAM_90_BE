@@ -3,7 +3,6 @@ package com.groomthon.habiglow.domain.auth.service;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.groomthon.habiglow.domain.auth.dto.request.SocialLoginRequest;
 import com.groomthon.habiglow.domain.auth.dto.response.TokenResponse;
 import com.groomthon.habiglow.global.exception.BaseException;
 import com.groomthon.habiglow.global.jwt.JWTUtil;
@@ -28,23 +27,13 @@ public class AuthenticationService {
 	private final BlacklistService blacklistService;
 
 
+	/**
+	 * 토큰 재발급 (RTR 적용)
+	 * Refresh Token을 사용하여 Access Token과 Refresh Token을 모두 재발급합니다.
+	 * 보안을 위해 기존 Refresh Token은 무효화되고 새로운 토큰들이 발급됩니다.
+	 */
 	@Transactional
-	public TokenResponse refreshAccessToken(HttpServletRequest request, HttpServletResponse response) {
-		String refreshToken = extractRefreshTokenFromRequest(request);
-
-		TokenValidator.TokenValidationResult validation = tokenValidator.validateRefreshToken(refreshToken);
-		if (!validation.isValid()) {
-			throw new BaseException(ErrorCode.INVALID_TOKEN);
-		}
-
-		TokenResponse tokenResponse = jwtTokenService.reissueAccessToken(response, validation.getMemberId(), validation.getEmail(), validation.getSocialUniqueId());
-
-		log.info("Access token refreshed for member: {}", validation.getMemberId());
-		return tokenResponse;
-	}
-
-	@Transactional
-	public TokenResponse refreshAllTokens(HttpServletRequest request, HttpServletResponse response) {
+	public TokenResponse refreshTokens(HttpServletRequest request, HttpServletResponse response) {
 		String refreshToken = extractRefreshTokenFromRequest(request);
 
 		TokenValidator.TokenValidationResult validation = tokenValidator.validateRefreshToken(refreshToken);
@@ -53,9 +42,10 @@ public class AuthenticationService {
 		}
 
 		refreshTokenService.deleteRefreshToken(validation.getMemberId());
+
 		TokenResponse tokenResponse = jwtTokenService.reissueAllTokens(response, validation.getMemberId(), validation.getEmail(), validation.getSocialUniqueId());
 
-		log.info("Full token refresh completed for member: {}", validation.getMemberId());
+		log.info("Token refreshed with RTR for member: {}", validation.getMemberId());
 		return tokenResponse;
 	}
 
