@@ -12,6 +12,8 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
+import java.time.LocalDate;
+
 /**
  * 루틴의 성장 모드 설정을 담당하는 Value Object
  * 성장 관련 로직과 검증을 캡슐화함
@@ -46,10 +48,13 @@ public class GrowthSettings {
     @Column(name = "minimum_target_value")
     private Integer minimumTargetValue;
 
+    @Column(name = "last_adjusted_date")
+    private LocalDate lastAdjustedDate;
+
     @Builder
     private GrowthSettings(Boolean isGrowthMode, TargetType targetType, Integer targetValue,
         Integer growthCycleDays, Integer targetIncrement, Integer currentCycleDays,
-        Integer targetDecrement, Integer minimumTargetValue) {
+        Integer targetDecrement, Integer minimumTargetValue, LocalDate lastAdjustedDate) {
         this.isGrowthMode = isGrowthMode != null ? isGrowthMode : false;
         this.targetType = targetType;
         this.targetValue = targetValue;
@@ -58,6 +63,7 @@ public class GrowthSettings {
         this.currentCycleDays = currentCycleDays != null ? currentCycleDays : 0;
         this.targetDecrement = targetDecrement;
         this.minimumTargetValue = minimumTargetValue != null ? minimumTargetValue : 1;
+        this.lastAdjustedDate = lastAdjustedDate;
     }
 
     /**
@@ -85,6 +91,7 @@ public class GrowthSettings {
 
         this.targetValue += targetIncrement;
         this.currentCycleDays = 0; // 성장 주기 리셋
+        this.lastAdjustedDate = LocalDate.now(); // 조정 시점 기록
         return this.targetValue;
     }
 
@@ -99,6 +106,7 @@ public class GrowthSettings {
 
         this.targetValue = newTargetValue;
         this.currentCycleDays = 0; // 주기 리셋
+        this.lastAdjustedDate = LocalDate.now(); // 조정 시점 기록
     }
 
     /**
@@ -139,6 +147,7 @@ public class GrowthSettings {
             .currentCycleDays(this.currentCycleDays) // 기존 주기일 유지
             .targetDecrement(this.targetDecrement) // 기존 감소값 유지
             .minimumTargetValue(this.minimumTargetValue) // 기존 최소값 유지
+            .lastAdjustedDate(this.lastAdjustedDate) // 기존 조정 날짜 유지
             .build();
     }
 

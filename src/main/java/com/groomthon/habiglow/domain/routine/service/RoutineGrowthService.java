@@ -318,7 +318,7 @@ public class RoutineGrowthService {
     }
 
     /**
-     * 감소 주기 완료 여부 판단
+     * 감소 주기 완료 여부 판단 (마지막 조정 시점 이후의 기록만 확인)
      */
     private boolean isReductionCycleCompleted(RoutineEntity routine, List<DailyRoutineEntity> recentRecords) {
         if (!routine.isGrowthModeEnabled()) {
@@ -326,12 +326,20 @@ public class RoutineGrowthService {
         }
 
         Integer cycleDays = routine.getGrowthCycleDays();
-        if (recentRecords.size() < cycleDays) {
+        LocalDate lastAdjustedDate = routine.getGrowthSettings().getLastAdjustedDate();
+
+        // 마지막 조정 이후의 기록만 필터링
+        List<DailyRoutineEntity> relevantRecords = recentRecords.stream()
+            .filter(record -> lastAdjustedDate == null || record.getPerformedDate().isAfter(lastAdjustedDate))
+            .toList();
+
+        // 마지막 조정 이후 충분한 기록이 있는지 확인
+        if (relevantRecords.size() < cycleDays) {
             return false;
         }
 
-        // 핵심 조건: 최근 cycleDays 동안 FULL_SUCCESS가 한 번도 없었는지만 확인
-        boolean hasAnySuccess = recentRecords.stream()
+        // 핵심 조건: 마지막 조정 이후 cycleDays 동안 FULL_SUCCESS가 한 번도 없었는지 확인
+        boolean hasAnySuccess = relevantRecords.stream()
             .anyMatch(record -> record.getPerformanceLevel() == PerformanceLevel.FULL_SUCCESS);
 
         return !hasAnySuccess; // 성공이 없으면 감소 주기 완료
