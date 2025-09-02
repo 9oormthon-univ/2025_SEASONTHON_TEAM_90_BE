@@ -28,7 +28,11 @@ public enum ApiSuccessCode implements SuccessType {
 	ROUTINE_VIEW("S211", "루틴 조회 성공"),
 	ROUTINE_UPDATED("S212", "루틴 수정 성공"),
 	ROUTINE_DELETED("S213", "루틴 삭제 성공"),
-	ROUTINE_LIST_VIEW("S214", "루틴 목록 조회 성공");
+	ROUTINE_LIST_VIEW("S214", "루틴 목록 조회 성공"),
+
+	// AI 관련
+	AI_INSIGHT_SUCCESS("S300", "AI 주간 인사이트 조회 성공");
+
 
 	private final String code;
 	private final String message;

@@ -239,6 +239,138 @@
 
 ---
 
+## 5. 성장 루틴 관리 🚀
+
+### 📈 성장 가능한 루틴 조회
+**GET** `/api/routines/growth-check`
+
+로그인 시 전날 기준으로 성장 주기를 완료한 루틴들을 조회합니다.
+
+**Response:**
+```json
+{
+  "code": "S200",
+  "message": "요청이 성공적으로 처리되었습니다",
+  "data": {
+    "growthReadyRoutines": [
+      {
+        "routineId": 1,
+        "title": "푸쉬업 챌린지",
+        "category": "HEALTH",
+        "targetType": "NUMBER",
+        "currentTarget": 10,
+        "nextTarget": 12,
+        "increment": 2,
+        "completedCycleDays": 3,
+        "consecutiveDays": 3,
+        "currentCycleDays": 3,
+        "lastPerformedDate": "2025-01-30"
+      }
+    ],
+    "totalGrowthReadyCount": 1
+  }
+}
+```
+
+**필드 설명:**
+- `growthReadyRoutines`: 성장 가능한 루틴 목록
+- `currentTarget`: 현재 목표값
+- `nextTarget`: 성장 시 변경될 목표값
+- `increment`: 증가량
+- `completedCycleDays`: 설정된 성장 주기 일수
+- `consecutiveDays`: 총 연속 성공 일수
+- `currentCycleDays`: 현재 주기 내 연속 성공 일수
+- `totalGrowthReadyCount`: 성장 가능한 루틴 총 개수
+
+---
+
+### 📊 루틴 목표치 증가
+**PATCH** `/api/routines/{routineId}/increase-target`
+
+성장 주기가 완료된 루틴의 목표치를 증가시킵니다.
+
+**Path Parameters:**
+- `routineId`: 목표를 증가시킬 루틴 ID
+
+**성공 조건:**
+- 성장 모드가 활성화된 루틴
+- 성장 주기가 완료된 상태 (currentCycleDays >= growthCycleDays)
+- 전날 FULL_SUCCESS 기록이 존재
+- 목표 증가가 가능한 상태
+
+**Response:**
+```json
+{
+  "code": "S200",
+  "message": "요청이 성공적으로 처리되었습니다",
+  "data": {
+    "routineId": 1,
+    "title": "푸쉬업 챌린지",
+    "previousTarget": 10,
+    "newTarget": 12,
+    "increment": 2,
+    "targetType": "NUMBER",
+    "message": "목표가 10개에서 12개로 증가되었습니다!"
+  }
+}
+```
+
+**에러 응답:**
+```json
+{
+  "code": "ROUTINE007",
+  "message": "성장 모드가 활성화되지 않은 루틴입니다",
+  "data": null
+}
+```
+
+```json
+{
+  "code": "ROUTINE008", 
+  "message": "아직 성장 주기가 완료되지 않았습니다",
+  "data": null
+}
+```
+
+---
+
+### 🔄 성장 주기 리셋
+**PATCH** `/api/routines/{routineId}/reset-growth-cycle`
+
+성장 주기가 완료된 루틴의 주기를 리셋합니다. 성장을 거부할 때 사용합니다.
+
+**Path Parameters:**
+- `routineId`: 성장 주기를 리셋할 루틴 ID
+
+**사용 시나리오:**
+- 사용자가 목표 증가를 원하지 않는 경우
+- 현재 목표를 더 연습하고 싶은 경우
+- 성장 주기를 새로 시작하고 싶은 경우
+
+**Response:**
+```json
+{
+  "code": "S200",
+  "message": "요청이 성공적으로 처리되었습니다", 
+  "data": {
+    "routineId": 1,
+    "title": "푸쉬업 챌린지",
+    "currentTarget": 10,
+    "targetType": "NUMBER",
+    "growthCycleDays": 3,
+    "currentCycleDays": 0,
+    "message": "성장 주기가 리셋되었습니다. 10개 목표로 새로운 3일 주기를 시작하세요!"
+  }
+}
+```
+
+**주요 변경사항:**
+- `currentCycleDays`: 0으로 초기화
+- 목표값은 그대로 유지
+- 새로운 성장 주기 시작
+
+---
+
 ## 💡 성장 모드 설명
 
 ### 🚀 점진적 과부하 원리
@@ -247,16 +379,27 @@
 ### 동작 방식
 1. **초기 목표 설정**: 달성 가능한 목표로 시작
 2. **성장 주기 설정**: 목표를 증가시킬 주기 (예: 7일마다)
-3. **증가량 설정**: 주기마다 증가할 수치 (예: +50)
-4. **자동 증가**: 설정된 주기에 따라 목표 자동 증가
+3. **증가량 설정**: 주기마다 증가할 수치 (예: +10개)
+4. **자동 성장 감지**: 성장 주기 완료 시 사용자에게 알림
+5. **사용자 선택**: 목표 증가 또는 주기 리셋 선택 가능
+
+### 🔄 성장 주기 관리 시스템
+- **consecutiveDays**: 총 연속 성공 일수 (누적)
+- **currentCycleDays**: 현재 주기 내 연속 성공 일수
+- **성장 조건**: `currentCycleDays >= growthCycleDays`
+- **주기 리셋**: 목표 증가 시 `currentCycleDays = 0`으로 초기화
 
 ### 예시 시나리오
 ```
-초기 목표: 100개 푸시업 (7일 주기, +10개씩 증가)
-1주차: 100개
-2주차: 110개  
-3주차: 120개
-...
+푸쉬업 루틴: 초기 10개 (3일 주기, +2개씩 증가)
+
+1일차: 10개 성공 → currentCycleDays: 1, consecutiveDays: 1
+2일차: 10개 성공 → currentCycleDays: 2, consecutiveDays: 2  
+3일차: 10개 성공 → currentCycleDays: 3, consecutiveDays: 3
+      ↓ 성장 조건 만족!
+사용자 선택:
+- 목표 증가 → 12개 목표, currentCycleDays: 0
+- 주기 리셋 → 10개 목표 유지, currentCycleDays: 0
 ```
 
 ### 설정 필드
@@ -265,6 +408,7 @@
 - `targetValue`: 현재 목표 수치
 - `growthCycleDays`: 성장 주기 (일 단위)
 - `targetIncrement`: 주기당 증가량
+- `currentCycleDays`: 현재 주기 내 연속 성공 일수 🆕
 
 ---
 

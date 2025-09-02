@@ -145,4 +145,12 @@ public class RoutineEntity extends BaseTimeEntity {
     public Integer getTargetIncrement() {
         return growthSettings.getTargetIncrement();
     }
+    
+    public GrowthSettings getGrowthSettings() {
+        return growthSettings;
+    }
+    
+    public Integer getCurrentCycleDays() {
+        return growthSettings.getCurrentCycleDays();
+    }
 }

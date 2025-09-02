@@ -37,15 +37,18 @@ public class GrowthSettings {
     @Column(name = "target_increment")
     private Integer targetIncrement;
     
+    @Column(name = "current_cycle_days")
+    private Integer currentCycleDays = 0;
+    
     @Builder
     private GrowthSettings(Boolean isGrowthMode, TargetType targetType, Integer targetValue, 
-                          Integer growthCycleDays, Integer targetIncrement) {
+                          Integer growthCycleDays, Integer targetIncrement, Integer currentCycleDays) {
         this.isGrowthMode = isGrowthMode != null ? isGrowthMode : false;
         this.targetType = targetType;
         this.targetValue = targetValue;
         this.growthCycleDays = growthCycleDays;
         this.targetIncrement = targetIncrement;
-        
+        this.currentCycleDays = currentCycleDays != null ? currentCycleDays : 0;
     }
     
     /**
@@ -72,11 +75,36 @@ public class GrowthSettings {
         }
         
         this.targetValue += targetIncrement;
+        this.currentCycleDays = 0; // 성장 주기 리셋
         return this.targetValue;
     }
     
     /**
-     * 성장 설정 업데이트
+     * 현재 주기 연속일 증가
+     */
+    public void incrementCurrentCycleDays() {
+        this.currentCycleDays = (this.currentCycleDays != null ? this.currentCycleDays : 0) + 1;
+    }
+    
+    /**
+     * 현재 주기 연속일 리셋 (실패 시)
+     */
+    public void resetCurrentCycleDays() {
+        this.currentCycleDays = 0;
+    }
+    
+    /**
+     * 성장 주기 완료 여부 확인
+     */
+    public boolean isGrowthCycleCompleted() {
+        if (!isEnabled() || currentCycleDays == null || growthCycleDays == null) {
+            return false;
+        }
+        return currentCycleDays >= growthCycleDays;
+    }
+    
+    /**
+     * 성장 설정 업데이트 (현재 주기일은 유지)
      */
     public GrowthSettings update(Boolean isGrowthMode, TargetType targetType, Integer targetValue,
                                 Integer growthCycleDays, Integer targetIncrement) {
@@ -86,6 +114,7 @@ public class GrowthSettings {
                 .targetValue(targetValue)
                 .growthCycleDays(growthCycleDays)
                 .targetIncrement(targetIncrement)
+                .currentCycleDays(this.currentCycleDays) // 기존 주기일 유지
                 .build();
     }
     
