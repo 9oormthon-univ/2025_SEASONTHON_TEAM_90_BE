@@ -2,10 +2,13 @@
 
 > **소셜 로그인 전용 Spring Boot JWT 인증 시스템 API 문서**
 
-## 🔄 최근 업데이트 (v4.0)
+## 🔄 최근 업데이트 (v4.1)
 
-### 🔒 보안 강화 업데이트 (v4.0 - 2025-01-30)
-- **RTR(Refresh Token Rotation) 완전 적용**: 모든 토큰 재발급에 RTR 보안 정책 통일 적용
+### 🔒 보안 강화 업데이트 (v4.1 - 2025-01-30)
+- **⚠️ Access Token 응답 헤더 노출 제거**: 보안 위험이 있는 Authorization 헤더 응답 완전 제거
+- **📦 Response Body 전용 토큰 전달**: 모든 JWT 토큰은 응답 본문(Response Body)을 통해서만 전달
+- **🛡️ 로그/캐시 보안 강화**: HTTP 응답 헤더의 민감 정보 노출 방지로 로그 유출 위험 제거
+- **🔄 RTR(Refresh Token Rotation) 완전 적용**: 모든 토큰 재발급에 RTR 보안 정책 통일 적용
 - **API 엔드포인트 통합**: `/api/auth/token/refresh/full` 제거, `/api/auth/token/refresh`로 통일
 - **토큰 재사용 공격 완전 차단**: Refresh Token 한 번 사용 시 즉시 무효화
 - **보안 헤더 강화**: XSS, 클릭재킹, MIME 스니핑 등 웹 공격 방어 헤더 추가
