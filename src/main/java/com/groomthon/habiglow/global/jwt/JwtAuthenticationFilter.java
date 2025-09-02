@@ -48,9 +48,9 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 	}
 
 	private void validateAndSetAuthentication(String token) {
-		// JWT 토큰 검증
-		if (!jwtUtil.validateToken(token, "access")) {
-			log.warn("토큰 검증 실패");
+		// JWT 토큰 검증 - 명시적으로 Access Token 타입 확인
+		if (!jwtUtil.isAccessToken(token)) {
+			log.warn("유효하지 않은 Access Token입니다");
 			throw new InvalidJwtSignatureException();
 		}
 		
