@@ -3,7 +3,6 @@ package com.groomthon.habiglow.domain.routine.controller;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
@@ -14,9 +13,6 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.groomthon.habiglow.domain.routine.dto.request.CreateRoutineRequest;
 import com.groomthon.habiglow.domain.routine.dto.request.UpdateRoutineRequest;
-import com.groomthon.habiglow.domain.routine.dto.response.GrowthCheckResponse;
-import com.groomthon.habiglow.domain.routine.dto.response.IncreaseTargetResponse;
-import com.groomthon.habiglow.domain.routine.dto.response.ResetGrowthCycleResponse;
 import com.groomthon.habiglow.domain.routine.dto.response.RoutineListResponse;
 import com.groomthon.habiglow.domain.routine.dto.response.RoutineResponse;
 import com.groomthon.habiglow.domain.routine.entity.RoutineCategory;
@@ -152,59 +148,5 @@ public class RoutineController {
             @PathVariable Long routineId) {
         Long userId = jwtMemberExtractor.extractMemberId(request);
         routineService.deleteRoutine(userId, routineId);
-    }
-    
-    @Operation(
-        summary = "성장 가능한 루틴 조회", 
-        description = "로그인 시 전날 기준으로 성장 주기를 완료한 루틴들을 조회합니다."
-    )
-    @ApiResponse(responseCode = "200", description = "조회 성공")
-    @CustomExceptionDescription(SwaggerResponseDescription.ROUTINE_ERROR)
-    @GetMapping("/growth-check")
-    @PreAuthorize("isAuthenticated()")
-    @SuccessCode(ApiSuccessCode.SUCCESS)
-    public GrowthCheckResponse checkGrowthReadyRoutines(HttpServletRequest request) {
-        Long userId = jwtMemberExtractor.extractMemberId(request);
-        return routineGrowthService.checkGrowthReadyRoutines(userId);
-    }
-    
-    @Operation(
-        summary = "루틴 목표치 증가", 
-        description = "성장 주기가 완료된 루틴의 목표치를 증가시킵니다."
-    )
-    @ApiResponses(value = {
-        @ApiResponse(responseCode = "200", description = "증가 성공"),
-        @ApiResponse(responseCode = "400", description = "성장 조건 미충족", content = @Content),
-        @ApiResponse(responseCode = "404", description = "루틴이 존재하지 않음", content = @Content)
-    })
-    @CustomExceptionDescription(SwaggerResponseDescription.ROUTINE_ERROR)
-    @PatchMapping("/{routineId}/increase-target")
-    @PreAuthorize("isAuthenticated()")
-    @SuccessCode(ApiSuccessCode.SUCCESS)
-    public IncreaseTargetResponse increaseTarget(
-            HttpServletRequest request,
-            @Parameter(description = "루틴 ID", example = "1") @PathVariable Long routineId) {
-        Long userId = jwtMemberExtractor.extractMemberId(request);
-        return routineGrowthService.increaseRoutineTarget(routineId, userId);
-    }
-    
-    @Operation(
-        summary = "성장 주기 리셋", 
-        description = "성장 주기가 완료된 루틴의 주기를 리셋합니다. 성장을 거부할 때 사용합니다."
-    )
-    @ApiResponses(value = {
-        @ApiResponse(responseCode = "200", description = "리셋 성공"),
-        @ApiResponse(responseCode = "400", description = "리셋 조건 미충족", content = @Content),
-        @ApiResponse(responseCode = "404", description = "루틴이 존재하지 않음", content = @Content)
-    })
-    @CustomExceptionDescription(SwaggerResponseDescription.ROUTINE_ERROR)
-    @PatchMapping("/{routineId}/reset-growth-cycle")
-    @PreAuthorize("isAuthenticated()")
-    @SuccessCode(ApiSuccessCode.SUCCESS)
-    public ResetGrowthCycleResponse resetGrowthCycle(
-            HttpServletRequest request,
-            @Parameter(description = "루틴 ID", example = "1") @PathVariable Long routineId) {
-        Long userId = jwtMemberExtractor.extractMemberId(request);
-        return routineGrowthService.resetGrowthCycle(routineId, userId);
     }
 }

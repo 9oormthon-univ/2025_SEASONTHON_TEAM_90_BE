@@ -42,6 +42,8 @@ public enum ErrorCode implements ErrorType {
 	ROUTINE_CANNOT_INCREASE_TARGET("ROUTINE006", "목표치를 증가시킬 수 없는 상태입니다", HttpStatus.BAD_REQUEST.value()),
 	ROUTINE_NOT_GROWTH_MODE("ROUTINE007", "성장 모드가 활성화되지 않은 루틴입니다", HttpStatus.BAD_REQUEST.value()),
 	GROWTH_CYCLE_NOT_COMPLETED("ROUTINE008", "아직 성장 주기가 완료되지 않았습니다", HttpStatus.BAD_REQUEST.value()),
+	ROUTINE_CANNOT_DECREASE_TARGET("ROUTINE009", "목표치를 감소시킬 수 없는 상태입니다", HttpStatus.BAD_REQUEST.value()),
+	REDUCTION_CYCLE_NOT_COMPLETED("ROUTINE010", "아직 감소 조건이 충족되지 않았습니다", HttpStatus.BAD_REQUEST.value()),
 	
 	// 일일 기록 관련 오류 (DAILY)
 	DAILY_RECORD_FUTURE_DATE_NOT_ALLOWED("DAILY001", "미래 날짜는 수정할 수 없습니다", HttpStatus.BAD_REQUEST.value()),
