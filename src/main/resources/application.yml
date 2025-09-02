@@ -29,7 +29,6 @@ security:
     - "/swagger-ui/**"
     # 헬스체크
     - "/health"
-    - "/actuator/health"
     # 일반 회원가입 제거: "/api/join", "/api/join/email-check", "/api/auth/login"
   cors-max-age: 3600
 

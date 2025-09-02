@@ -13,6 +13,8 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 
 import com.google.common.util.concurrent.RateLimiter;
 import com.groomthon.habiglow.global.config.properties.SecurityProperties;
+import com.groomthon.habiglow.domain.auth.service.BlacklistService;
+import com.groomthon.habiglow.global.jwt.JWTUtil;
 import com.groomthon.habiglow.global.jwt.JwtAuthenticationFilter;
 import com.groomthon.habiglow.global.security.JwtAccessDeniedHandler;
 import com.groomthon.habiglow.global.security.JwtAuthenticationEntryPoint;
@@ -26,10 +28,18 @@ public class SecurityConfig {
 
 	private final SecurityProperties securityProperties;
 	private final CorsConfig corsConfig;
+	private final JWTUtil jwtUtil;
+	private final BlacklistService blacklistService;
 
 	@Bean
-	public RateLimitFilter rateLimitFilter(ConcurrentHashMap<String, RateLimiter> rateLimiterMap) {
-		return new RateLimitFilter(rateLimiterMap);
+	public RateLimitFilter rateLimitFilter(ConcurrentHashMap<String, RateLimiter> rateLimiterMap, 
+			com.groomthon.habiglow.global.util.SecurityResponseUtils responseUtils) {
+		return new RateLimitFilter(rateLimiterMap, responseUtils);
+	}
+
+	@Bean
+	public JwtAuthenticationFilter jwtAuthenticationFilter() {
+		return new JwtAuthenticationFilter(jwtUtil, blacklistService);
 	}
 
 	@Bean

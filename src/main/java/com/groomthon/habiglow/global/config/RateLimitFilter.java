@@ -1,16 +1,13 @@
 package com.groomthon.habiglow.global.config;
 
 import java.io.IOException;
-import java.io.PrintWriter;
 import java.util.concurrent.ConcurrentHashMap;
 
-import org.springframework.http.MediaType;
 import org.springframework.web.filter.OncePerRequestFilter;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.util.concurrent.RateLimiter;
-import com.groomthon.habiglow.global.dto.CommonApiResponse;
 import com.groomthon.habiglow.global.response.ErrorCode;
+import com.groomthon.habiglow.global.util.SecurityResponseUtils;
 
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
@@ -28,7 +25,7 @@ import lombok.extern.slf4j.Slf4j;
 public class RateLimitFilter extends OncePerRequestFilter {
 
     private final ConcurrentHashMap<String, RateLimiter> rateLimiterMap;
-    private final ObjectMapper objectMapper = new ObjectMapper();
+    private final SecurityResponseUtils responseUtils;
 
     // API별 요청 제한 설정 (초당 요청 수)
     private static final double SOCIAL_LOGIN_RATE = 0.1;  // 10초당 1회
@@ -89,15 +86,6 @@ public class RateLimitFilter extends OncePerRequestFilter {
     }
 
     private void sendRateLimitError(HttpServletResponse response) throws IOException {
-        response.setStatus(ErrorCode.TOO_MANY_REQUESTS.getStatus());
-        response.setContentType(MediaType.APPLICATION_JSON_VALUE);
-        response.setCharacterEncoding("UTF-8");
-        
-        CommonApiResponse<Void> errorResponse = CommonApiResponse.fail(ErrorCode.TOO_MANY_REQUESTS);
-        String jsonResponse = objectMapper.writeValueAsString(errorResponse);
-        
-        PrintWriter writer = response.getWriter();
-        writer.write(jsonResponse);
-        writer.flush();
+        responseUtils.sendErrorResponse(response, ErrorCode.TOO_MANY_REQUESTS);
     }
 }
