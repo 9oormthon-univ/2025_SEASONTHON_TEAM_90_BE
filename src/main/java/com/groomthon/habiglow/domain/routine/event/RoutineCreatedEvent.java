@@ -2,8 +2,8 @@ package com.groomthon.habiglow.domain.routine.event;
 
 import java.time.LocalDateTime;
 
-import com.groomthon.habiglow.domain.routine.entity.RoutineCategory;
-import com.groomthon.habiglow.domain.routine.entity.TargetType;
+import com.groomthon.habiglow.domain.routine.common.RoutineCategory;
+import com.groomthon.habiglow.domain.routine.common.TargetType;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;

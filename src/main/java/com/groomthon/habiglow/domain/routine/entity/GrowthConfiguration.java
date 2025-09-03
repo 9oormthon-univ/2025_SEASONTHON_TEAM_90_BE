@@ -2,6 +2,8 @@ package com.groomthon.habiglow.domain.routine.entity;
 
 import java.time.LocalDate;
 
+import com.groomthon.habiglow.domain.routine.common.TargetType;
+
 import jakarta.persistence.Column;
 import jakarta.persistence.Embeddable;
 import jakarta.persistence.EnumType;
@@ -48,7 +50,7 @@ public class GrowthConfiguration {
     @Column(name = "last_adjusted_date")
     private LocalDate lastAdjustedDate;
 
-    @Builder
+    @Builder(toBuilder = true)
     private GrowthConfiguration(Boolean isGrowthMode, TargetType targetType, Integer targetValue,
         Integer growthCycleDays, Integer targetIncrement, Integer currentCycleDays,
         Integer targetDecrement, Integer minimumTargetValue, LocalDate lastAdjustedDate) {
@@ -76,45 +78,23 @@ public class GrowthConfiguration {
     }
 
     // 데이터 업데이트 메서드 (비즈니스 로직 없는 단순 setter)
-    public GrowthConfiguration updateTargetValue(Integer newTargetValue) {
-        return GrowthConfiguration.builder()
-            .isGrowthMode(this.isGrowthMode)
-            .targetType(this.targetType)
+    public GrowthConfiguration withUpdatedTarget(Integer newTargetValue) {
+        return this.toBuilder()
             .targetValue(newTargetValue)
-            .growthCycleDays(this.growthCycleDays)
-            .targetIncrement(this.targetIncrement)
             .currentCycleDays(0) // 목표 변경 시 주기 리셋
-            .targetDecrement(this.targetDecrement)
-            .minimumTargetValue(this.minimumTargetValue)
             .lastAdjustedDate(LocalDate.now())
             .build();
     }
 
-    public GrowthConfiguration resetCurrentCycleDays() {
-        return GrowthConfiguration.builder()
-            .isGrowthMode(this.isGrowthMode)
-            .targetType(this.targetType)
-            .targetValue(this.targetValue)
-            .growthCycleDays(this.growthCycleDays)
-            .targetIncrement(this.targetIncrement)
+    public GrowthConfiguration withResetCycle() {
+        return this.toBuilder()
             .currentCycleDays(0)
-            .targetDecrement(this.targetDecrement)
-            .minimumTargetValue(this.minimumTargetValue)
-            .lastAdjustedDate(this.lastAdjustedDate)
             .build();
     }
 
-    public GrowthConfiguration incrementCurrentCycleDays() {
-        return GrowthConfiguration.builder()
-            .isGrowthMode(this.isGrowthMode)
-            .targetType(this.targetType)
-            .targetValue(this.targetValue)
-            .growthCycleDays(this.growthCycleDays)
-            .targetIncrement(this.targetIncrement)
+    public GrowthConfiguration withIncrementedCycle() {
+        return this.toBuilder()
             .currentCycleDays((this.currentCycleDays != null ? this.currentCycleDays : 0) + 1)
-            .targetDecrement(this.targetDecrement)
-            .minimumTargetValue(this.minimumTargetValue)
-            .lastAdjustedDate(this.lastAdjustedDate)
             .build();
     }
 

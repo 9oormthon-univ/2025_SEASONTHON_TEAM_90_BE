@@ -1,5 +1,7 @@
 package com.groomthon.habiglow.domain.routine.entity;
 
+import com.groomthon.habiglow.domain.routine.common.RoutineCategory;
+
 import jakarta.persistence.Column;
 import jakarta.persistence.Embeddable;
 import jakarta.persistence.EnumType;

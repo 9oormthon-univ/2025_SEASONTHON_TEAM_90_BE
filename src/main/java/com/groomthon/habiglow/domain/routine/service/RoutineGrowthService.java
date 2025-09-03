@@ -7,13 +7,13 @@ import java.util.stream.Collectors;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.groomthon.habiglow.domain.routine.dto.response.AdaptiveRoutineCheckResponse;
-import com.groomthon.habiglow.domain.routine.dto.response.GrowthReadyRoutineResponse;
-import com.groomthon.habiglow.domain.routine.dto.response.ReductionReadyRoutineResponse;
+import com.groomthon.habiglow.domain.routine.dto.response.adaptation.AdaptiveRoutineCheckResponse;
+import com.groomthon.habiglow.domain.routine.dto.response.adaptation.GrowthReadyRoutineResponse;
+import com.groomthon.habiglow.domain.routine.dto.response.adaptation.ReductionReadyRoutineResponse;
 import com.groomthon.habiglow.domain.routine.dto.response.ResetGrowthCycleResponse;
-import com.groomthon.habiglow.domain.routine.dto.response.RoutineAdaptationCheckResponse;
+import com.groomthon.habiglow.domain.routine.dto.response.adaptation.RoutineAdaptationCheckResponse;
 import com.groomthon.habiglow.domain.routine.entity.RoutineEntity;
-import com.groomthon.habiglow.domain.routine.helper.RoutineHelper;
+import com.groomthon.habiglow.domain.routine.repository.RoutineRepository;
 import com.groomthon.habiglow.global.exception.BaseException;
 import com.groomthon.habiglow.global.response.ErrorCode;
 
@@ -25,14 +25,15 @@ import lombok.extern.slf4j.Slf4j;
 @RequiredArgsConstructor
 public class RoutineGrowthService {
 
-    private final RoutineHelper routineHelper;
+    private final RoutineRepository routineRepository;
     private final GrowthAnalysisService growthAnalysisService;
     private final ReductionAnalysisService reductionAnalysisService;
     private final GrowthConfigurationService growthConfigurationService;
 
     @Transactional
     public ResetGrowthCycleResponse resetGrowthCycle(Long routineId, Long memberId) {
-        RoutineEntity routine = routineHelper.findRoutineByIdAndMemberId(routineId, memberId);
+        RoutineEntity routine = routineRepository.findByRoutineIdAndMember_Id(routineId, memberId)
+                .orElseThrow(() -> new BaseException(ErrorCode.ROUTINE_NOT_FOUND));
 
         if (!routine.isGrowthModeEnabled()) {
             throw new BaseException(ErrorCode.ROUTINE_NOT_GROWTH_MODE);

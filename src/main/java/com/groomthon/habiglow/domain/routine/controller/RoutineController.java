@@ -16,14 +16,14 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.groomthon.habiglow.domain.routine.dto.request.CreateRoutineRequest;
 import com.groomthon.habiglow.domain.routine.dto.request.UpdateRoutineRequest;
-import com.groomthon.habiglow.domain.routine.dto.response.AdaptationAction;
-import com.groomthon.habiglow.domain.routine.dto.response.AdaptiveRoutineCheckResponse;
+import com.groomthon.habiglow.domain.routine.dto.response.adaptation.AdaptationAction;
+import com.groomthon.habiglow.domain.routine.dto.response.adaptation.AdaptiveRoutineCheckResponse;
 import com.groomthon.habiglow.domain.routine.dto.response.ResetGrowthCycleResponse;
-import com.groomthon.habiglow.domain.routine.dto.response.RoutineAdaptationResultResponse;
+import com.groomthon.habiglow.domain.routine.dto.response.adaptation.RoutineAdaptationResultResponse;
 import com.groomthon.habiglow.domain.routine.dto.response.RoutineCategoryResponse;
 import com.groomthon.habiglow.domain.routine.dto.response.RoutineListResponse;
 import com.groomthon.habiglow.domain.routine.dto.response.RoutineResponse;
-import com.groomthon.habiglow.domain.routine.entity.RoutineCategory;
+import com.groomthon.habiglow.domain.routine.common.RoutineCategory;
 import com.groomthon.habiglow.domain.routine.facade.RoutineManagementFacade;
 import com.groomthon.habiglow.domain.routine.service.RoutineGrowthService;
 import com.groomthon.habiglow.domain.routine.facade.RoutineQueryFacade;

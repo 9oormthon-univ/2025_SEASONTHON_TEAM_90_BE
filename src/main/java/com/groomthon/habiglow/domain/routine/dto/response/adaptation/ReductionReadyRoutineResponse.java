@@ -1,4 +1,4 @@
-package com.groomthon.habiglow.domain.routine.dto.response;
+package com.groomthon.habiglow.domain.routine.dto.response.adaptation;
 
 import java.time.LocalDate;
 

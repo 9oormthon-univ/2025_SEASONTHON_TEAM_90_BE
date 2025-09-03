@@ -4,7 +4,7 @@ import java.util.List;
 
 import org.hibernate.validator.constraints.URL;
 
-import com.groomthon.habiglow.domain.routine.entity.RoutineCategory;
+import com.groomthon.habiglow.domain.routine.common.RoutineCategory;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.Size;

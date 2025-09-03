@@ -22,8 +22,6 @@ public interface DailyRoutineRepository extends JpaRepository<DailyRoutineEntity
 
     Optional<DailyRoutineEntity> findByRoutine_RoutineIdAndMemberIdAndPerformedDate(
             Long routineId, Long memberId, LocalDate date);
-    Optional<DailyRoutineEntity> findByRoutineRoutineIdAndMemberIdAndPerformedDate(
-        Long routineId, Long memberId, LocalDate date);
 
     @Modifying
     @Query("DELETE FROM DailyRoutineEntity dr WHERE dr.member.id = :memberId AND dr.performedDate = :date")

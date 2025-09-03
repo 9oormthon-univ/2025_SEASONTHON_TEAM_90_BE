@@ -2,7 +2,7 @@ package com.groomthon.habiglow.domain.routine.event;
 
 import java.time.LocalDateTime;
 
-import com.groomthon.habiglow.domain.routine.dto.response.AdaptationAction;
+import com.groomthon.habiglow.domain.routine.dto.response.adaptation.AdaptationAction;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;

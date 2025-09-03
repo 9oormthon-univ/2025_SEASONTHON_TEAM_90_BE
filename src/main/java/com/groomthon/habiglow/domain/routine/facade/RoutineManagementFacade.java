@@ -5,18 +5,20 @@ import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.groomthon.habiglow.domain.member.entity.MemberEntity;
+import com.groomthon.habiglow.domain.member.repository.MemberRepository;
 import com.groomthon.habiglow.domain.routine.dto.request.CreateRoutineRequest;
 import com.groomthon.habiglow.domain.routine.dto.request.UpdateRoutineRequest;
 import com.groomthon.habiglow.domain.routine.dto.response.RoutineResponse;
 import com.groomthon.habiglow.domain.routine.entity.RoutineEntity;
-import com.groomthon.habiglow.domain.routine.helper.RoutineHelper;
+import com.groomthon.habiglow.global.exception.BaseException;
+import com.groomthon.habiglow.global.response.ErrorCode;
 import com.groomthon.habiglow.domain.routine.repository.RoutineRepository;
 import com.groomthon.habiglow.domain.routine.service.RoutineValidationService;
 import com.groomthon.habiglow.domain.routine.service.GrowthAnalysisService;
 import com.groomthon.habiglow.domain.routine.service.ReductionAnalysisService;
 import com.groomthon.habiglow.domain.routine.service.GrowthConfigurationService;
-import com.groomthon.habiglow.domain.routine.dto.response.RoutineAdaptationResultResponse;
-import com.groomthon.habiglow.domain.routine.dto.response.AdaptationAction;
+import com.groomthon.habiglow.domain.routine.dto.response.adaptation.RoutineAdaptationResultResponse;
+import com.groomthon.habiglow.domain.routine.dto.response.adaptation.AdaptationAction;
 import com.groomthon.habiglow.domain.routine.event.RoutineTargetChangedEvent;
 import com.groomthon.habiglow.domain.routine.event.RoutineCreatedEvent;
 import com.groomthon.habiglow.domain.routine.event.RoutineDeletedEvent;
@@ -30,7 +32,7 @@ import lombok.extern.slf4j.Slf4j;
 public class RoutineManagementFacade {
     
     private final RoutineRepository routineRepository;
-    private final RoutineHelper routineHelper;
+    private final MemberRepository memberRepository;
     private final RoutineValidationService validationService;
     private final GrowthAnalysisService growthAnalysisService;
     private final ReductionAnalysisService reductionAnalysisService;
@@ -39,7 +41,8 @@ public class RoutineManagementFacade {
 
     @Transactional
     public RoutineResponse createRoutineWithFullValidation(Long memberId, CreateRoutineRequest request) {
-        MemberEntity member = routineHelper.findMemberById(memberId);
+        MemberEntity member = memberRepository.findById(memberId)
+                .orElseThrow(() -> new BaseException(ErrorCode.MEMBER_NOT_FOUND));
         
         validateAndCreateRoutine(request);
         
@@ -75,7 +78,8 @@ public class RoutineManagementFacade {
 
     @Transactional
     public RoutineResponse updateRoutineWithValidation(Long memberId, Long routineId, UpdateRoutineRequest request) {
-        RoutineEntity routine = routineHelper.findRoutineByIdAndMemberId(routineId, memberId);
+        RoutineEntity routine = routineRepository.findByRoutineIdAndMember_Id(routineId, memberId)
+                .orElseThrow(() -> new BaseException(ErrorCode.ROUTINE_NOT_FOUND));
         
         validateAndUpdateRoutine(request);
         
@@ -136,7 +140,8 @@ public class RoutineManagementFacade {
 
     @Transactional
     public void deleteRoutine(Long memberId, Long routineId) {
-        RoutineEntity routine = routineHelper.findRoutineByIdAndMemberId(routineId, memberId);
+        RoutineEntity routine = routineRepository.findByRoutineIdAndMember_Id(routineId, memberId)
+                .orElseThrow(() -> new BaseException(ErrorCode.ROUTINE_NOT_FOUND));
         
         // 루틴 삭제 이벤트 발행 (삭제 전에 데이터 수집)
         RoutineDeletedEvent event = RoutineDeletedEvent.of(
@@ -166,7 +171,8 @@ public class RoutineManagementFacade {
      */
     @Transactional
     public RoutineAdaptationResultResponse executeRoutineAdaptation(Long memberId, Long routineId, AdaptationAction action) {
-        RoutineEntity routine = routineHelper.findRoutineByIdAndMemberId(routineId, memberId);
+        RoutineEntity routine = routineRepository.findByRoutineIdAndMember_Id(routineId, memberId)
+                .orElseThrow(() -> new BaseException(ErrorCode.ROUTINE_NOT_FOUND));
         
         return switch (action) {
             case INCREASE -> executeGrowthAdaptation(routine, memberId);

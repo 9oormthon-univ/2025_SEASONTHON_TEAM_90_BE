@@ -1,4 +1,4 @@
-package com.groomthon.habiglow.domain.routine.dto.response;
+package com.groomthon.habiglow.domain.routine.dto.response.adaptation;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.AllArgsConstructor;

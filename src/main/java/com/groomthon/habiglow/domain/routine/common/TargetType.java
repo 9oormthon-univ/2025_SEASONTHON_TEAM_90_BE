@@ -1,4 +1,4 @@
-package com.groomthon.habiglow.domain.routine.entity;
+package com.groomthon.habiglow.domain.routine.common;
 
 public enum TargetType {
     DATE("날짜", "일"),

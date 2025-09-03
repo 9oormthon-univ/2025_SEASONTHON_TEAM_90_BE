@@ -1,6 +1,8 @@
 package com.groomthon.habiglow.domain.routine.entity;
 
 import com.groomthon.habiglow.domain.member.entity.MemberEntity;
+import com.groomthon.habiglow.domain.routine.common.RoutineCategory;
+import com.groomthon.habiglow.domain.routine.common.TargetType;
 import com.groomthon.habiglow.global.entity.BaseTimeEntity;
 
 import jakarta.persistence.Column;
@@ -49,7 +51,7 @@ public class RoutineEntity extends BaseTimeEntity {
     /**
      * 루틴 정보 업데이트 (제목 제외)
      */
-    public void updateRoutine(String description, RoutineCategory category, Boolean isGrowthMode, 
+    public void updateRoutine(String description, RoutineCategory category, Boolean isGrowthMode,
                              TargetType targetType, Integer targetValue, Integer growthCycleDays, Integer targetIncrement) {
         // 기본 정보 업데이트
         this.details = this.details.updateDetails(description, category);
