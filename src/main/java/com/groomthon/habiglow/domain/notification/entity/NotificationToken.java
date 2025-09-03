@@ -1,5 +1,6 @@
 package com.groomthon.habiglow.domain.notification.entity;
 
+import com.groomthon.habiglow.domain.notification.enums.PushPlatform;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
@@ -17,6 +18,7 @@ import java.time.LocalDateTime;
 )
 @Getter @Setter
 public class NotificationToken {
+
     @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
@@ -25,6 +27,10 @@ public class NotificationToken {
 
     @Column(nullable=false, length=2048)
     private String token;
+
+    @Enumerated(EnumType.STRING)
+    @Column(nullable=false, length=20)
+    private PushPlatform platform = PushPlatform.ANDROID; // 지금은 ANDROID 고정
 
     @Column(name="device_id", nullable=false, length=128)
     private String deviceId;
@@ -35,10 +41,19 @@ public class NotificationToken {
     private boolean active = true;
 
     @Column(nullable=false, updatable=false)
-    private LocalDateTime createdAt = LocalDateTime.now();
+    private LocalDateTime createdAt;
 
     @Column(nullable=false)
-    private LocalDateTime updatedAt = LocalDateTime.now();
+    private LocalDateTime updatedAt;
 
-    @PreUpdate void onUpdate(){ this.updatedAt = LocalDateTime.now(); }
+    @PrePersist
+    protected void onCreate() {
+        this.createdAt = LocalDateTime.now();
+        this.updatedAt = this.createdAt;
+    }
+
+    @PreUpdate
+    protected void onUpdate() {
+        this.updatedAt = LocalDateTime.now();
+    }
 }
