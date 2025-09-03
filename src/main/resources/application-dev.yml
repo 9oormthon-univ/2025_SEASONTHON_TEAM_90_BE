@@ -28,7 +28,7 @@ cookie:
 fcm:
   firebase:
     config:
-      path: "classpath:firebase/habiglow-3db7f-firebase-adminsdk-fbsvc-53af65622f.json"
+      path: "classpath:firebase/habiglow-service-account.json"
 
 
 swagger:
