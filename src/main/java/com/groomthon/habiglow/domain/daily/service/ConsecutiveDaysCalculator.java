@@ -27,7 +27,7 @@ public class ConsecutiveDaysCalculator {
         
         LocalDate yesterday = currentDate.minusDays(1);
         Optional<DailyRoutineEntity> yesterdayRecord = dailyRoutineRepository
-            .findByRoutineRoutineIdAndMemberIdAndPerformedDate(routineId, memberId, yesterday);
+            .findByRoutine_RoutineIdAndMemberIdAndPerformedDate(routineId, memberId, yesterday);
         
         if (yesterdayRecord.isEmpty() || !yesterdayRecord.get().isFullSuccess()) {
             return 1;

@@ -21,7 +21,7 @@ import java.time.LocalDate;
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/v1/dashboard/weekly")
-@Tag(name = "대시보드 인사이트 API", description = "주간 AI 인사이트, 통계를 관리하는 api")
+@Tag(name = "주간 대시보드 API", description = "주간 AI 인사이트 및 통계를 관리하는 API")
 @SecurityRequirement(name = "JWT") // Swagger에서 Authorize(베어러 토큰) 사용
 public class WeeklyInsightController {
 

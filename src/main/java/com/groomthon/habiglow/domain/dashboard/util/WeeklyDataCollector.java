@@ -36,7 +36,7 @@ public class WeeklyDataCollector {
         LocalDate thisMonday = LocalDate.now().with(TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY));
         LocalDate lastWeekMonday = thisMonday.minusWeeks(1);
 
-        if (activeProfiles.contains("dummy-data")) {
+        if (activeProfiles != null && activeProfiles.contains("dummy-data")) {
             return WeeklyDummyDataGenerator.generate(memberId, lastWeekMonday);
         }
 
