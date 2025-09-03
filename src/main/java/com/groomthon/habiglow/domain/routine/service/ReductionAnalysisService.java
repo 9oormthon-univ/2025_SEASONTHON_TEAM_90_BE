@@ -29,11 +29,12 @@ public class ReductionAnalysisService {
     private final Clock clock;
     private final DailyRoutineRepository dailyRoutineRepository;
     private final RoutineRepository routineRepository;
+    private final RoutineDataAccessService routineDataAccessService;
     private final ReductionStrategy reductionStrategy;
 
     @Transactional(readOnly = true)
     public RoutineAdaptationCheckResponse<ReductionReadyRoutineResponse> analyzeReductionReadyRoutines(Long memberId) {
-        List<RoutineEntity> growthRoutines = routineRepository.findGrowthEnabledRoutinesByMemberId(memberId);
+        List<RoutineEntity> growthRoutines = routineDataAccessService.findGrowthEnabledRoutines(memberId);
 
         if (growthRoutines.isEmpty()) {
             return RoutineAdaptationCheckResponse.reduction(Collections.emptyList());
@@ -43,12 +44,13 @@ public class ReductionAnalysisService {
 
         List<ReductionReadyRoutineResponse> reductionReadyRoutines = growthRoutines.stream()
             .filter(routine -> {
-                LocalDate startDate = endDate.minusDays(routine.getGrowthCycleDays() - 1);
-                List<DailyRoutineEntity> recentRecords = dailyRoutineRepository
-                    .findByRoutineAndMemberAndDateRange(routine.getRoutineId(), memberId, startDate, endDate);
+                List<DailyRoutineEntity> recentRecords = routineDataAccessService
+                    .getGrowthCyclePeriodRecords(routine.getRoutineId(), memberId, routine, clock);
                 
+                LocalDate cycleEndDate = LocalDate.now(clock).minusDays(1);
+                LocalDate startDate = cycleEndDate.minusDays(routine.getGrowthCycleDays() - 1);
                 log.info("Checking reduction for routine {}: period={} to {}, records={}", 
-                    routine.getRoutineId(), startDate, endDate, recentRecords.size());
+                    routine.getRoutineId(), startDate, cycleEndDate, recentRecords.size());
                 
                 boolean canAdapt = reductionStrategy.canAdapt(routine);
                 boolean cycleCompleted = reductionStrategy.isAdaptationCycleCompleted(routine, recentRecords);
@@ -79,11 +81,8 @@ public class ReductionAnalysisService {
             throw new BaseException(ErrorCode.ROUTINE_CANNOT_DECREASE_TARGET);
         }
 
-        LocalDate endDate = LocalDate.now(clock).minusDays(1);
-        LocalDate startDate = endDate.minusDays(routine.getGrowthCycleDays() - 1);
-
-        List<DailyRoutineEntity> recentRecords = dailyRoutineRepository
-            .findByRoutineAndMemberAndDateRange(routine.getRoutineId(), memberId, startDate, endDate);
+        List<DailyRoutineEntity> recentRecords = routineDataAccessService
+            .getGrowthCyclePeriodRecords(routine.getRoutineId(), memberId, routine, clock);
 
         if (!reductionStrategy.isAdaptationCycleCompleted(routine, recentRecords)) {
             throw new BaseException(ErrorCode.REDUCTION_CYCLE_NOT_COMPLETED);
@@ -91,14 +90,9 @@ public class ReductionAnalysisService {
     }
 
     private LocalDate findLastAttemptDate(Long routineId, Long memberId, LocalDate endDate) {
-        LocalDate startDate = endDate.minusDays(30);
+        List<DailyRoutineEntity> recentRecords = routineDataAccessService
+            .getRecentRecordsForLastAttempt(routineId, memberId, clock);
 
-        List<DailyRoutineEntity> recentRecords = dailyRoutineRepository
-            .findByRoutineAndMemberAndDateRange(routineId, memberId, startDate, endDate);
-
-        return recentRecords.stream()
-            .map(DailyRoutineEntity::getPerformedDate)
-            .max(LocalDate::compareTo)
-            .orElse(null);
+        return routineDataAccessService.findMostRecentRecordDate(recentRecords);
     }
 }

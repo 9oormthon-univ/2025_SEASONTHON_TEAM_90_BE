@@ -33,30 +33,23 @@ public class GrowthAnalysisService {
     private final Clock clock;
     private final DailyRoutineRepository dailyRoutineRepository;
     private final RoutineRepository routineRepository;
+    private final RoutineDataAccessService routineDataAccessService;
     private final GrowthStrategy growthStrategy;
 
     @Transactional(readOnly = true)
     public RoutineAdaptationCheckResponse<GrowthReadyRoutineResponse> analyzeGrowthReadyRoutines(Long memberId) {
-        List<RoutineEntity> growthRoutines = routineRepository.findGrowthEnabledRoutinesByMemberId(memberId);
+        List<RoutineEntity> growthRoutines = routineDataAccessService.findGrowthEnabledRoutines(memberId);
 
         if (growthRoutines.isEmpty()) {
             return RoutineAdaptationCheckResponse.growth(Collections.emptyList());
         }
 
-        LocalDate yesterday = LocalDate.now(clock).minusDays(1);
-
         List<Long> routineIds = growthRoutines.stream()
             .map(RoutineEntity::getRoutineId)
             .toList();
 
-        List<DailyRoutineEntity> yesterdayRecords = dailyRoutineRepository
-            .findSuccessRecordsByRoutinesAndMemberAndDate(routineIds, memberId, yesterday, PerformanceLevel.FULL_SUCCESS);
-
-        Map<Long, DailyRoutineEntity> recordMap = yesterdayRecords.stream()
-            .collect(Collectors.toMap(
-                record -> record.getRoutine().getRoutineId(),
-                record -> record
-            ));
+        Map<Long, DailyRoutineEntity> recordMap = routineDataAccessService
+            .getYesterdaySuccessRecords(routineIds, memberId, clock);
 
         List<GrowthReadyRoutineResponse> growthReadyRoutines = growthRoutines.stream()
             .filter(routine -> {
@@ -78,17 +71,17 @@ public class GrowthAnalysisService {
     }
 
     public boolean isGrowthCycleCompleted(Long routineId, Long memberId, LocalDate targetDate) {
-        Optional<DailyRoutineEntity> lastRecord = dailyRoutineRepository
-            .findSuccessRecordByRoutineAndMemberAndDate(routineId, memberId, targetDate, PerformanceLevel.FULL_SUCCESS);
-
-        if (lastRecord.isEmpty()) {
+        DailyRoutineEntity lastRecord = routineDataAccessService
+            .getSuccessRecord(routineId, memberId, targetDate);
+        
+        if (lastRecord == null) {
             return false;
         }
 
         RoutineEntity routine = routineRepository.findById(routineId)
             .orElseThrow(() -> new BaseException(ErrorCode.ROUTINE_NOT_FOUND));
 
-        return growthStrategy.isAdaptationCycleCompleted(routine, List.of(lastRecord.get()));
+        return growthStrategy.isAdaptationCycleCompleted(routine, List.of(lastRecord));
     }
 
     public void validateGrowthConditions(RoutineEntity routine, Long memberId) {
@@ -101,10 +94,10 @@ public class GrowthAnalysisService {
         }
 
         LocalDate yesterday = LocalDate.now(clock).minusDays(1);
-        Optional<DailyRoutineEntity> lastRecord = dailyRoutineRepository
-            .findSuccessRecordByRoutineAndMemberAndDate(routine.getRoutineId(), memberId, yesterday, PerformanceLevel.FULL_SUCCESS);
+        DailyRoutineEntity lastRecord = routineDataAccessService
+            .getSuccessRecord(routine.getRoutineId(), memberId, yesterday);
 
-        if (lastRecord.isEmpty()) {
+        if (lastRecord == null) {
             throw new BaseException(ErrorCode.GROWTH_CYCLE_NOT_COMPLETED);
         }
     }
