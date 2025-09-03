@@ -88,6 +88,9 @@ jobs:
           ssh -o StrictHostKeyChecking=no -i ~/.ssh/id_rsa ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} << 'EOF'
             # 원격 서버에서 실행할 명령어들
             sudo pkill -f "java -jar" || true # 기존 애플리케이션 종료
+            
+            # Firebase 설정 파일 존재 확인
+            ls -la /opt/secure/firebase/habiglow-service-account.json || echo "Firebase config file not found!"
           
             # 새 애플리케이션 시작 (환경 변수 적용)
             nohup java -jar -Dspring.profiles.active=prod,dummy-data -Dfcm.firebase.config.path=file:/opt/secure/firebase/habiglow-service-account.json -Dspring.datasource.url=jdbc:postgresql://${{ secrets.DB_HOST }}:${{ vars.DB_PORT }}/${{ secrets.DB_NAME }} -Dspring.datasource.username=${{ secrets.DB_USERNAME }} -Dspring.datasource.password=${{ secrets.DB_PASSWORD }} -DJWT_SECRET_KEY=${{ secrets.JWT_SECRET_KEY }} -DOPENAI_API_KEY=${{ secrets.OPENAI_API_KEY }} ~/habiglow-0.0.1-SNAPSHOT.jar > ~/nohup.out 2>&1 &
