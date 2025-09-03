@@ -29,6 +29,12 @@ openai:
 cookie:
   secure: true
 
+fcm:
+  firebase:
+    config:
+      path: "file:/opt/secure/firebase/habiglow-service-account.json"
+
+
 swagger:
   server:
     url: ${SWAGGER_SERVER_URL:https://habiglow.duckdns.org}
