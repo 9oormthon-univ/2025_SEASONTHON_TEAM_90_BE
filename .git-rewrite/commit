@@ -1,0 +1,26 @@
+tree aaff07f4473b3f47b15fab06981dac7f5be61c80
+parent 6fc316cf3bb8c4487a95d11e8bf6a6a7196fdecb
+parent 121fd14e8419f6f28bf4cbe5118e5baa68729e7b
+author Kimgyuilli <87853959+Kimgyuilli@users.noreply.github.com> 1756817168 +0900
+committer GitHub <noreply@github.com> 1756817168 +0900
+gpgsig -----BEGIN PGP SIGNATURE-----
+ 
+ wsFcBAABCAAQBQJotucQCRC1aQ7uu5UhlAAAqLQQAJVPsK0uPVAmClvT3ZH/V3q9
+ OmnGOEyoacCBVjn5jCsgYcqvooBfKX1zTGFn/HUbuzHKOYgtIKzU6xjsLw7mR/rT
+ A1HgqKaAGOOX1uPYLCiBIX8k6aWg+fBYVCixLdPaEL0OF9db81bf3ukr+y92xPDE
+ 85Paso4zODw1CakXOHNYk7nsjgfmNYMSkau9JlWneKL6dWxtt6irVU9E5NbQHMe2
+ 1zGEMolNe5SjY/Nx6LaOCV9jHfKkZfT1LqLl9g1Wow1WFZ1oXmXkqkgV9D+5B83f
+ g79pgQtgRnF9EvTz54/A++fU18RGr3DhBrP1gwP4owz2Bz+m2IatdHq+Zrcf9huN
+ EiSTI6lIeaIvJq8NS0hp9zqnq5p0JwGgK/kpnLJpJhlPJUF7zIPvom1UQ6gjBgIn
+ 8X/qspCsFc2Rui2mOXPm5aLOh1lv0F68KrfeagxuMNrWpvzHHHe8fWvZBvN9aJW3
+ +OfNbIkyYpOVwPnP4rta38sVO2E2o5PS2caTkhmJd1+xrQPQYqQ1MW5L79oQaeg/
+ RWdzZy843HPBKUnpLRIB89UIG+qr4LPhw6pG4WDqtbIQeaqVr+KlElocbN9/lA5N
+ 16P8VGXnSF57+PQqGKxgFvxt0UTmwz6c41c5f/EwD/RP/YV2yK8Gz5GGw7BqBm+L
+ ufoNr2NKSvXqRFhsxnBS
+ =6AzA
+ -----END PGP SIGNATURE-----
+ 
+
+Merge pull request #23 from 9oormthon-univ/17-fix/401-rquest-error
+
+  Refactor Auth: 인증 시스템 전반 리팩토링 및 개선

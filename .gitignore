@@ -90,6 +90,7 @@ pgdata/
 # firebase 키
 # ========================
 /src/main/resources/firebase/*.json
+firebase/
 
 
 # ========================
