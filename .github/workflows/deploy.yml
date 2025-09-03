@@ -46,6 +46,11 @@ jobs:
       - name: Grant execute permission for gradlew
         run: chmod +x gradlew
 
+      - name: Create Firebase config for CI
+        run: |
+          mkdir -p src/main/resources/firebase
+          echo '${{ secrets.FIREBASE_SERVICE_ACCOUNT_JSON }}' > src/main/resources/firebase/habiglow-service-account.json
+
       - name: Wait for PostgreSQL to be ready
         run: |
           for i in $(seq 1 10); do
@@ -66,8 +71,6 @@ jobs:
           JWT_ACCESS_EXPIRATION: ${{ vars.JWT_ACCESS_EXPIRATION }}
           JWT_REFRESH_EXPIRATION: ${{ vars.JWT_REFRESH_EXPIRATION }}
           SWAGGER_SERVER_URL: ${{ vars.SWAGGER_SERVER_URL }}
-          # Firebase CI에서 비활성화
-          FCM_FIREBASE_ENABLED: false
         run: ./gradlew build
 
       # CI가 성공하고 main 브랜치에 푸시될 때만 배포 실행
