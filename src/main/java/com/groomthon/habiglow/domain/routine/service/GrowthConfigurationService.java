@@ -4,7 +4,6 @@ import org.springframework.stereotype.Service;
 
 import com.groomthon.habiglow.domain.routine.entity.GrowthConfiguration;
 import com.groomthon.habiglow.domain.routine.entity.RoutineEntity;
-import com.groomthon.habiglow.domain.routine.entity.TargetType;
 import com.groomthon.habiglow.global.exception.BaseException;
 import com.groomthon.habiglow.global.response.ErrorCode;
 
@@ -94,22 +93,4 @@ public class GrowthConfigurationService {
         routine.updateGrowthConfiguration(updatedConfig);
     }
 
-    public void incrementCycleDays(RoutineEntity routine) {
-        GrowthConfiguration config = routine.getGrowthConfiguration();
-        
-        if (config.isEnabled()) {
-            GrowthConfiguration updatedConfig = config.incrementCurrentCycleDays();
-            routine.updateGrowthConfiguration(updatedConfig);
-        }
-    }
-
-    public GrowthConfiguration createGrowthConfiguration(Boolean isGrowthMode, TargetType targetType, 
-            Integer targetValue, Integer growthCycleDays, Integer targetIncrement) {
-        
-        if (Boolean.TRUE.equals(isGrowthMode)) {
-            return GrowthConfiguration.of(targetType, targetValue, growthCycleDays, targetIncrement);
-        } else {
-            return GrowthConfiguration.disabled();
-        }
-    }
 }

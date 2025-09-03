@@ -1,6 +1,5 @@
 package com.groomthon.habiglow.domain.routine.service;
 
-import java.time.LocalDate;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -8,18 +7,13 @@ import java.util.stream.Collectors;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.groomthon.habiglow.domain.routine.dto.response.AdaptationAction;
 import com.groomthon.habiglow.domain.routine.dto.response.AdaptiveRoutineCheckResponse;
+import com.groomthon.habiglow.domain.routine.dto.response.GrowthReadyRoutineResponse;
 import com.groomthon.habiglow.domain.routine.dto.response.ReductionReadyRoutineResponse;
-import com.groomthon.habiglow.domain.routine.dto.response.RoutineAdaptationCheckResponse;
-import com.groomthon.habiglow.domain.routine.dto.response.GrowthReadyRoutineResponse;
-import com.groomthon.habiglow.domain.routine.dto.response.GrowthReadyRoutineResponse;
 import com.groomthon.habiglow.domain.routine.dto.response.ResetGrowthCycleResponse;
-import com.groomthon.habiglow.domain.routine.dto.response.RoutineAdaptationResultResponse;
+import com.groomthon.habiglow.domain.routine.dto.response.RoutineAdaptationCheckResponse;
 import com.groomthon.habiglow.domain.routine.entity.RoutineEntity;
 import com.groomthon.habiglow.domain.routine.helper.RoutineHelper;
-import com.groomthon.habiglow.domain.routine.facade.RoutineManagementFacade;
-import com.groomthon.habiglow.domain.routine.service.GrowthConfigurationService;
 import com.groomthon.habiglow.global.exception.BaseException;
 import com.groomthon.habiglow.global.response.ErrorCode;
 
@@ -34,19 +28,7 @@ public class RoutineGrowthService {
     private final RoutineHelper routineHelper;
     private final GrowthAnalysisService growthAnalysisService;
     private final ReductionAnalysisService reductionAnalysisService;
-    private final RoutineManagementFacade routineManagementFacade;
     private final GrowthConfigurationService growthConfigurationService;
-
-    @Transactional(readOnly = true)
-    public RoutineAdaptationCheckResponse<GrowthReadyRoutineResponse> checkGrowthReadyRoutines(Long memberId) {
-        return growthAnalysisService.analyzeGrowthReadyRoutines(memberId);
-    }
-
-
-    @Transactional
-    public RoutineAdaptationResultResponse increaseRoutineTarget(Long routineId, Long memberId) {
-        return routineManagementFacade.executeRoutineAdaptation(memberId, routineId, AdaptationAction.INCREASE);
-    }
 
     @Transactional
     public ResetGrowthCycleResponse resetGrowthCycle(Long routineId, Long memberId) {
@@ -70,11 +52,6 @@ public class RoutineGrowthService {
         return ResetGrowthCycleResponse.from(routine, previousCycleDays);
     }
 
-
-    public boolean isGrowthCycleCompleted(Long routineId, Long memberId, LocalDate targetDate) {
-        return growthAnalysisService.isGrowthCycleCompleted(routineId, memberId, targetDate);
-    }
-
     @Transactional(readOnly = true)
     public AdaptiveRoutineCheckResponse checkAdaptiveRoutines(Long memberId) {
         RoutineAdaptationCheckResponse<GrowthReadyRoutineResponse> growthResponse = growthAnalysisService.analyzeGrowthReadyRoutines(memberId);
@@ -95,16 +72,6 @@ public class RoutineGrowthService {
             memberId, growthReadyRoutines.size(), filteredReductionRoutines.size());
 
         return AdaptiveRoutineCheckResponse.of(growthReadyRoutines, filteredReductionRoutines);
-    }
-
-    @Transactional(readOnly = true)
-    public RoutineAdaptationCheckResponse<ReductionReadyRoutineResponse> checkReductionReadyRoutines(Long memberId) {
-        return reductionAnalysisService.analyzeReductionReadyRoutines(memberId);
-    }
-
-    @Transactional
-    public RoutineAdaptationResultResponse decreaseRoutineTarget(Long routineId, Long memberId) {
-        return routineManagementFacade.executeRoutineAdaptation(memberId, routineId, AdaptationAction.DECREASE);
     }
 
 }
