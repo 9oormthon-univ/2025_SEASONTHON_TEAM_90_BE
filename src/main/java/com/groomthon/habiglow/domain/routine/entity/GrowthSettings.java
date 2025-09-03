@@ -81,32 +81,32 @@ public class GrowthSettings {
     }
 
     /**
-     * 목표치 증가 실행
-     * @return 증가된 새로운 목표치
+     * @deprecated Use GrowthConfigurationService.executeTargetIncrease() instead
      */
+    @Deprecated
     public Integer increaseTarget() {
         if (!canIncreaseTarget()) {
             throw new BaseException(ErrorCode.ROUTINE_CANNOT_INCREASE_TARGET);
         }
 
         this.targetValue += targetIncrement;
-        this.currentCycleDays = 0; // 성장 주기 리셋
-        this.lastAdjustedDate = LocalDate.now(); // 조정 시점 기록
+        this.currentCycleDays = 0;
+        this.lastAdjustedDate = LocalDate.now();
         return this.targetValue;
     }
 
     /**
-     * 목표치 감소 실행 (서비스에서 계산된 값으로 설정)
-     * @param newTargetValue 서비스에서 계산된 새로운 목표값
+     * @deprecated Use GrowthConfigurationService.executeTargetDecrease() instead
      */
+    @Deprecated
     public void decreaseTarget(Integer newTargetValue) {
         if (newTargetValue == null || newTargetValue < (minimumTargetValue != null ? minimumTargetValue : 1)) {
             throw new BaseException(ErrorCode.ROUTINE_CANNOT_DECREASE_TARGET);
         }
 
         this.targetValue = newTargetValue;
-        this.currentCycleDays = 0; // 주기 리셋
-        this.lastAdjustedDate = LocalDate.now(); // 조정 시점 기록
+        this.currentCycleDays = 0;
+        this.lastAdjustedDate = LocalDate.now();
     }
 
     /**

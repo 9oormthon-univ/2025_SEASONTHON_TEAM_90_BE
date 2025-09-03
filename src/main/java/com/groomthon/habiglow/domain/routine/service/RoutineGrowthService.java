@@ -19,6 +19,7 @@ import com.groomthon.habiglow.domain.routine.dto.response.RoutineAdaptationResul
 import com.groomthon.habiglow.domain.routine.entity.RoutineEntity;
 import com.groomthon.habiglow.domain.routine.helper.RoutineHelper;
 import com.groomthon.habiglow.domain.routine.facade.RoutineManagementFacade;
+import com.groomthon.habiglow.domain.routine.service.GrowthConfigurationService;
 import com.groomthon.habiglow.global.exception.BaseException;
 import com.groomthon.habiglow.global.response.ErrorCode;
 
@@ -34,6 +35,7 @@ public class RoutineGrowthService {
     private final GrowthAnalysisService growthAnalysisService;
     private final ReductionAnalysisService reductionAnalysisService;
     private final RoutineManagementFacade routineManagementFacade;
+    private final GrowthConfigurationService growthConfigurationService;
 
     @Transactional(readOnly = true)
     public RoutineAdaptationCheckResponse<GrowthReadyRoutineResponse> checkGrowthReadyRoutines(Long memberId) {
@@ -54,13 +56,13 @@ public class RoutineGrowthService {
             throw new BaseException(ErrorCode.ROUTINE_NOT_GROWTH_MODE);
         }
 
-        if (!routine.getGrowthSettings().isGrowthCycleCompleted()) {
+        if (!routine.getGrowthConfiguration().isCycleCompleted()) {
             throw new BaseException(ErrorCode.GROWTH_CYCLE_NOT_COMPLETED);
         }
 
         Integer previousCycleDays = routine.getCurrentCycleDays();
 
-        routine.getGrowthSettings().resetCurrentCycleDays();
+        growthConfigurationService.resetGrowthCycle(routine);
 
         log.info("Growth cycle reset for routine: {} by member: {}, previous cycle days: {}",
             routineId, memberId, previousCycleDays);

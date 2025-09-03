@@ -26,7 +26,7 @@ import com.groomthon.habiglow.domain.routine.dto.response.RoutineResponse;
 import com.groomthon.habiglow.domain.routine.entity.RoutineCategory;
 import com.groomthon.habiglow.domain.routine.facade.RoutineManagementFacade;
 import com.groomthon.habiglow.domain.routine.service.RoutineGrowthService;
-import com.groomthon.habiglow.domain.routine.service.RoutineService;
+import com.groomthon.habiglow.domain.routine.facade.RoutineQueryFacade;
 import com.groomthon.habiglow.global.jwt.JwtMemberExtractor;
 import com.groomthon.habiglow.global.response.ApiSuccessCode;
 import com.groomthon.habiglow.global.response.AutoApiResponse;
@@ -51,9 +51,9 @@ import lombok.RequiredArgsConstructor;
 @Tag(name = "루틴 관리 API", description = "사용자 루틴 CRUD 관련 API")
 public class RoutineController {
     
-    private final RoutineService routineService;
-    private final RoutineGrowthService routineGrowthService;
-    private final RoutineManagementFacade routineManagementFacade;
+    private final RoutineManagementFacade routineManagementFacade; // Command (CUD)
+    private final RoutineQueryFacade routineQueryFacade; // Query (R)
+    private final RoutineGrowthService routineGrowthService; // Growth-specific operations
     private final JwtMemberExtractor jwtMemberExtractor;
 
     @Operation(
@@ -69,7 +69,7 @@ public class RoutineController {
             HttpServletRequest request,
             @Valid @RequestBody CreateRoutineRequest createRequest) {
         Long userId = jwtMemberExtractor.extractMemberId(request);
-        return routineService.createRoutine(userId, createRequest);
+        return routineManagementFacade.createRoutineWithFullValidation(userId, createRequest);
     }
     
     @Operation(
@@ -83,7 +83,7 @@ public class RoutineController {
     @SuccessCode(ApiSuccessCode.ROUTINE_LIST_VIEW)
     public RoutineListResponse getMyRoutines(HttpServletRequest request) {
         Long userId = jwtMemberExtractor.extractMemberId(request);
-        return routineService.getMyRoutines(userId);
+        return routineQueryFacade.getMyRoutines(userId);
     }
     
     @Operation(
@@ -99,7 +99,7 @@ public class RoutineController {
             HttpServletRequest request,
             @Parameter(description = "루틴 카테고리") @RequestParam RoutineCategory category) {
         Long userId = jwtMemberExtractor.extractMemberId(request);
-        return routineService.getMyRoutinesByCategory(userId, category);
+        return routineQueryFacade.getMyRoutinesByCategory(userId, category);
     }
     
     @Operation(
@@ -118,7 +118,7 @@ public class RoutineController {
             HttpServletRequest request,
             @PathVariable Long routineId) {
         Long userId = jwtMemberExtractor.extractMemberId(request);
-        return routineService.getRoutineById(userId, routineId);
+        return routineQueryFacade.getRoutineById(userId, routineId);
     }
     
     @Operation(
@@ -138,7 +138,7 @@ public class RoutineController {
             @PathVariable Long routineId,
             @Valid @RequestBody UpdateRoutineRequest updateRequest) {
         Long userId = jwtMemberExtractor.extractMemberId(request);
-        return routineService.updateRoutine(userId, routineId, updateRequest);
+        return routineManagementFacade.updateRoutineWithValidation(userId, routineId, updateRequest);
     }
     
     @Operation(
@@ -157,7 +157,7 @@ public class RoutineController {
             HttpServletRequest request,
             @PathVariable Long routineId) {
         Long userId = jwtMemberExtractor.extractMemberId(request);
-        routineService.deleteRoutine(userId, routineId);
+        routineManagementFacade.deleteRoutine(userId, routineId);
     }
     
     // ==================== 카테고리 관련 API ====================
