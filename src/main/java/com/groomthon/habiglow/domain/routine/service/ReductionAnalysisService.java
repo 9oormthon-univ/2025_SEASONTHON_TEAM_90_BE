@@ -10,7 +10,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.groomthon.habiglow.domain.daily.entity.DailyRoutineEntity;
 import com.groomthon.habiglow.domain.daily.repository.DailyRoutineRepository;
-import com.groomthon.habiglow.domain.routine.dto.response.DifficultyReductionCheckResponse;
+import com.groomthon.habiglow.domain.routine.dto.response.RoutineAdaptationCheckResponse;
 import com.groomthon.habiglow.domain.routine.dto.response.ReductionReadyRoutineResponse;
 import com.groomthon.habiglow.domain.routine.entity.RoutineEntity;
 import com.groomthon.habiglow.domain.routine.repository.RoutineRepository;
@@ -32,11 +32,11 @@ public class ReductionAnalysisService {
     private final ReductionStrategy reductionStrategy;
 
     @Transactional(readOnly = true)
-    public DifficultyReductionCheckResponse analyzeReductionReadyRoutines(Long memberId) {
+    public RoutineAdaptationCheckResponse<ReductionReadyRoutineResponse> analyzeReductionReadyRoutines(Long memberId) {
         List<RoutineEntity> growthRoutines = routineRepository.findGrowthEnabledRoutinesByMemberId(memberId);
 
         if (growthRoutines.isEmpty()) {
-            return DifficultyReductionCheckResponse.of(Collections.emptyList());
+            return RoutineAdaptationCheckResponse.reduction(Collections.emptyList());
         }
 
         LocalDate endDate = LocalDate.now(clock).minusDays(1);
@@ -67,7 +67,7 @@ public class ReductionAnalysisService {
         log.info("Reduction analysis completed for member: {}, found {} reduction-ready routines",
             memberId, reductionReadyRoutines.size());
 
-        return DifficultyReductionCheckResponse.of(reductionReadyRoutines);
+        return RoutineAdaptationCheckResponse.reduction(reductionReadyRoutines);
     }
 
     public void validateReductionConditions(RoutineEntity routine, Long memberId) {

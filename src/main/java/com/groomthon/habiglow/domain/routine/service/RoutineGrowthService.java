@@ -10,8 +10,9 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.groomthon.habiglow.domain.routine.dto.response.AdaptationAction;
 import com.groomthon.habiglow.domain.routine.dto.response.AdaptiveRoutineCheckResponse;
-import com.groomthon.habiglow.domain.routine.dto.response.DifficultyReductionCheckResponse;
-import com.groomthon.habiglow.domain.routine.dto.response.GrowthCheckResponse;
+import com.groomthon.habiglow.domain.routine.dto.response.ReductionReadyRoutineResponse;
+import com.groomthon.habiglow.domain.routine.dto.response.RoutineAdaptationCheckResponse;
+import com.groomthon.habiglow.domain.routine.dto.response.GrowthReadyRoutineResponse;
 import com.groomthon.habiglow.domain.routine.dto.response.GrowthReadyRoutineResponse;
 import com.groomthon.habiglow.domain.routine.dto.response.ResetGrowthCycleResponse;
 import com.groomthon.habiglow.domain.routine.dto.response.RoutineAdaptationResultResponse;
@@ -35,7 +36,7 @@ public class RoutineGrowthService {
     private final RoutineManagementFacade routineManagementFacade;
 
     @Transactional(readOnly = true)
-    public GrowthCheckResponse checkGrowthReadyRoutines(Long memberId) {
+    public RoutineAdaptationCheckResponse<GrowthReadyRoutineResponse> checkGrowthReadyRoutines(Long memberId) {
         return growthAnalysisService.analyzeGrowthReadyRoutines(memberId);
     }
 
@@ -74,17 +75,17 @@ public class RoutineGrowthService {
 
     @Transactional(readOnly = true)
     public AdaptiveRoutineCheckResponse checkAdaptiveRoutines(Long memberId) {
-        GrowthCheckResponse growthResponse = growthAnalysisService.analyzeGrowthReadyRoutines(memberId);
-        DifficultyReductionCheckResponse reductionResponse = reductionAnalysisService.analyzeReductionReadyRoutines(memberId);
+        RoutineAdaptationCheckResponse<GrowthReadyRoutineResponse> growthResponse = growthAnalysisService.analyzeGrowthReadyRoutines(memberId);
+        RoutineAdaptationCheckResponse<ReductionReadyRoutineResponse> reductionResponse = reductionAnalysisService.analyzeReductionReadyRoutines(memberId);
 
-        List<GrowthReadyRoutineResponse> growthReadyRoutines = growthResponse.getGrowthReadyRoutines();
+        List<GrowthReadyRoutineResponse> growthReadyRoutines = growthResponse.getCandidates();
         
         Set<Long> growthReadyIds = growthReadyRoutines.stream()
             .map(GrowthReadyRoutineResponse::getRoutineId)
             .collect(Collectors.toSet());
 
-        List<com.groomthon.habiglow.domain.routine.dto.response.ReductionReadyRoutineResponse> filteredReductionRoutines = 
-            reductionResponse.getReductionReadyRoutines().stream()
+        List<ReductionReadyRoutineResponse> filteredReductionRoutines = 
+            reductionResponse.getCandidates().stream()
             .filter(routine -> !growthReadyIds.contains(routine.getRoutineId()))
             .toList();
 
@@ -95,7 +96,7 @@ public class RoutineGrowthService {
     }
 
     @Transactional(readOnly = true)
-    public DifficultyReductionCheckResponse checkReductionReadyRoutines(Long memberId) {
+    public RoutineAdaptationCheckResponse<ReductionReadyRoutineResponse> checkReductionReadyRoutines(Long memberId) {
         return reductionAnalysisService.analyzeReductionReadyRoutines(memberId);
     }
 

@@ -14,7 +14,7 @@ import org.springframework.transaction.annotation.Transactional;
 import com.groomthon.habiglow.domain.daily.entity.DailyRoutineEntity;
 import com.groomthon.habiglow.domain.daily.entity.PerformanceLevel;
 import com.groomthon.habiglow.domain.daily.repository.DailyRoutineRepository;
-import com.groomthon.habiglow.domain.routine.dto.response.GrowthCheckResponse;
+import com.groomthon.habiglow.domain.routine.dto.response.RoutineAdaptationCheckResponse;
 import com.groomthon.habiglow.domain.routine.dto.response.GrowthReadyRoutineResponse;
 import com.groomthon.habiglow.domain.routine.entity.RoutineEntity;
 import com.groomthon.habiglow.domain.routine.repository.RoutineRepository;
@@ -36,14 +36,11 @@ public class GrowthAnalysisService {
     private final GrowthStrategy growthStrategy;
 
     @Transactional(readOnly = true)
-    public GrowthCheckResponse analyzeGrowthReadyRoutines(Long memberId) {
+    public RoutineAdaptationCheckResponse<GrowthReadyRoutineResponse> analyzeGrowthReadyRoutines(Long memberId) {
         List<RoutineEntity> growthRoutines = routineRepository.findGrowthEnabledRoutinesByMemberId(memberId);
 
         if (growthRoutines.isEmpty()) {
-            return GrowthCheckResponse.builder()
-                .growthReadyRoutines(Collections.emptyList())
-                .totalGrowthReadyCount(0)
-                .build();
+            return RoutineAdaptationCheckResponse.growth(Collections.emptyList());
         }
 
         LocalDate yesterday = LocalDate.now(clock).minusDays(1);
@@ -77,10 +74,7 @@ public class GrowthAnalysisService {
         log.info("Growth analysis completed for member: {}, found {} growth-ready routines",
             memberId, growthReadyRoutines.size());
 
-        return GrowthCheckResponse.builder()
-            .growthReadyRoutines(growthReadyRoutines)
-            .totalGrowthReadyCount(growthReadyRoutines.size())
-            .build();
+        return RoutineAdaptationCheckResponse.growth(growthReadyRoutines);
     }
 
     public boolean isGrowthCycleCompleted(Long routineId, Long memberId, LocalDate targetDate) {
