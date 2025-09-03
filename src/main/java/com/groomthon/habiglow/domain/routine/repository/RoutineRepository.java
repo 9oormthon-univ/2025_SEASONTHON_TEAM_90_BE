@@ -20,6 +20,6 @@ public interface RoutineRepository extends JpaRepository<RoutineEntity, Long> {
     
     Optional<RoutineEntity> findByRoutineIdAndMember_Id(Long routineId, Long memberId);
     
-    @Query("SELECT r FROM RoutineEntity r WHERE r.member.id = :memberId AND r.growthSettings.isGrowthMode = true")
+    @Query("SELECT r FROM RoutineEntity r WHERE r.member.id = :memberId AND r.growthConfiguration.isGrowthMode = true")
     List<RoutineEntity> findGrowthEnabledRoutinesByMemberId(@Param("memberId") Long memberId);
 }
