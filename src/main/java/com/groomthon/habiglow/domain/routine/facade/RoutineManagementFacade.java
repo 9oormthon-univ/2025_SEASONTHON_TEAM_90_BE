@@ -39,38 +39,19 @@ public class RoutineManagementFacade {
     private final GrowthConfigurationService growthConfigurationService;
     private final ApplicationEventPublisher eventPublisher;
 
+    // ==================== LIFECYCLE MANAGEMENT ====================
+
     @Transactional
     public RoutineResponse createRoutineWithFullValidation(Long memberId, CreateRoutineRequest request) {
-        MemberEntity member = memberRepository.findById(memberId)
-                .orElseThrow(() -> new BaseException(ErrorCode.MEMBER_NOT_FOUND));
+        MemberEntity member = findMemberById(memberId);
         
         validateAndCreateRoutine(request);
         
-        RoutineEntity routine = RoutineEntity.createRoutine(
-                member,
-                request.getTitle(),
-                request.getDescription(),
-                request.getCategory(),
-                request.getIsGrowthMode(),
-                request.getTargetType(),
-                request.getTargetValue(),
-                request.getGrowthCycleDays(),
-                request.getTargetIncrement()
-        );
+        RoutineEntity savedRoutine = createAndSaveRoutine(member, request);
         
-        RoutineEntity savedRoutine = routineRepository.save(routine);
+        handleGrowthModeLogging(savedRoutine, memberId);
         
-        if (savedRoutine.isGrowthModeEnabled()) {
-            logGrowthModeActivated(savedRoutine, memberId);
-        }
-        
-        // 루틴 생성 이벤트 발행
-        RoutineCreatedEvent event = RoutineCreatedEvent.of(
-            savedRoutine.getRoutineId(), savedRoutine.getTitle(), memberId,
-            savedRoutine.getCategory(), savedRoutine.getIsGrowthMode(),
-            savedRoutine.getTargetType(), savedRoutine.getTargetValue()
-        );
-        eventPublisher.publishEvent(event);
+        publishRoutineCreatedEvent(savedRoutine, memberId);
         
         log.info("Created routine: {} for member: {}", savedRoutine.getRoutineId(), memberId);
         return RoutineResponse.from(savedRoutine);
@@ -78,8 +59,7 @@ public class RoutineManagementFacade {
 
     @Transactional
     public RoutineResponse updateRoutineWithValidation(Long memberId, Long routineId, UpdateRoutineRequest request) {
-        RoutineEntity routine = routineRepository.findByRoutineIdAndMember_Id(routineId, memberId)
-                .orElseThrow(() -> new BaseException(ErrorCode.ROUTINE_NOT_FOUND));
+        RoutineEntity routine = findRoutineByIdAndMemberId(routineId, memberId);
         
         validateAndUpdateRoutine(request);
         
@@ -101,6 +81,152 @@ public class RoutineManagementFacade {
         return RoutineResponse.from(routine);
     }
 
+    @Transactional
+    public void deleteRoutine(Long memberId, Long routineId) {
+        RoutineEntity routine = findRoutineByIdAndMemberId(routineId, memberId);
+        
+        // 루틴 삭제 이벤트 발행 (삭제 전에 데이터 수집)
+        RoutineDeletedEvent event = RoutineDeletedEvent.of(
+            routine.getRoutineId(), routine.getTitle(), memberId,
+            routine.getCategory(), routine.isGrowthModeEnabled(), 
+            routine.getTargetValue()
+        );
+        eventPublisher.publishEvent(event);
+        
+        handleDeletionLogging(routine, memberId);
+        
+        routineRepository.delete(routine);
+    }
+
+    // ==================== OPTIMIZATION MANAGEMENT ====================
+
+    /**
+     * 루틴 적응 실행 - 통합된 Facade 메서드 (CQRS Command 부분)
+     */
+    @Transactional
+    public RoutineAdaptationResultResponse executeRoutineAdaptation(Long memberId, Long routineId, AdaptationAction action) {
+        RoutineEntity routine = findRoutineByIdAndMemberId(routineId, memberId);
+        
+        return switch (action) {
+            case INCREASE -> executeGrowthAdaptation(routine, memberId);
+            case DECREASE -> executeReductionAdaptation(routine, memberId);
+            case RESET -> executeGrowthReset(routine, memberId);
+        };
+    }
+    
+    private RoutineAdaptationResultResponse executeGrowthAdaptation(RoutineEntity routine, Long memberId) {
+        growthAnalysisService.validateGrowthConditions(routine, memberId);
+        
+        Integer previousTarget = routine.getTargetValue();
+        Integer newTarget = growthConfigurationService.executeTargetIncrease(routine);
+        
+        publishTargetChangedEvent(routine, memberId, previousTarget, newTarget, AdaptationAction.INCREASE);
+        
+        log.info("Growth adaptation executed for routine: {} from {} to {} by member: {}",
+            routine.getRoutineId(), previousTarget, newTarget, memberId);
+            
+        return RoutineAdaptationResultResponse.success(
+            routine.getRoutineId(), routine.getTitle(), 
+            previousTarget, newTarget, AdaptationAction.INCREASE);
+    }
+    
+    private RoutineAdaptationResultResponse executeReductionAdaptation(RoutineEntity routine, Long memberId) {
+        reductionAnalysisService.validateReductionConditions(routine, memberId);
+        
+        Integer previousTarget = routine.getTargetValue();
+        Integer newTarget = growthConfigurationService.executeTargetDecrease(routine);
+        
+        publishTargetChangedEvent(routine, memberId, previousTarget, newTarget, AdaptationAction.DECREASE);
+        
+        log.info("Reduction adaptation executed for routine: {} from {} to {} by member: {}",
+            routine.getRoutineId(), previousTarget, newTarget, memberId);
+            
+        return RoutineAdaptationResultResponse.success(
+            routine.getRoutineId(), routine.getTitle(), 
+            previousTarget, newTarget, AdaptationAction.DECREASE);
+    }
+    
+    private RoutineAdaptationResultResponse executeGrowthReset(RoutineEntity routine, Long memberId) {
+        Integer previousCycleDays = routine.getCurrentCycleDays();
+        growthConfigurationService.resetGrowthCycle(routine);
+        
+        log.info("Growth cycle reset for routine: {} by member: {}, previous cycle days: {}",
+            routine.getRoutineId(), memberId, previousCycleDays);
+            
+        return RoutineAdaptationResultResponse.success(
+            routine.getRoutineId(), routine.getTitle(), 
+            previousCycleDays, 0, AdaptationAction.RESET);
+    }
+
+    // ==================== PRIVATE HELPER METHODS ====================
+
+    private MemberEntity findMemberById(Long memberId) {
+        return memberRepository.findById(memberId)
+                .orElseThrow(() -> new BaseException(ErrorCode.MEMBER_NOT_FOUND));
+    }
+
+    private RoutineEntity findRoutineByIdAndMemberId(Long routineId, Long memberId) {
+        return routineRepository.findByRoutineIdAndMember_Id(routineId, memberId)
+                .orElseThrow(() -> new BaseException(ErrorCode.ROUTINE_NOT_FOUND));
+    }
+
+    private void publishRoutineCreatedEvent(RoutineEntity routine, Long memberId) {
+        RoutineCreatedEvent event = RoutineCreatedEvent.of(
+            routine.getRoutineId(), routine.getTitle(), memberId,
+            routine.getCategory(), routine.getIsGrowthMode(),
+            routine.getTargetType(), routine.getTargetValue()
+        );
+        eventPublisher.publishEvent(event);
+    }
+
+    private void publishRoutineDeletedEvent(RoutineEntity routine, Long memberId) {
+        RoutineDeletedEvent event = RoutineDeletedEvent.of(
+            routine.getRoutineId(), routine.getTitle(), memberId,
+            routine.getCategory(), routine.isGrowthModeEnabled(), 
+            routine.getTargetValue()
+        );
+        eventPublisher.publishEvent(event);
+    }
+
+    private void publishTargetChangedEvent(RoutineEntity routine, Long memberId, 
+                                         Integer previousTarget, Integer newTarget, AdaptationAction action) {
+        RoutineTargetChangedEvent event = RoutineTargetChangedEvent.of(
+            routine.getRoutineId(), routine.getTitle(), memberId,
+            previousTarget, newTarget, action
+        );
+        eventPublisher.publishEvent(event);
+    }
+
+    private RoutineEntity createAndSaveRoutine(MemberEntity member, CreateRoutineRequest request) {
+        RoutineEntity routine = RoutineEntity.createRoutine(
+                member,
+                request.getTitle(),
+                request.getDescription(),
+                request.getCategory(),
+                request.getIsGrowthMode(),
+                request.getTargetType(),
+                request.getTargetValue(),
+                request.getGrowthCycleDays(),
+                request.getTargetIncrement()
+        );
+        
+        return routineRepository.save(routine);
+    }
+
+    private void handleGrowthModeLogging(RoutineEntity routine, Long memberId) {
+        if (routine.isGrowthModeEnabled()) {
+            logGrowthModeActivated(routine, memberId);
+        }
+    }
+
+    private void handleDeletionLogging(RoutineEntity routine, Long memberId) {
+        if (routine.isGrowthModeEnabled()) {
+            log.info("Deleting growth-enabled routine: {} for member: {} - Lost target: {}", 
+                    routine.getRoutineId(), memberId, routine.getTargetValue());
+        } else {
+            log.info("Deleting routine: {} for member: {}", routine.getRoutineId(), memberId);
+        }
+    }
 
     private void validateAndCreateRoutine(CreateRoutineRequest request) {
         validationService.validateCreateRequest(
@@ -138,101 +264,9 @@ public class RoutineManagementFacade {
         }
     }
 
-    @Transactional
-    public void deleteRoutine(Long memberId, Long routineId) {
-        RoutineEntity routine = routineRepository.findByRoutineIdAndMember_Id(routineId, memberId)
-                .orElseThrow(() -> new BaseException(ErrorCode.ROUTINE_NOT_FOUND));
-        
-        // 루틴 삭제 이벤트 발행 (삭제 전에 데이터 수집)
-        RoutineDeletedEvent event = RoutineDeletedEvent.of(
-            routine.getRoutineId(), routine.getTitle(), memberId,
-            routine.getCategory(), routine.isGrowthModeEnabled(), 
-            routine.getTargetValue()
-        );
-        eventPublisher.publishEvent(event);
-        
-        if (routine.isGrowthModeEnabled()) {
-            log.info("Deleting growth-enabled routine: {} for member: {} - Lost target: {}", 
-                    routineId, memberId, routine.getTargetValue());
-        } else {
-            log.info("Deleting routine: {} for member: {}", routineId, memberId);
-        }
-        
-        routineRepository.delete(routine);
-    }
-
     private void logGrowthModeActivated(RoutineEntity routine, Long memberId) {
         log.info("New routine with growth mode created: {} for member: {} - Target: {}, Increment: {}", 
                 routine.getRoutineId(), memberId, routine.getTargetValue(), routine.getTargetIncrement());
-    }
-
-    /**
-     * 루틴 적응 실행 - 통합된 Facade 메서드 (CQRS Command 부분)
-     */
-    @Transactional
-    public RoutineAdaptationResultResponse executeRoutineAdaptation(Long memberId, Long routineId, AdaptationAction action) {
-        RoutineEntity routine = routineRepository.findByRoutineIdAndMember_Id(routineId, memberId)
-                .orElseThrow(() -> new BaseException(ErrorCode.ROUTINE_NOT_FOUND));
-        
-        return switch (action) {
-            case INCREASE -> executeGrowthAdaptation(routine, memberId);
-            case DECREASE -> executeReductionAdaptation(routine, memberId);
-            case RESET -> executeGrowthReset(routine, memberId);
-        };
-    }
-    
-    private RoutineAdaptationResultResponse executeGrowthAdaptation(RoutineEntity routine, Long memberId) {
-        growthAnalysisService.validateGrowthConditions(routine, memberId);
-        
-        Integer previousTarget = routine.getTargetValue();
-        Integer newTarget = growthConfigurationService.executeTargetIncrease(routine);
-        
-        // 도메인 이벤트 발행
-        RoutineTargetChangedEvent event = RoutineTargetChangedEvent.of(
-            routine.getRoutineId(), routine.getTitle(), memberId,
-            previousTarget, newTarget, AdaptationAction.INCREASE
-        );
-        eventPublisher.publishEvent(event);
-        
-        log.info("Growth adaptation executed for routine: {} from {} to {} by member: {}",
-            routine.getRoutineId(), previousTarget, newTarget, memberId);
-            
-        return RoutineAdaptationResultResponse.success(
-            routine.getRoutineId(), routine.getTitle(), 
-            previousTarget, newTarget, AdaptationAction.INCREASE);
-    }
-    
-    private RoutineAdaptationResultResponse executeReductionAdaptation(RoutineEntity routine, Long memberId) {
-        reductionAnalysisService.validateReductionConditions(routine, memberId);
-        
-        Integer previousTarget = routine.getTargetValue();
-        Integer newTarget = growthConfigurationService.executeTargetDecrease(routine);
-        
-        // 도메인 이벤트 발행
-        RoutineTargetChangedEvent event = RoutineTargetChangedEvent.of(
-            routine.getRoutineId(), routine.getTitle(), memberId,
-            previousTarget, newTarget, AdaptationAction.DECREASE
-        );
-        eventPublisher.publishEvent(event);
-        
-        log.info("Reduction adaptation executed for routine: {} from {} to {} by member: {}",
-            routine.getRoutineId(), previousTarget, newTarget, memberId);
-            
-        return RoutineAdaptationResultResponse.success(
-            routine.getRoutineId(), routine.getTitle(), 
-            previousTarget, newTarget, AdaptationAction.DECREASE);
-    }
-    
-    private RoutineAdaptationResultResponse executeGrowthReset(RoutineEntity routine, Long memberId) {
-        Integer previousCycleDays = routine.getCurrentCycleDays();
-        growthConfigurationService.resetGrowthCycle(routine);
-        
-        log.info("Growth cycle reset for routine: {} by member: {}, previous cycle days: {}",
-            routine.getRoutineId(), memberId, previousCycleDays);
-            
-        return RoutineAdaptationResultResponse.success(
-            routine.getRoutineId(), routine.getTitle(), 
-            previousCycleDays, 0, AdaptationAction.RESET);
     }
 
 }
