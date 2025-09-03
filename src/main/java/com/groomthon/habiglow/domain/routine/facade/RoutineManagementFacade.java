@@ -18,6 +18,8 @@ import com.groomthon.habiglow.domain.routine.service.GrowthConfigurationService;
 import com.groomthon.habiglow.domain.routine.dto.response.RoutineAdaptationResultResponse;
 import com.groomthon.habiglow.domain.routine.dto.response.AdaptationAction;
 import com.groomthon.habiglow.domain.routine.event.RoutineTargetChangedEvent;
+import com.groomthon.habiglow.domain.routine.event.RoutineCreatedEvent;
+import com.groomthon.habiglow.domain.routine.event.RoutineDeletedEvent;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -58,6 +60,14 @@ public class RoutineManagementFacade {
         if (savedRoutine.isGrowthModeEnabled()) {
             logGrowthModeActivated(savedRoutine, memberId);
         }
+        
+        // 루틴 생성 이벤트 발행
+        RoutineCreatedEvent event = RoutineCreatedEvent.of(
+            savedRoutine.getRoutineId(), savedRoutine.getTitle(), memberId,
+            savedRoutine.getCategory(), savedRoutine.getIsGrowthMode(),
+            savedRoutine.getTargetType(), savedRoutine.getTargetValue()
+        );
+        eventPublisher.publishEvent(event);
         
         log.info("Created routine: {} for member: {}", savedRoutine.getRoutineId(), memberId);
         return RoutineResponse.from(savedRoutine);
@@ -127,6 +137,14 @@ public class RoutineManagementFacade {
     @Transactional
     public void deleteRoutine(Long memberId, Long routineId) {
         RoutineEntity routine = routineHelper.findRoutineByIdAndMemberId(routineId, memberId);
+        
+        // 루틴 삭제 이벤트 발행 (삭제 전에 데이터 수집)
+        RoutineDeletedEvent event = RoutineDeletedEvent.of(
+            routine.getRoutineId(), routine.getTitle(), memberId,
+            routine.getCategory(), routine.isGrowthModeEnabled(), 
+            routine.getTargetValue()
+        );
+        eventPublisher.publishEvent(event);
         
         if (routine.isGrowthModeEnabled()) {
             log.info("Deleting growth-enabled routine: {} for member: {} - Lost target: {}", 

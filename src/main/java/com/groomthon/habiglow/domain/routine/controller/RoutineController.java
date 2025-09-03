@@ -48,7 +48,7 @@ import lombok.RequiredArgsConstructor;
 @RequestMapping("/api/routines")
 @RequiredArgsConstructor
 @AutoApiResponse
-@Tag(name = "루틴 관리 API", description = "사용자 루틴 CRUD 관련 API")
+@Tag(name = "루틴 관리 API", description = "사용자 루틴 CRUD, 성장 모드, 카테고리 관리 통합 API")
 public class RoutineController {
     
     private final RoutineManagementFacade routineManagementFacade; // Command (CUD)
