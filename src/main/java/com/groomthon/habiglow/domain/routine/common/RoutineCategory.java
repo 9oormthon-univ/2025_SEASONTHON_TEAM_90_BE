@@ -1,4 +1,4 @@
-package com.groomthon.habiglow.domain.routine.entity;
+package com.groomthon.habiglow.domain.routine.common;
 
 import lombok.Getter;
 

@@ -8,7 +8,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
-import com.groomthon.habiglow.domain.routine.entity.RoutineCategory;
+import com.groomthon.habiglow.domain.routine.common.RoutineCategory;
 import com.groomthon.habiglow.domain.routine.entity.RoutineEntity;
 
 @Repository
@@ -20,6 +20,6 @@ public interface RoutineRepository extends JpaRepository<RoutineEntity, Long> {
     
     Optional<RoutineEntity> findByRoutineIdAndMember_Id(Long routineId, Long memberId);
     
-    @Query("SELECT r FROM RoutineEntity r WHERE r.member.id = :memberId AND r.growthSettings.isGrowthMode = true")
+    @Query("SELECT r FROM RoutineEntity r WHERE r.member.id = :memberId AND r.growthConfiguration.isGrowthMode = true")
     List<RoutineEntity> findGrowthEnabledRoutinesByMemberId(@Param("memberId") Long memberId);
 }

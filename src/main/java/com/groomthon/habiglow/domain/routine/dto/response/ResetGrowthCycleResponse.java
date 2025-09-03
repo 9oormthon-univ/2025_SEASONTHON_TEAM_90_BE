@@ -1,7 +1,7 @@
 package com.groomthon.habiglow.domain.routine.dto.response;
 
+import com.groomthon.habiglow.domain.routine.common.TargetType;
 import com.groomthon.habiglow.domain.routine.entity.RoutineEntity;
-import com.groomthon.habiglow.domain.routine.entity.TargetType;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.AllArgsConstructor;

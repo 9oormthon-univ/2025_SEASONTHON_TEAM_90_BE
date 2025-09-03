@@ -7,9 +7,10 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.groomthon.habiglow.domain.routine.dto.response.RoutineListResponse;
 import com.groomthon.habiglow.domain.routine.dto.response.RoutineResponse;
-import com.groomthon.habiglow.domain.routine.entity.RoutineCategory;
+import com.groomthon.habiglow.domain.routine.common.RoutineCategory;
 import com.groomthon.habiglow.domain.routine.entity.RoutineEntity;
-import com.groomthon.habiglow.domain.routine.helper.RoutineHelper;
+import com.groomthon.habiglow.global.exception.BaseException;
+import com.groomthon.habiglow.global.response.ErrorCode;
 import com.groomthon.habiglow.domain.routine.repository.RoutineRepository;
 
 import lombok.RequiredArgsConstructor;
@@ -26,7 +27,6 @@ import lombok.extern.slf4j.Slf4j;
 public class RoutineQueryFacade {
     
     private final RoutineRepository routineRepository;
-    private final RoutineHelper routineHelper;
 
     /**
      * 사용자의 모든 루틴 조회
@@ -59,7 +59,8 @@ public class RoutineQueryFacade {
      * 특정 루틴 상세 조회
      */
     public RoutineResponse getRoutineById(Long memberId, Long routineId) {
-        RoutineEntity routine = routineHelper.findRoutineByIdAndMemberId(routineId, memberId);
+        RoutineEntity routine = routineRepository.findByRoutineIdAndMember_Id(routineId, memberId)
+                .orElseThrow(() -> new BaseException(ErrorCode.ROUTINE_NOT_FOUND));
         
         log.debug("Retrieved routine: {} for member: {}", routineId, memberId);
         return RoutineResponse.from(routine);
