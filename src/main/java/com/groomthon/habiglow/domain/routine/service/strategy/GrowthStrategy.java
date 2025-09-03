@@ -29,7 +29,7 @@ public class GrowthStrategy implements AdaptationStrategy {
             return false;
         }
         
-        return routine.getGrowthSettings().isGrowthCycleCompleted();
+        return routine.getGrowthConfiguration().isCycleCompleted();
     }
 
     @Override

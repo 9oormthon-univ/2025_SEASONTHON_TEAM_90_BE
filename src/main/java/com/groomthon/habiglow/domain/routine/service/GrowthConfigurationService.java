@@ -11,7 +11,7 @@ import lombok.RequiredArgsConstructor;
 
 /**
  * GrowthConfiguration의 비즈니스 로직을 담당하는 도메인 서비스
- * 기존 GrowthSettings에 있던 복잡한 로직을 여기로 이동
+ * 루틴의 성장 설정에 대한 비즈니스 로직을 처리하는 서비스
  */
 @Service
 @RequiredArgsConstructor

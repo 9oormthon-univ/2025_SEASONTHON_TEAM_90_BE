@@ -96,11 +96,7 @@ public class GrowthAnalysisService {
             throw new BaseException(ErrorCode.ROUTINE_NOT_GROWTH_MODE);
         }
 
-        if (!routine.canIncreaseTarget()) {
-            throw new BaseException(ErrorCode.ROUTINE_CANNOT_INCREASE_TARGET);
-        }
-
-        if (!routine.getGrowthSettings().isGrowthCycleCompleted()) {
+        if (!routine.getGrowthConfiguration().isCycleCompleted()) {
             throw new BaseException(ErrorCode.GROWTH_CYCLE_NOT_COMPLETED);
         }
 

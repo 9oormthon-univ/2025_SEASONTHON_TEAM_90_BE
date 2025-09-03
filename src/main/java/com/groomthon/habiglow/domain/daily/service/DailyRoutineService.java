@@ -66,9 +66,9 @@ public class DailyRoutineService {
         
         // FULL_SUCCESS인 경우 증가, 아니면 리셋
         if (performanceLevel == PerformanceLevel.FULL_SUCCESS) {
-            routine.getGrowthSettings().incrementCurrentCycleDays();
+            routine.updateGrowthConfiguration(routine.getGrowthConfiguration().incrementCurrentCycleDays());
         } else {
-            routine.getGrowthSettings().resetCurrentCycleDays();
+            routine.updateGrowthConfiguration(routine.getGrowthConfiguration().resetCurrentCycleDays());
         }
     }
 }

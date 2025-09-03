@@ -44,7 +44,7 @@ public class RoutineEntity extends BaseTimeEntity {
     private RoutineDetails details;
     
     @Embedded
-    private GrowthSettings growthSettings;
+    private GrowthConfiguration growthConfiguration;
     
     /**
      * 루틴 정보 업데이트 (제목 제외)
@@ -55,29 +55,18 @@ public class RoutineEntity extends BaseTimeEntity {
         this.details = this.details.updateDetails(description, category);
         
         // 성장 설정 업데이트
-        this.growthSettings = this.growthSettings.update(isGrowthMode, targetType, targetValue, 
-                                                         growthCycleDays, targetIncrement);
-    }
-    
-    /**
-     * 목표치 증가
-     */
-    public void increaseTarget() {
-        this.growthSettings.increaseTarget();
+        if (Boolean.TRUE.equals(isGrowthMode)) {
+            this.growthConfiguration = GrowthConfiguration.of(targetType, targetValue, growthCycleDays, targetIncrement);
+        } else {
+            this.growthConfiguration = GrowthConfiguration.disabled();
+        }
     }
     
     /**
      * 성장 모드 활성화 여부 확인
      */
     public boolean isGrowthModeEnabled() {
-        return growthSettings.isEnabled();
-    }
-    
-    /**
-     * 목표치 증가 가능 여부 확인
-     */
-    public boolean canIncreaseTarget() {
-        return growthSettings.canIncreaseTarget();
+        return growthConfiguration.isEnabled();
     }
     
     /**
@@ -103,14 +92,14 @@ public class RoutineEntity extends BaseTimeEntity {
                                             Integer growthCycleDays, Integer targetIncrement) {
         RoutineDetails details = RoutineDetails.of(title, description, category);
         
-        GrowthSettings growthSettings = Boolean.TRUE.equals(isGrowthMode) 
-            ? GrowthSettings.of(targetType, targetValue, growthCycleDays, targetIncrement)
-            : GrowthSettings.disabled();
+        GrowthConfiguration growthConfiguration = Boolean.TRUE.equals(isGrowthMode) 
+            ? GrowthConfiguration.of(targetType, targetValue, growthCycleDays, targetIncrement)
+            : GrowthConfiguration.disabled();
             
         return RoutineEntity.builder()
                 .member(member)
                 .details(details)
-                .growthSettings(growthSettings)
+                .growthConfiguration(growthConfiguration)
                 .build();
     }
 
@@ -127,67 +116,37 @@ public class RoutineEntity extends BaseTimeEntity {
     }
     
     public Boolean getIsGrowthMode() {
-        return growthSettings.getIsGrowthMode();
+        return growthConfiguration.getIsGrowthMode();
     }
     
     public TargetType getTargetType() {
-        return growthSettings.getTargetType();
+        return growthConfiguration.getTargetType();
     }
     
     public Integer getTargetValue() {
-        return growthSettings.getTargetValue();
+        return growthConfiguration.getTargetValue();
     }
     
     public Integer getGrowthCycleDays() {
-        return growthSettings.getGrowthCycleDays();
+        return growthConfiguration.getGrowthCycleDays();
     }
     
     public Integer getTargetIncrement() {
-        return growthSettings.getTargetIncrement();
-    }
-    
-    public GrowthSettings getGrowthSettings() {
-        return growthSettings;
+        return growthConfiguration.getTargetIncrement();
     }
     
     public Integer getCurrentCycleDays() {
-        return growthSettings.getCurrentCycleDays();
+        return growthConfiguration.getCurrentCycleDays();
+    }
+    
+    public GrowthConfiguration getGrowthConfiguration() {
+        return growthConfiguration;
     }
     
     /**
-     * 새로운 GrowthConfiguration 업데이트 메서드
-     * 기존 GrowthSettings에서 새로운 구조로 점진적 마이그레이션
+     * GrowthConfiguration 업데이트 메서드
      */
     public void updateGrowthConfiguration(GrowthConfiguration newConfig) {
-        // 새로운 GrowthConfiguration을 기존 GrowthSettings 형태로 변환
-        // 이는 임시적 호환성 메서드입니다
-        this.growthSettings = GrowthSettings.builder()
-            .isGrowthMode(newConfig.getIsGrowthMode())
-            .targetType(newConfig.getTargetType())
-            .targetValue(newConfig.getTargetValue())
-            .growthCycleDays(newConfig.getGrowthCycleDays())
-            .targetIncrement(newConfig.getTargetIncrement())
-            .currentCycleDays(newConfig.getCurrentCycleDays())
-            .targetDecrement(newConfig.getTargetDecrement())
-            .minimumTargetValue(newConfig.getMinimumTargetValue())
-            .lastAdjustedDate(newConfig.getLastAdjustedDate())
-            .build();
-    }
-    
-    /**
-     * 기존 GrowthSettings를 새로운 GrowthConfiguration으로 변환
-     */
-    public GrowthConfiguration getGrowthConfiguration() {
-        return GrowthConfiguration.builder()
-            .isGrowthMode(growthSettings.getIsGrowthMode())
-            .targetType(growthSettings.getTargetType())
-            .targetValue(growthSettings.getTargetValue())
-            .growthCycleDays(growthSettings.getGrowthCycleDays())
-            .targetIncrement(growthSettings.getTargetIncrement())
-            .currentCycleDays(growthSettings.getCurrentCycleDays())
-            .targetDecrement(growthSettings.getTargetDecrement())
-            .minimumTargetValue(growthSettings.getMinimumTargetValue())
-            .lastAdjustedDate(growthSettings.getLastAdjustedDate())
-            .build();
+        this.growthConfiguration = newConfig;
     }
 }
