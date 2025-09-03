@@ -54,7 +54,7 @@ jobs:
             sleep 1
           done
 
-      - name: Build without Firebase tests (CI only)
+      - name: Build project (skip tests for CI)
         env:
           # CI 단계에 필요한 환경 변수 (임시 DB에 연결)
           SPRING_DATASOURCE_URL: jdbc:postgresql://localhost:5432/habiglow_test_db
