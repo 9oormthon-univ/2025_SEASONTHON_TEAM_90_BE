@@ -2,8 +2,8 @@ package com.groomthon.habiglow.domain.routine.service;
 
 import org.springframework.stereotype.Service;
 
-import com.groomthon.habiglow.domain.routine.entity.RoutineCategory;
-import com.groomthon.habiglow.domain.routine.entity.TargetType;
+import com.groomthon.habiglow.domain.routine.common.RoutineCategory;
+import com.groomthon.habiglow.domain.routine.common.TargetType;
 import com.groomthon.habiglow.global.exception.BaseException;
 import com.groomthon.habiglow.global.response.ErrorCode;
 

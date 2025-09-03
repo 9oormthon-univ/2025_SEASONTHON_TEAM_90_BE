@@ -1,6 +1,6 @@
 package com.groomthon.habiglow.domain.member.entity;
 
-import com.groomthon.habiglow.domain.routine.entity.RoutineCategory;
+import com.groomthon.habiglow.domain.routine.common.RoutineCategory;
 import com.groomthon.habiglow.global.entity.BaseTimeEntity;
 
 import jakarta.persistence.Column;

@@ -44,6 +44,7 @@ logging:
   level:
     root: warn
     org.springframework: warn
+    com.groomthon.habiglow.domain.routine: info
 
 
 # ===== Actuator 설정 (헬스체크) =====

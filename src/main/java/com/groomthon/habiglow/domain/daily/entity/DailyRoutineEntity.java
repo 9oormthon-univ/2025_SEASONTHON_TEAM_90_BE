@@ -3,9 +3,9 @@ package com.groomthon.habiglow.domain.daily.entity;
 import java.time.LocalDate;
 
 import com.groomthon.habiglow.domain.member.entity.MemberEntity;
-import com.groomthon.habiglow.domain.routine.entity.RoutineCategory;
+import com.groomthon.habiglow.domain.routine.common.RoutineCategory;
 import com.groomthon.habiglow.domain.routine.entity.RoutineEntity;
-import com.groomthon.habiglow.domain.routine.entity.TargetType;
+import com.groomthon.habiglow.domain.routine.common.TargetType;
 import com.groomthon.habiglow.global.entity.BaseTimeEntity;
 
 import jakarta.persistence.Column;
