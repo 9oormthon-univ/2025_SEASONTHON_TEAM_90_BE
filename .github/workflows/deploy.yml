@@ -66,6 +66,8 @@ jobs:
           JWT_ACCESS_EXPIRATION: ${{ vars.JWT_ACCESS_EXPIRATION }}
           JWT_REFRESH_EXPIRATION: ${{ vars.JWT_REFRESH_EXPIRATION }}
           SWAGGER_SERVER_URL: ${{ vars.SWAGGER_SERVER_URL }}
+          # Firebase CI에서 비활성화
+          FCM_FIREBASE_ENABLED: false
         run: ./gradlew build
 
       # CI가 성공하고 main 브랜치에 푸시될 때만 배포 실행
