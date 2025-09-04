@@ -18,6 +18,8 @@ public class ReductionReadyRoutineResponse {
 	private String title;
 	private Integer currentTargetValue;
 	private Integer suggestedTargetValue;
+	private Integer currentCycleDays;
+	private Integer failureCycleDays;
 	private LocalDate lastAttemptDate;
 
 	public static ReductionReadyRoutineResponse from(RoutineEntity routine, Integer suggestedTarget, LocalDate lastAttemptDate) {
@@ -26,6 +28,8 @@ public class ReductionReadyRoutineResponse {
 			.title(routine.getTitle())
 			.currentTargetValue(routine.getTargetValue())
 			.suggestedTargetValue(suggestedTarget)
+			.currentCycleDays(routine.getCurrentCycleDays())
+			.failureCycleDays(routine.getGrowthConfiguration().getFailureCycleDays())
 			.lastAttemptDate(lastAttemptDate)
 			.build();
 	}
