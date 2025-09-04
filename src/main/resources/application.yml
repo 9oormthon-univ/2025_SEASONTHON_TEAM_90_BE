@@ -13,6 +13,11 @@ jwt:
   access-token-expiration: ${JWT_ACCESS_EXPIRATION:3600000}
   refresh-token-expiration: ${JWT_REFRESH_EXPIRATION:86400000}
 
+fcm:
+  firebase:
+    config:
+      path: "classpath:firebase/habiglow-service-account.json"
+
 security:
   public-urls:
     # 클라이언트 기반 소셜 로그인

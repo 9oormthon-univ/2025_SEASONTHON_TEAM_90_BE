@@ -18,7 +18,7 @@ public class WeeklyDashboardDto {
     @Schema(description = "핵심 지표")
     private MetricsInfo metrics;
 
-    @Schema(description = "감정 분포 (HAPPY, SOSO, SAD, MAD) - 단위: 일 수(0~7)")
+    @Schema(description = "감정 분포 (LOW | NORMAL | GOOD | VERY_GOOD) - 단위: 일 수(0~7)")
     private Map<String, Integer> emotionDistribution;
 
     @Schema(description = "일별 완성률 및 감정 (현재 요일까지만)")

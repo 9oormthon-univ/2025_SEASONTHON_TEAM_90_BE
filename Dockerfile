@@ -19,6 +19,9 @@ RUN apt-get update && apt-get install -y curl && rm -rf /var/lib/apt/lists/*
 # 빌드된 JAR 파일 복사
 COPY --from=builder /app/build/libs/*.jar app.jar
 
+# Firebase 키 파일 복사
+COPY --from=builder /app/src/main/resources/firebase/ /app/firebase/
+
 # 포트 노출
 EXPOSE 8080
 
