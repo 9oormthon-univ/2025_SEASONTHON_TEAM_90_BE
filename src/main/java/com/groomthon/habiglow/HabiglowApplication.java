@@ -8,10 +8,10 @@ import org.springframework.scheduling.annotation.EnableAsync;
 @SpringBootApplication
 @EnableJpaAuditing
 @EnableAsync
-public class HabiGlowApplication {
+public class HabiglowApplication {
 
 	public static void main(String[] args) {
-		SpringApplication.run(HabiGlowApplication.class, args);
+		SpringApplication.run(HabiglowApplication.class, args);
 	}
 
 }
