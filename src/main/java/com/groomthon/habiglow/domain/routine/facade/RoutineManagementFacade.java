@@ -131,15 +131,22 @@ public class RoutineManagementFacade {
     }
     
     private RoutineAdaptationResultResponse executeGrowthReset(RoutineEntity routine, Long memberId) {
-        Integer previousCycleDays = routine.getCurrentCycleDays();
-        growthConfigurationService.resetGrowthCycle(routine);
+        Integer previousSuccessDays = routine.getGrowthConfiguration().getCurrentCycleDays();
+        Integer previousFailureDays = routine.getGrowthConfiguration().getFailureCycleDays();
         
-        log.info("Growth cycle reset for routine: {} by member: {}, previous cycle days: {}",
-            routine.getRoutineId(), memberId, previousCycleDays);
+        // 성공/실패 카운트 모두 리셋 (완전 초기화)
+        routine.updateGrowthConfiguration(
+            routine.getGrowthConfiguration()
+                .withResetSuccessCycle()
+                .withResetFailureCycle()
+        );
+        
+        log.info("Both cycles reset for routine: {} by member: {}, previous success: {}, failure: {}",
+            routine.getRoutineId(), memberId, previousSuccessDays, previousFailureDays);
             
         return RoutineAdaptationResultResponse.success(
             routine.getRoutineId(), routine.getTitle(), 
-            previousCycleDays, 0, AdaptationAction.RESET);
+            previousSuccessDays + previousFailureDays, 0, AdaptationAction.RESET);
     }
 
 }

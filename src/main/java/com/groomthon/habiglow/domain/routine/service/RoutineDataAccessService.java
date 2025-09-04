@@ -40,17 +40,6 @@ public class RoutineDataAccessService {
     }
 
     /**
-     * 특정 기간의 루틴 기록들을 조회
-     */
-    public List<DailyRoutineEntity> getRecentRecords(Long routineId, Long memberId, 
-                                                     LocalDate startDate, LocalDate endDate) {
-        log.debug("Getting recent records for routine: {} member: {} between {} and {}", 
-                 routineId, memberId, startDate, endDate);
-        return dailyRoutineRepository.findByRoutineAndMemberAndDateRange(
-            routineId, memberId, startDate, endDate);
-    }
-
-    /**
      * 여러 루틴의 특정 날짜 성공 기록들을 Map으로 반환
      */
     public Map<Long, DailyRoutineEntity> getSuccessRecords(List<Long> routineIds, 
@@ -88,46 +77,5 @@ public class RoutineDataAccessService {
                                                                   Long memberId, Clock clock) {
         LocalDate yesterday = LocalDate.now(clock).minusDays(1);
         return getSuccessRecords(routineIds, memberId, yesterday);
-    }
-
-    /**
-     * 성장 주기 기간의 기록들 조회 (편의 메서드)
-     */
-    public List<DailyRoutineEntity> getGrowthCyclePeriodRecords(Long routineId, Long memberId, 
-                                                              RoutineEntity routine, Clock clock) {
-        LocalDate endDate = LocalDate.now(clock).minusDays(1);
-        LocalDate startDate = endDate.minusDays(routine.getGrowthCycleDays() - 1);
-        return getRecentRecords(routineId, memberId, startDate, endDate);
-    }
-
-    /**
-     * 최근 30일 기록들 조회 (마지막 시도일 찾기용)
-     */
-    public List<DailyRoutineEntity> getRecentRecordsForLastAttempt(Long routineId, Long memberId, Clock clock) {
-        LocalDate endDate = LocalDate.now(clock).minusDays(1);
-        LocalDate startDate = endDate.minusDays(30);
-        return getRecentRecords(routineId, memberId, startDate, endDate);
-    }
-
-    /**
-     * 기록 목록에서 가장 최근 기록 날짜 추출
-     */
-    public LocalDate findMostRecentRecordDate(List<DailyRoutineEntity> records) {
-        return records.stream()
-                .map(DailyRoutineEntity::getPerformedDate)
-                .max(LocalDate::compareTo)
-                .orElse(null);
-    }
-
-    /**
-     * 기록 목록을 루틴 ID로 맵핑
-     */
-    public Map<Long, DailyRoutineEntity> mapRecordsByRoutineId(List<DailyRoutineEntity> records) {
-        return records.stream()
-                .collect(Collectors.toMap(
-                    record -> record.getRoutine().getRoutineId(),
-                    record -> record,
-                    (existing, replacement) -> existing // 중복 시 첫 번째 유지
-                ));
     }
 }

@@ -11,7 +11,6 @@ import com.groomthon.habiglow.domain.routine.dto.response.adaptation.AdaptiveRou
 import com.groomthon.habiglow.domain.routine.dto.response.adaptation.GrowthReadyRoutineResponse;
 import com.groomthon.habiglow.domain.routine.dto.response.adaptation.ReductionReadyRoutineResponse;
 import com.groomthon.habiglow.domain.routine.dto.response.adaptation.RoutineAdaptationCheckResponse;
-import com.groomthon.habiglow.domain.routine.repository.RoutineRepository;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -21,10 +20,8 @@ import lombok.extern.slf4j.Slf4j;
 @RequiredArgsConstructor
 public class RoutineGrowthService {
 
-    private final RoutineRepository routineRepository;
     private final GrowthAnalysisService growthAnalysisService;
     private final ReductionAnalysisService reductionAnalysisService;
-    private final GrowthConfigurationService growthConfigurationService;
 
     @Transactional(readOnly = true)
     public AdaptiveRoutineCheckResponse checkAdaptiveRoutines(Long memberId) {
