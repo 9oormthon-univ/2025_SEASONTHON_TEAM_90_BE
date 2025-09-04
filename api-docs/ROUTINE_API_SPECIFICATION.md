@@ -103,7 +103,6 @@ Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
 | GET | `/api/routines/categories` | 루틴 카테고리 목록 조회 | ❌ |
 | GET | `/api/routines/adaptation-check` | 적응형 루틴 조정 대상 조회 | ✅ |
 | PATCH | `/api/routines/{id}/target` | 루틴 목표 조정 | ✅ |
-| PATCH | `/api/routines/{id}/reset-cycle` | 성장 주기 리셋 (레거시) | ✅ |
 
 ## 1. 🔧 루틴 CRUD
 
@@ -505,29 +504,6 @@ Authorization: Bearer {access_token}
   }
 }
 ```
-### 3.3 성장 주기 리셋 (레거시) ⚠️ DEPRECATED
-성장 주기가 완료된 루틴의 주기를 리셋합니다. **현재는 `/target?action=RESET` 사용을 권장합니다.**
-
-**요청**
-```http
-PATCH /api/routines/{routineId}/reset-cycle
-Authorization: Bearer {access_token}
-```
-
-**응답**
-```json
-{
-  "code": "S200",
-  "message": "성공",
-  "data": {
-    "routineId": 1,
-    "routineTitle": "푸쉬업 챌린지",
-    "resetCycleDays": 7
-  }
-}
-```
-
----
 
 ## ⚠️ 에러 코드
 
