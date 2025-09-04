@@ -65,5 +65,40 @@ public interface DailyRoutineRepository extends JpaRepository<DailyRoutineEntity
             @Param("start") LocalDate start,
             @Param("end") LocalDate end);
 
+    /**
+     * 루틴 삭제 시 관련된 모든 DailyRoutineEntity의 routine 참조를 null로 처리
+     */
+    @Modifying
+    @Query("UPDATE DailyRoutineEntity dr SET dr.routine = null WHERE dr.routine.routineId = :routineId")
+    int nullifyRoutineReference(@Param("routineId") Long routineId);
+
+    /**
+     * 특정 회원의 루틴 삭제 시 관련된 DailyRoutineEntity의 routine 참조를 null로 처리
+     */
+    @Modifying
+    @Query("UPDATE DailyRoutineEntity dr SET dr.routine = null " +
+           "WHERE dr.routine.routineId = :routineId AND dr.member.id = :memberId")
+    int nullifyRoutineReferenceForMember(@Param("routineId") Long routineId, @Param("memberId") Long memberId);
+
+    /**
+     * 특정 회원의 특정 날짜에 데일리 루틴 기록이 존재하는지 확인
+     */
+    boolean existsByMemberIdAndPerformedDate(Long memberId, LocalDate performedDate);
+
+    /**
+     * 특정 회원의 월별 통계를 위한 일별 루틴 성공률 조회
+     */
+    @Query("SELECT dr.performedDate, " +
+           "COUNT(*) as totalRoutines, " +
+           "COUNT(CASE WHEN dr.performanceLevel = 'FULL_SUCCESS' THEN 1 END) as successfulRoutines " +
+           "FROM DailyRoutineEntity dr " +
+           "WHERE dr.member.id = :memberId " +
+           "AND EXTRACT(YEAR FROM dr.performedDate) = :year " +
+           "AND EXTRACT(MONTH FROM dr.performedDate) = :month " +
+           "GROUP BY dr.performedDate " +
+           "ORDER BY dr.performedDate")
+    List<Object[]> findMonthlyStatsByMemberAndYearMonth(@Param("memberId") Long memberId, 
+                                                        @Param("year") int year, 
+                                                        @Param("month") int month);
 
 }

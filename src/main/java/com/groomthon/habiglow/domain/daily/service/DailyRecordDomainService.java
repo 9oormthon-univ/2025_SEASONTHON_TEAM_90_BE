@@ -15,7 +15,9 @@ import com.groomthon.habiglow.domain.daily.dto.error.InvalidRoutineError;
 import com.groomthon.habiglow.domain.daily.dto.request.RoutinePerformanceRequest;
 import com.groomthon.habiglow.domain.daily.dto.request.SaveDailyRecordRequest.RoutineRecordRequest;
 import com.groomthon.habiglow.domain.daily.entity.DailyRoutineEntity;
+import com.groomthon.habiglow.domain.daily.entity.PerformanceLevel;
 import com.groomthon.habiglow.domain.daily.exception.DailyRecordValidationException;
+import com.groomthon.habiglow.domain.daily.repository.DailyRoutineRepository;
 import com.groomthon.habiglow.domain.member.entity.MemberEntity;
 import com.groomthon.habiglow.domain.member.repository.MemberRepository;
 import com.groomthon.habiglow.domain.routine.entity.RoutineEntity;
@@ -33,6 +35,7 @@ public class DailyRecordDomainService {
     private final RoutineService routineService;
     private final MemberRepository memberRepository;
     private final DailyRoutineService dailyRoutineService;
+    private final DailyRoutineRepository dailyRoutineRepository;
     
     public List<DailyRoutineEntity> saveRoutineRecords(Long memberId, LocalDate date, 
                                                       List<RoutineRecordRequest> routineRecords) {
@@ -41,7 +44,14 @@ public class DailyRecordDomainService {
         }
         
         List<RoutinePerformanceRequest> enrichedRecords = enrichRoutineRecords(routineRecords, memberId);
-        return dailyRoutineService.saveRoutineRecords(memberId, date, enrichedRecords);
+        
+        // 스냅샷 생성을 먼저 실행 (첫 저장인 경우)
+        createSnapshotForMissingRoutines(memberId, date, enrichedRecords);
+        
+        // 실제 기록 저장 (upsert 방식으로 스냅샷 보존)
+        List<DailyRoutineEntity> savedRecords = dailyRoutineService.saveRoutineRecords(memberId, date, enrichedRecords);
+        
+        return savedRecords;
     }
     
     public void validateRoutineOwnership(List<Long> routineIds, Long memberId) {
@@ -96,5 +106,34 @@ public class DailyRecordDomainService {
                 return RoutinePerformanceRequest.of(routine, member, record.getPerformanceLevel());
             })
             .collect(Collectors.toList());
+    }
+
+    /**
+     * 기록되지 않은 루틴에 대해 미수행 스냅샷 생성 (모든 날짜 적용)
+     */
+    private void createSnapshotForMissingRoutines(Long memberId, LocalDate date, 
+                                                List<RoutinePerformanceRequest> recordedRoutines) {
+        
+        boolean hasExistingRecords = dailyRoutineRepository.existsByMemberIdAndPerformedDate(memberId, date);
+        if (hasExistingRecords) {
+            return;
+        }
+        
+        List<RoutineEntity> allUserRoutines = routineService.getUserRoutines(memberId);
+        Set<Long> recordedRoutineIds = recordedRoutines.stream()
+                .map(r -> r.getRoutine().getRoutineId())
+                .collect(Collectors.toSet());
+        
+        MemberEntity member = memberRepository.findById(memberId)
+                .orElseThrow(() -> new BaseException(ErrorCode.MEMBER_NOT_FOUND));
+        
+        List<DailyRoutineEntity> missingRoutineRecords = allUserRoutines.stream()
+                .filter(routine -> !recordedRoutineIds.contains(routine.getRoutineId()))
+                .map(routine -> DailyRoutineEntity.create(routine, member, PerformanceLevel.NOT_PERFORMED, date, 0))
+                .collect(Collectors.toList());
+        
+        if (!missingRoutineRecords.isEmpty()) {
+            dailyRoutineRepository.saveAll(missingRoutineRecords);
+        }
     }
 }
