@@ -85,4 +85,20 @@ public interface DailyRoutineRepository extends JpaRepository<DailyRoutineEntity
      */
     boolean existsByMemberIdAndPerformedDate(Long memberId, LocalDate performedDate);
 
+    /**
+     * 특정 회원의 월별 통계를 위한 일별 루틴 성공률 조회
+     */
+    @Query("SELECT dr.performedDate, " +
+           "COUNT(*) as totalRoutines, " +
+           "COUNT(CASE WHEN dr.performanceLevel = 'FULL_SUCCESS' THEN 1 END) as successfulRoutines " +
+           "FROM DailyRoutineEntity dr " +
+           "WHERE dr.member.id = :memberId " +
+           "AND EXTRACT(YEAR FROM dr.performedDate) = :year " +
+           "AND EXTRACT(MONTH FROM dr.performedDate) = :month " +
+           "GROUP BY dr.performedDate " +
+           "ORDER BY dr.performedDate")
+    List<Object[]> findMonthlyStatsByMemberAndYearMonth(@Param("memberId") Long memberId, 
+                                                        @Param("year") int year, 
+                                                        @Param("month") int month);
+
 }

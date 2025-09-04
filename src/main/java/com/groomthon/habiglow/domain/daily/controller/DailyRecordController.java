@@ -13,7 +13,9 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.groomthon.habiglow.domain.daily.dto.request.SaveDailyRecordRequest;
 import com.groomthon.habiglow.domain.daily.dto.response.DailyRecordResponse;
+import com.groomthon.habiglow.domain.daily.dto.response.MonthlyStatsResponse;
 import com.groomthon.habiglow.domain.daily.facade.DailyRecordFacade;
+import com.groomthon.habiglow.domain.daily.service.DailyRecordQueryService;
 import com.groomthon.habiglow.global.jwt.JwtMemberExtractor;
 import com.groomthon.habiglow.global.response.AutoApiResponse;
 import com.groomthon.habiglow.global.swagger.CustomExceptionDescription;
@@ -34,6 +36,7 @@ import lombok.RequiredArgsConstructor;
 public class DailyRecordController {
     
     private final DailyRecordFacade dailyRecordFacade;
+    private final DailyRecordQueryService dailyRecordQueryService;
     private final JwtMemberExtractor jwtMemberExtractor;
     
     @Operation(
@@ -81,5 +84,21 @@ public class DailyRecordController {
         
         Long memberId = jwtMemberExtractor.extractMemberId(httpRequest);
         return dailyRecordFacade.getTodayRecord(memberId, LocalDate.now());
+    }
+    
+    @Operation(
+        summary = "월별 통계 조회",
+        description = "특정 월에 대해 각 일별로 성공한 루틴(FullSuccess)/전체 루틴 수를 반환합니다."
+    )
+    @ApiResponse(responseCode = "200", description = "조회 성공")
+    @GetMapping("/monthly-stats/{year}/{month}")
+    @PreAuthorize("hasRole('USER')")
+    public MonthlyStatsResponse getMonthlyStats(
+            @PathVariable int year,
+            @PathVariable int month,
+            HttpServletRequest httpRequest) {
+        
+        Long memberId = jwtMemberExtractor.extractMemberId(httpRequest);
+        return dailyRecordQueryService.getMonthlyStats(memberId, year, month);
     }
 }
