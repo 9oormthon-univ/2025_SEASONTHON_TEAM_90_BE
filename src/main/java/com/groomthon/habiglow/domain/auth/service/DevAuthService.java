@@ -17,7 +17,6 @@ import lombok.extern.slf4j.Slf4j;
 @Service
 @RequiredArgsConstructor
 @Slf4j
-@Profile({"dev", "local"}) // 개발 환경에서만 활성화
 @Transactional
 public class DevAuthService {
 
