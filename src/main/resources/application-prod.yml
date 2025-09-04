@@ -32,7 +32,7 @@ cookie:
 fcm:
   firebase:
     config:
-      path: ${FCM_FIREBASE_CONFIG_PATH:file:/opt/secure/firebase/habiglow-service-account.json}
+      path: ${FCM_FIREBASE_CONFIG_PATH:file:/app/firebase/habiglow-service-account.json}
 
 
 swagger:
