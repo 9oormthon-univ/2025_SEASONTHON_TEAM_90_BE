@@ -1,19 +1,14 @@
 package com.groomthon.habiglow.domain.routine.service;
 
-import java.time.Clock;
-import java.time.LocalDate;
 import java.util.Collections;
 import java.util.List;
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.groomthon.habiglow.domain.daily.entity.DailyRoutineEntity;
-import com.groomthon.habiglow.domain.daily.repository.DailyRoutineRepository;
-import com.groomthon.habiglow.domain.routine.dto.response.adaptation.RoutineAdaptationCheckResponse;
 import com.groomthon.habiglow.domain.routine.dto.response.adaptation.ReductionReadyRoutineResponse;
+import com.groomthon.habiglow.domain.routine.dto.response.adaptation.RoutineAdaptationCheckResponse;
 import com.groomthon.habiglow.domain.routine.entity.RoutineEntity;
-import com.groomthon.habiglow.domain.routine.repository.RoutineRepository;
 import com.groomthon.habiglow.domain.routine.service.strategy.ReductionStrategy;
 import com.groomthon.habiglow.global.exception.BaseException;
 import com.groomthon.habiglow.global.response.ErrorCode;
@@ -26,9 +21,6 @@ import lombok.extern.slf4j.Slf4j;
 @RequiredArgsConstructor
 public class ReductionAnalysisService {
 
-    private final Clock clock;
-    private final DailyRoutineRepository dailyRoutineRepository;
-    private final RoutineRepository routineRepository;
     private final RoutineDataAccessService routineDataAccessService;
     private final ReductionStrategy reductionStrategy;
 
@@ -40,29 +32,12 @@ public class ReductionAnalysisService {
             return RoutineAdaptationCheckResponse.reduction(Collections.emptyList());
         }
 
-        LocalDate endDate = LocalDate.now(clock).minusDays(1);
-
         List<ReductionReadyRoutineResponse> reductionReadyRoutines = growthRoutines.stream()
-            .filter(routine -> {
-                List<DailyRoutineEntity> recentRecords = routineDataAccessService
-                    .getGrowthCyclePeriodRecords(routine.getRoutineId(), memberId, routine, clock);
-                
-                LocalDate cycleEndDate = LocalDate.now(clock).minusDays(1);
-                LocalDate startDate = cycleEndDate.minusDays(routine.getGrowthCycleDays() - 1);
-                log.info("Checking reduction for routine {}: period={} to {}, records={}", 
-                    routine.getRoutineId(), startDate, cycleEndDate, recentRecords.size());
-                
-                boolean canAdapt = reductionStrategy.canAdapt(routine);
-                boolean cycleCompleted = reductionStrategy.isAdaptationCycleCompleted(routine, recentRecords);
-                
-                log.info("Routine {}: canAdapt={}, cycleCompleted={}", routine.getRoutineId(), canAdapt, cycleCompleted);
-
-                return canAdapt && cycleCompleted;
-            })
+            .filter(routine -> reductionStrategy.canAdapt(routine) && 
+                              reductionStrategy.isAdaptationCycleCompleted(routine, Collections.emptyList()))
             .map(routine -> {
                 Integer suggestedTarget = reductionStrategy.calculateNewTargetValue(routine);
-                LocalDate lastAttemptDate = findLastAttemptDate(routine.getRoutineId(), memberId, endDate);
-                return ReductionReadyRoutineResponse.from(routine, suggestedTarget, lastAttemptDate);
+                return ReductionReadyRoutineResponse.from(routine, suggestedTarget, null);
             })
             .toList();
 
@@ -81,18 +56,8 @@ public class ReductionAnalysisService {
             throw new BaseException(ErrorCode.ROUTINE_CANNOT_DECREASE_TARGET);
         }
 
-        List<DailyRoutineEntity> recentRecords = routineDataAccessService
-            .getGrowthCyclePeriodRecords(routine.getRoutineId(), memberId, routine, clock);
-
-        if (!reductionStrategy.isAdaptationCycleCompleted(routine, recentRecords)) {
+        if (!reductionStrategy.isAdaptationCycleCompleted(routine, Collections.emptyList())) {
             throw new BaseException(ErrorCode.REDUCTION_CYCLE_NOT_COMPLETED);
         }
-    }
-
-    private LocalDate findLastAttemptDate(Long routineId, Long memberId, LocalDate endDate) {
-        List<DailyRoutineEntity> recentRecords = routineDataAccessService
-            .getRecentRecordsForLastAttempt(routineId, memberId, clock);
-
-        return routineDataAccessService.findMostRecentRecordDate(recentRecords);
     }
 }

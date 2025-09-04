@@ -32,37 +32,16 @@ public class ReductionStrategy implements AdaptationStrategy {
             return false;
         }
         
-        if (recentRecords == null || recentRecords.isEmpty()) {
-            log.info("No recent records for routine {}", routine.getRoutineId());
-            return false;
-        }
-
-        Integer cycleDays = routine.getGrowthCycleDays();
-        LocalDate lastAdjustedDate = routine.getGrowthConfiguration().getLastAdjustedDate();
+        // 단순화된 로직: 실패 카운트만 체크
+        boolean isFailureCycleCompleted = routine.getGrowthConfiguration().isFailureCycleCompleted();
         
-        log.info("Reduction check for routine {}: cycleDays={}, lastAdjustedDate={}, recentRecords={}",
-            routine.getRoutineId(), cycleDays, lastAdjustedDate, recentRecords.size());
-
-        List<DailyRoutineEntity> relevantRecords = recentRecords.stream()
-            .filter(record -> lastAdjustedDate == null || record.getPerformedDate().isAfter(lastAdjustedDate))
-            .toList();
+        log.info("Reduction check for routine {}: failureCycleDays={}, growthCycleDays={}, completed={}", 
+            routine.getRoutineId(), 
+            routine.getGrowthConfiguration().getFailureCycleDays(),
+            routine.getGrowthCycleDays(),
+            isFailureCycleCompleted);
         
-        log.info("Relevant records for routine {}: {}", routine.getRoutineId(), relevantRecords.size());
-
-        // 관련 기록이 없으면 감소 불가 (최근에 조정되어 평가할 기록이 없음)
-        if (relevantRecords.isEmpty()) {
-            log.info("No relevant records after lastAdjustedDate for routine {}", routine.getRoutineId());
-            return false;
-        }
-
-        // 성장 주기 동안 FULL_SUCCESS가 있는지 확인
-        // 기록이 없는 날은 자동으로 NOT_PERFORMED = 실패로 간주됨
-        boolean hasAnySuccess = relevantRecords.stream()
-            .anyMatch(record -> record.getPerformanceLevel() == PerformanceLevel.FULL_SUCCESS);
-        
-        log.info("Routine {} has success in cycle: {}, should reduce: {}", routine.getRoutineId(), hasAnySuccess, !hasAnySuccess);
-
-        return !hasAnySuccess;
+        return isFailureCycleCompleted;
     }
 
     @Override
