@@ -3,7 +3,7 @@ package com.groomthon.habiglow.domain.member.entity;
 import java.io.Serializable;
 import java.util.Objects;
 
-import com.groomthon.habiglow.domain.routine.entity.RoutineCategory;
+import com.groomthon.habiglow.domain.routine.common.RoutineCategory;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;

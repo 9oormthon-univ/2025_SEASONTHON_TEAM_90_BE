@@ -6,7 +6,7 @@ import com.groomthon.habiglow.domain.daily.entity.DailyReflectionEntity;
 import com.groomthon.habiglow.domain.daily.entity.DailyRoutineEntity;
 import com.groomthon.habiglow.domain.daily.repository.DailyReflectionRepository;
 import com.groomthon.habiglow.domain.daily.repository.DailyRoutineRepository;
-import com.groomthon.habiglow.domain.routine.entity.RoutineCategory;
+import com.groomthon.habiglow.domain.routine.common.RoutineCategory;
 import com.groomthon.habiglow.domain.routine.entity.RoutineEntity;
 import com.groomthon.habiglow.domain.routine.repository.RoutineRepository;
 import com.groomthon.habiglow.domain.daily.entity.PerformanceLevel; // 엔티티 패키지와 일치!

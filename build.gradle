@@ -59,6 +59,11 @@ dependencies {
 	implementation 'com.google.guava:guava:33.0.0-jre'
 
 
+	// === firebase 푸시 알림 설정 ===
+
+	implementation 'com.google.firebase:firebase-admin:9.2.0'
+
+
 	// === DB 드라이버 ===
 
 	// PostgreSQL 드라이버 (JPA와 연동되는 실DB 연결용)
@@ -79,6 +84,8 @@ dependencies {
 
 	// Spring Boot 테스트 기능 (JUnit, MockMvc 등 포함)
 	testImplementation 'org.springframework.boot:spring-boot-starter-test'
+
+
 }
 
 tasks.named('test') {

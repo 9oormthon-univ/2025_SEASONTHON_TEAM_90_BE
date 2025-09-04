@@ -9,7 +9,7 @@ import com.groomthon.habiglow.domain.member.dto.response.MemberInterestsResponse
 import com.groomthon.habiglow.domain.member.entity.MemberEntity;
 import com.groomthon.habiglow.domain.member.entity.MemberInterest;
 import com.groomthon.habiglow.domain.member.repository.MemberRepository;
-import com.groomthon.habiglow.domain.routine.entity.RoutineCategory;
+import com.groomthon.habiglow.domain.routine.common.RoutineCategory;
 import com.groomthon.habiglow.global.exception.BaseException;
 import com.groomthon.habiglow.global.response.ErrorCode;
 

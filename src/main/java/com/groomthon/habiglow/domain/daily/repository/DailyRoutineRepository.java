@@ -15,10 +15,10 @@ import com.groomthon.habiglow.domain.daily.entity.PerformanceLevel;
 public interface DailyRoutineRepository extends JpaRepository<DailyRoutineEntity, Long> {
 
     @Query("SELECT dr FROM DailyRoutineEntity dr " +
-            "LEFT JOIN FETCH dr.routine " +
-            "WHERE dr.member.id = :memberId AND dr.performedDate = :date")
+        "LEFT JOIN FETCH dr.routine " +
+        "WHERE dr.member.id = :memberId AND dr.performedDate = :date")
     List<DailyRoutineEntity> findByMemberIdAndPerformedDateWithRoutine(@Param("memberId") Long memberId,
-                                                                       @Param("date") LocalDate date);
+        @Param("date") LocalDate date);
 
     Optional<DailyRoutineEntity> findByRoutine_RoutineIdAndMemberIdAndPerformedDate(
             Long routineId, Long memberId, LocalDate date);
@@ -26,24 +26,34 @@ public interface DailyRoutineRepository extends JpaRepository<DailyRoutineEntity
     @Modifying
     @Query("DELETE FROM DailyRoutineEntity dr WHERE dr.member.id = :memberId AND dr.performedDate = :date")
     void deleteByMemberIdAndPerformedDate(@Param("memberId") Long memberId, @Param("date") LocalDate date);
-    
+
     @Query("SELECT dr FROM DailyRoutineEntity dr WHERE dr.routine.routineId = :routineId " +
-           "AND dr.member.id = :memberId AND dr.performedDate = :date " +
-           "AND dr.performanceLevel = :level")
+        "AND dr.member.id = :memberId AND dr.performedDate = :date " +
+        "AND dr.performanceLevel = :level")
     Optional<DailyRoutineEntity> findSuccessRecordByRoutineAndMemberAndDate(
         @Param("routineId") Long routineId,
-        @Param("memberId") Long memberId, 
+        @Param("memberId") Long memberId,
         @Param("date") LocalDate date,
         @Param("level") PerformanceLevel level);
 
     @Query("SELECT dr FROM DailyRoutineEntity dr WHERE dr.routine.routineId IN :routineIds " +
-           "AND dr.member.id = :memberId AND dr.performedDate = :date " +
-           "AND dr.performanceLevel = :level")
+        "AND dr.member.id = :memberId AND dr.performedDate = :date " +
+        "AND dr.performanceLevel = :level")
     List<DailyRoutineEntity> findSuccessRecordsByRoutinesAndMemberAndDate(
         @Param("routineIds") List<Long> routineIds,
         @Param("memberId") Long memberId,
         @Param("date") LocalDate date,
         @Param("level") PerformanceLevel level);
+
+    @Query("SELECT dr FROM DailyRoutineEntity dr WHERE dr.routine.routineId = :routineId " +
+        "AND dr.member.id = :memberId " +
+        "AND dr.performedDate BETWEEN :startDate AND :endDate " +
+        "ORDER BY dr.performedDate DESC")
+    List<DailyRoutineEntity> findByRoutineAndMemberAndDateRange(
+        @Param("routineId") Long routineId,
+        @Param("memberId") Long memberId,
+        @Param("startDate") LocalDate startDate,
+        @Param("endDate") LocalDate endDate);
 
 // 주간 범위 조회 (member.id + performedDate BETWEEN)
     @Query("SELECT dr FROM DailyRoutineEntity dr " +

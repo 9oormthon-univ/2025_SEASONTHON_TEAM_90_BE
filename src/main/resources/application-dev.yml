@@ -8,7 +8,7 @@ spring:
 
   jpa:
     hibernate:
-      ddl-auto: update
+      ddl-auto: create
     show-sql: true
     properties:
       hibernate:
@@ -24,6 +24,12 @@ openai:
 
 cookie:
   secure: false
+
+fcm:
+  firebase:
+    config:
+      path: "firebase/habiglow-service-account.json"
+
 
 swagger:
   server:
