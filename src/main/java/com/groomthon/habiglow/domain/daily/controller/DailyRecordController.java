@@ -71,7 +71,7 @@ public class DailyRecordController {
     
     @Operation(
         summary = "오늘 기록 조회",
-        description = "오늘 날짜의 루틴 수행 기록과 회고를 조회합니다. (편의 API)"
+        description = "오늘 날짜의 루틴 수행 기록과 회고를 조회합니다. 기록되지 않은 루틴은 미수행 상태로 표시됩니다."
     )
     @ApiResponse(responseCode = "200", description = "조회 성공")
     @CustomExceptionDescription(SwaggerResponseDescription.DAILY_RECORD_ERROR)
@@ -80,6 +80,6 @@ public class DailyRecordController {
     public DailyRecordResponse getTodayRecord(HttpServletRequest httpRequest) {
         
         Long memberId = jwtMemberExtractor.extractMemberId(httpRequest);
-        return dailyRecordFacade.getDailyRecord(memberId, LocalDate.now());
+        return dailyRecordFacade.getTodayRecord(memberId, LocalDate.now());
     }
 }

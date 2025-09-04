@@ -24,10 +24,23 @@ public class DailyRecordQueryService {
     private final DailyRoutineService dailyRoutineService;
     private final RoutineService routineService;
     
+    /**
+     * 과거 날짜 조회: 실제 저장된 기록만 반환
+     */
     public DailyRecordResponse getDailyRecord(Long memberId, LocalDate date) {
         Optional<DailyReflectionEntity> reflection = reflectionService.getReflection(memberId, date);
         List<DailyRoutineEntity> routineRecords = dailyRoutineService.getTodayRoutines(memberId, date);
+        
+        return DailyRecordResponse.of(reflection.orElse(null), routineRecords);
+    }
+
+    /**
+     * 당일 조회: 실제 기록 + 가상 미수행 기록 합쳐서 반환
+     */
+    public DailyRecordResponse getTodayRecord(Long memberId, LocalDate date) {
+        Optional<DailyReflectionEntity> reflection = reflectionService.getReflection(memberId, date);
         List<RoutineEntity> allUserRoutines = routineService.getUserRoutines(memberId);
+        List<DailyRoutineEntity> routineRecords = dailyRoutineService.getTodayRecordWithVirtual(memberId, date, allUserRoutines);
         
         return DailyRecordResponse.of(reflection.orElse(null), routineRecords, allUserRoutines);
     }

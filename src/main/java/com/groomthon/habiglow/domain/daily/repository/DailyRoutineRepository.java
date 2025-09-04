@@ -80,4 +80,9 @@ public interface DailyRoutineRepository extends JpaRepository<DailyRoutineEntity
            "WHERE dr.routine.routineId = :routineId AND dr.member.id = :memberId")
     int nullifyRoutineReferenceForMember(@Param("routineId") Long routineId, @Param("memberId") Long memberId);
 
+    /**
+     * 특정 회원의 특정 날짜에 데일리 루틴 기록이 존재하는지 확인
+     */
+    boolean existsByMemberIdAndPerformedDate(Long memberId, LocalDate performedDate);
+
 }

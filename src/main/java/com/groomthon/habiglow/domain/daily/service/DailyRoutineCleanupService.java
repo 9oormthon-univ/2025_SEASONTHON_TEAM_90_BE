@@ -19,19 +19,7 @@ import lombok.extern.slf4j.Slf4j;
 public class DailyRoutineCleanupService {
     
     private final DailyRoutineRepository dailyRoutineRepository;
-    
-    /**
-     * 루틴 삭제 시 관련된 모든 DailyRoutineEntity의 routine 참조를 null로 처리
-     * 
-     * @param routineId 삭제된 루틴 ID
-     */
-    public void nullifyRoutineReference(Long routineId) {
-        int updatedCount = dailyRoutineRepository.nullifyRoutineReference(routineId);
-        
-        log.info("Nullified routine reference for {} daily routine records after routine deletion: {}", 
-                updatedCount, routineId);
-    }
-    
+
     /**
      * 특정 회원의 루틴 삭제 시 관련된 DailyRoutineEntity의 routine 참조를 null로 처리
      * 

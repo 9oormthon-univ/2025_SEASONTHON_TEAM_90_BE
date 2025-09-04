@@ -28,4 +28,9 @@ public class DailyRecordFacade {
     public DailyRecordResponse getDailyRecord(Long memberId, LocalDate date) {
         return queryService.getDailyRecord(memberId, date);
     }
+    
+    @Transactional(readOnly = true)
+    public DailyRecordResponse getTodayRecord(Long memberId, LocalDate date) {
+        return queryService.getTodayRecord(memberId, date);
+    }
 }
