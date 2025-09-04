@@ -119,11 +119,12 @@ Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
 | POST | `/api/auth/social/login` | 클라이언트 소셜 로그인 | ❌ |
 | POST | `/api/auth/token/refresh` | 토큰 재발급 (RTR 적용) | 🟡 Refresh Token |
 | POST | `/api/auth/logout` | 로그아웃 | ✅ |
-| GET | `/api/users/me` | 내 정보 조회 | ✅ |
-| GET | `/api/users/me/interests` | 내 관심사 조회 | ✅ |
-| PUT | `/api/users/me/interests` | 관심사 수정 | ✅ |
-| DELETE | `/api/users/me` | 내 계정 삭제 | ✅ |
-| GET | `/api/routine-categories` | 루틴 카테고리 목록 조회 | ❌ |
+| GET | `/api/members/me` | 내 정보 조회 | ✅ |
+| GET | `/api/members/me/interests` | 내 관심사 조회 | ✅ |
+| PATCH | `/api/members/me` | 내 정보 부분 수정 | ✅ |
+| PUT | `/api/members/me/interests` | 관심사 수정 | ✅ |
+| DELETE | `/api/members/me` | 내 계정 삭제 | ✅ |
+| GET | `/api/routines/categories` | 루틴 카테고리 목록 조회 | ❌ |
 | POST | `/api/dev/auth/register` | 개발용 Mock 회원가입 | ❌ (dev only) |
 | POST | `/api/dev/auth/mock-login` | 개발용 Mock 로그인 | ❌ (dev only) |
 
@@ -370,7 +371,7 @@ Content-Type: application/json
 
 **요청**
 ```http
-GET /api/routine-categories
+GET /api/routines/categories
 ```
 
 **응답**
