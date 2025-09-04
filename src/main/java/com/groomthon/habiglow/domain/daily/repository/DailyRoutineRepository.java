@@ -65,5 +65,19 @@ public interface DailyRoutineRepository extends JpaRepository<DailyRoutineEntity
             @Param("start") LocalDate start,
             @Param("end") LocalDate end);
 
+    /**
+     * 루틴 삭제 시 관련된 모든 DailyRoutineEntity의 routine 참조를 null로 처리
+     */
+    @Modifying
+    @Query("UPDATE DailyRoutineEntity dr SET dr.routine = null WHERE dr.routine.routineId = :routineId")
+    int nullifyRoutineReference(@Param("routineId") Long routineId);
+
+    /**
+     * 특정 회원의 루틴 삭제 시 관련된 DailyRoutineEntity의 routine 참조를 null로 처리
+     */
+    @Modifying
+    @Query("UPDATE DailyRoutineEntity dr SET dr.routine = null " +
+           "WHERE dr.routine.routineId = :routineId AND dr.member.id = :memberId")
+    int nullifyRoutineReferenceForMember(@Param("routineId") Long routineId, @Param("memberId") Long memberId);
 
 }
