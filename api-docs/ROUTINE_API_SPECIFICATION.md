@@ -2,9 +2,15 @@
 
 > **점진적 과부하와 성장 중심의 루틴 관리 시스템 API 문서**
 
-## 🔄 최근 업데이트 (v3.0)
+## 🔄 최근 업데이트 (v3.1)
 
-### 🔧 아키텍처 개선 (v3.0 - 2025-01-31)
+### 🆕 신규 기능 (v3.1 - 2025-09-04)
+- **실패 주기 카운터 추가**: `failureCycleDays` 필드로 감소 로직 개선
+- **카운터 정보 응답 확대**: 모든 루틴 관련 API에 `currentCycleDays`, `failureCycleDays` 포함
+- **적응 후 즉시 제외**: 성장/감소 액션 후 해당 루틴이 즉시 적응 대상에서 제거
+- **완전한 리셋 기능**: RESET 액션 시 성공/실패 카운터 모두 0으로 초기화
+
+### 🔧 아키텍처 개선 (v3.1 - 2025-09-04)
 - **Facade 패턴 완전 적용**: Command(CUD)와 Query(R) Facade 분리로 CQRS 패턴 구현
 - **성장 모드 서비스 분리**: `RoutineGrowthService`로 성장 로직 전문화
 - **통합 적응형 API**: 성장/감소 대상 루틴을 한번에 확인할 수 있는 `/adaptation-check` 추가
@@ -154,6 +160,8 @@ Content-Type: application/json
     "targetValue": 10,
     "growthCycleDays": 7,
     "targetIncrement": 2,
+    "currentCycleDays": 0,
+    "failureCycleDays": 0,
     "createdAt": "2025-01-01T00:00:00",
     "updatedAt": "2025-01-01T00:00:00"
   }
@@ -172,6 +180,8 @@ Content-Type: application/json
   | `targetValue` | `Integer`| 현재 목표 수치 |
   | `growthCycleDays`| `Integer`| 설정된 성장 주기 (일) |
   | `targetIncrement`| `Integer`| 주기당 목표 증가량 |
+  | `currentCycleDays` | `Integer` | 현재 성공 주기 일수 (0부터 시작) |
+  | `failureCycleDays` | `Integer` | 현재 실패 주기 일수 (0부터 시작) |
   | `createdAt` | `String` | 생성 일시 (ISO 8601 형식) |
   | `updatedAt` | `String` | 마지막 수정 일시 (ISO 8601 형식) |
 
@@ -203,6 +213,8 @@ Authorization: Bearer {access_token}
         "targetValue": 10,
         "growthCycleDays": 7,
         "targetIncrement": 2,
+        "currentCycleDays": 3,
+        "failureCycleDays": 0,
         "createdAt": "2025-01-01T00:00:00",
         "updatedAt": "2025-01-01T00:00:00"
       }
@@ -399,59 +411,76 @@ Authorization: Bearer {access_token}
 ```json
 {
   "code": "S200",
-  "message": "성공",
+  "message": "적응형 루틴 조정 대상 조회 성공",
   "data": {
-    "growthCandidates": {
-      "candidates": [
-        {
-          "routineId": 1,
-          "routineTitle": "푸쉬업 챌린지",
-          "category": "HEALTH",
-          "currentTarget": 10,
-          "suggestedTarget": 12,
-          "completedCycleDays": 7,
-          "totalCycleDays": 7
-        }
-      ],
-      "totalCount": 1,
-      "type": "GROWTH"
-    },
-    "reductionCandidates": {
-      "candidates": [
-        {
-          "routineId": 2,
-          "routineTitle": "독서하기",
-          "category": "LEARNING",
-          "currentTarget": 60,
-          "suggestedTarget": 50,
-          "failedDays": 5,
-          "totalCycleDays": 7
-        }
-      ],
-      "totalCount": 1,
-      "type": "REDUCTION"
-    }
+    "growthReadyRoutines": [
+      {
+        "routineId": 1,
+        "title": "푸쉬업 챌린지",
+        "category": "HEALTH",
+        "targetType": "NUMBER",
+        "currentTarget": 10,
+        "nextTarget": 12,
+        "increment": 2,
+        "completedCycleDays": 7,
+        "consecutiveDays": 7,
+        "currentCycleDays": 7,
+        "failureCycleDays": 0,
+        "lastPerformedDate": "2025-09-03"
+      }
+    ],
+    "reductionReadyRoutines": [
+      {
+        "routineId": 2,
+        "title": "독서하기",
+        "currentTargetValue": 60,
+        "suggestedTargetValue": 50,
+        "currentCycleDays": 2,
+        "failureCycleDays": 7,
+        "lastAttemptDate": "2025-09-01"
+      }
+    ],
+    "totalGrowthReadyCount": 1,
+    "totalReductionReadyCount": 1,
+    "totalAdaptiveCount": 2
   }
 }
 ```
+**응답 필드**
   | 필드 | 타입 | 설명 |
   |---|---|---|
-  | `growthCandidates` | `Object` | 목표 **증가** 후보 루틴 정보 |
-  | `reductionCandidates` | `Object` | 목표 **감소** 후보 루틴 정보 |
+  | `growthReadyRoutines` | `Array` | 목표 **증가** 후보 루틴 목록 |
+  | `reductionReadyRoutines` | `Array` | 목표 **감소** 후보 루틴 목록 |
+  | `totalGrowthReadyCount` | `Integer` | 성장 후보 루틴 총 개수 |
+  | `totalReductionReadyCount` | `Integer` | 감소 후보 루틴 총 개수 |
+  | `totalAdaptiveCount` | `Integer` | 전체 조정 대상 루틴 개수 |
 
-  **`GrowthCandidate` 상세**:
+  **성장 후보 루틴(`GrowthReadyRoutineResponse`) 필드**:
   | 필드 | 타입 | 설명 |
   |---|---|---|
-  | `candidates` | `Array` | 성장 후보 루틴 객체 배열 |
-  | `totalCount` | `Integer` | 성장 후보 루틴 총 개수 |
-  | `type` | `String` | `GROWTH` 고정값 |
+  | `routineId` | `Long` | 루틴 ID |
+  | `title` | `String` | 루틴 제목 |
+  | `category` | `String` | 루틴 카테고리 |
+  | `targetType` | `String` | 목표 타입 |
+  | `currentTarget` | `Integer` | 현재 목표치 |
+  | `nextTarget` | `Integer` | 다음 목표치 |
+  | `increment` | `Integer` | 증가량 |
+  | `completedCycleDays` | `Integer` | 완료된 성장 주기(일) |
+  | `consecutiveDays` | `Integer` | 연속 성공일 |
+  | `currentCycleDays` | `Integer` | 현재 주기 연속일 |
+  | `failureCycleDays` | `Integer` | 현재 실패 주기 일수 |
+  | `lastPerformedDate` | `String` | 마지막 수행 날짜 |
 
-  **`ReductionCandidate` 상세**:
+  **감소 후보 루틴(`ReductionReadyRoutineResponse`) 필드**:
   | 필드 | 타입 | 설명 |
   |---|---|---|
-  | `candidates` | `Array` | 감소 후보 루틴 객체 배열 |
-  | `totalCount` | `Integer` | 감소 후보 루틴 총 개수 |
-  | `type` | `String` | `REDUCTION` 고정값 |
+  | `routineId` | `Long` | 루틴 ID |
+  | `title` | `String` | 루틴 제목 |
+  | `currentTargetValue` | `Integer` | 현재 목표치 |
+  | `suggestedTargetValue` | `Integer` | 제안 목표치 |
+  | `currentCycleDays` | `Integer` | 현재 주기 연속일 |
+  | `failureCycleDays` | `Integer` | 실패 주기 일수 |
+  | `lastAttemptDate` | `String` | 마지막 시도 날짜 |
 
 ---
 
@@ -491,8 +520,8 @@ Authorization: Bearer {access_token}
 
 **액션 타입별 동작**
 - **INCREASE**: 목표값을 targetIncrement만큼 증가시키고 currentCycleDays를 0으로 리셋
-- **DECREASE**: 목표값을 targetIncrement만큼 감소시키고 currentCycleDays를 0으로 리셋  
-- **RESET**: 목표값은 유지하고 currentCycleDays만 0으로 리셋
+- **DECREASE**: 목표값을 targetIncrement만큼 감소시키고 failureCycleDays를 0으로 리셋  
+- **RESET**: 목표값은 유지하고 currentCycleDays와 failureCycleDays를 모두 0으로 리셋
 
 **에러 응답**
 ```json
@@ -602,8 +631,11 @@ pm.sendRequest(mockLoginRequest, function (err, response) {
 ### 🚀 성장 모드 시스템
 1. **점진적 과부하**: 일정 주기마다 목표를 단계적으로 증가
 2. **적응형 조정**: 사용자 수행도에 따른 목표 증가/감소 제안
-3. **주기 관리**: currentCycleDays로 현재 성장 주기 진행도 추적
+3. **이중 주기 관리**: 
+   - `currentCycleDays`: 현재 성공 주기 진행도 추적
+   - `failureCycleDays`: 현재 실패 주기 진행도 추적
 4. **스냅샷 보존**: 일일 기록 시점의 성장 설정값 보존
+5. **자동 리셋**: 성장/감소 액션 후 해당 카운터 자동 초기화
 
 ### 🛠️ 기술적 세부사항
 1. **Facade 패턴**: Command(CUD)와 Query(R) 책임 분리
