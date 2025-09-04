@@ -41,6 +41,9 @@ public class GrowthConfiguration {
     @Column(name = "current_cycle_days")
     private Integer currentCycleDays = 0;
 
+    @Column(name = "failure_cycle_days")
+    private Integer failureCycleDays = 0;
+
     @Column(name = "target_decrement")
     private Integer targetDecrement;
 
@@ -53,13 +56,15 @@ public class GrowthConfiguration {
     @Builder(toBuilder = true)
     private GrowthConfiguration(Boolean isGrowthMode, TargetType targetType, Integer targetValue,
         Integer growthCycleDays, Integer targetIncrement, Integer currentCycleDays,
-        Integer targetDecrement, Integer minimumTargetValue, LocalDate lastAdjustedDate) {
+        Integer failureCycleDays, Integer targetDecrement, Integer minimumTargetValue, 
+        LocalDate lastAdjustedDate) {
         this.isGrowthMode = isGrowthMode != null ? isGrowthMode : false;
         this.targetType = targetType;
         this.targetValue = targetValue;
         this.growthCycleDays = growthCycleDays;
         this.targetIncrement = targetIncrement;
         this.currentCycleDays = currentCycleDays != null ? currentCycleDays : 0;
+        this.failureCycleDays = failureCycleDays != null ? failureCycleDays : 0;
         this.targetDecrement = targetDecrement;
         this.minimumTargetValue = minimumTargetValue != null ? minimumTargetValue : 1;
         this.lastAdjustedDate = lastAdjustedDate;
@@ -75,6 +80,13 @@ public class GrowthConfiguration {
             return false;
         }
         return currentCycleDays >= growthCycleDays;
+    }
+
+    public boolean isFailureCycleCompleted() {
+        if (!isEnabled() || failureCycleDays == null || growthCycleDays == null) {
+            return false;
+        }
+        return failureCycleDays >= growthCycleDays;
     }
 
     // 데이터 업데이트 메서드 (비즈니스 로직 없는 단순 setter)
@@ -95,6 +107,24 @@ public class GrowthConfiguration {
     public GrowthConfiguration withIncrementedCycle() {
         return this.toBuilder()
             .currentCycleDays((this.currentCycleDays != null ? this.currentCycleDays : 0) + 1)
+            .build();
+    }
+
+    public GrowthConfiguration withIncrementedFailureCycle() {
+        return this.toBuilder()
+            .failureCycleDays((this.failureCycleDays != null ? this.failureCycleDays : 0) + 1)
+            .build();
+    }
+
+    public GrowthConfiguration withResetFailureCycle() {
+        return this.toBuilder()
+            .failureCycleDays(0)
+            .build();
+    }
+
+    public GrowthConfiguration withResetSuccessCycle() {
+        return this.toBuilder()
+            .currentCycleDays(0)
             .build();
     }
 

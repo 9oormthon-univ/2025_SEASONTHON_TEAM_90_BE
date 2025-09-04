@@ -10,12 +10,7 @@ import org.springframework.transaction.annotation.Transactional;
 import com.groomthon.habiglow.domain.routine.dto.response.adaptation.AdaptiveRoutineCheckResponse;
 import com.groomthon.habiglow.domain.routine.dto.response.adaptation.GrowthReadyRoutineResponse;
 import com.groomthon.habiglow.domain.routine.dto.response.adaptation.ReductionReadyRoutineResponse;
-import com.groomthon.habiglow.domain.routine.dto.response.ResetGrowthCycleResponse;
 import com.groomthon.habiglow.domain.routine.dto.response.adaptation.RoutineAdaptationCheckResponse;
-import com.groomthon.habiglow.domain.routine.entity.RoutineEntity;
-import com.groomthon.habiglow.domain.routine.repository.RoutineRepository;
-import com.groomthon.habiglow.global.exception.BaseException;
-import com.groomthon.habiglow.global.response.ErrorCode;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -25,33 +20,8 @@ import lombok.extern.slf4j.Slf4j;
 @RequiredArgsConstructor
 public class RoutineGrowthService {
 
-    private final RoutineRepository routineRepository;
     private final GrowthAnalysisService growthAnalysisService;
     private final ReductionAnalysisService reductionAnalysisService;
-    private final GrowthConfigurationService growthConfigurationService;
-
-    @Transactional
-    public ResetGrowthCycleResponse resetGrowthCycle(Long routineId, Long memberId) {
-        RoutineEntity routine = routineRepository.findByRoutineIdAndMember_Id(routineId, memberId)
-                .orElseThrow(() -> new BaseException(ErrorCode.ROUTINE_NOT_FOUND));
-
-        if (!routine.isGrowthModeEnabled()) {
-            throw new BaseException(ErrorCode.ROUTINE_NOT_GROWTH_MODE);
-        }
-
-        if (!routine.getGrowthConfiguration().isCycleCompleted()) {
-            throw new BaseException(ErrorCode.GROWTH_CYCLE_NOT_COMPLETED);
-        }
-
-        Integer previousCycleDays = routine.getCurrentCycleDays();
-
-        growthConfigurationService.resetGrowthCycle(routine);
-
-        log.info("Growth cycle reset for routine: {} by member: {}, previous cycle days: {}",
-            routineId, memberId, previousCycleDays);
-
-        return ResetGrowthCycleResponse.from(routine, previousCycleDays);
-    }
 
     @Transactional(readOnly = true)
     public AdaptiveRoutineCheckResponse checkAdaptiveRoutines(Long memberId) {

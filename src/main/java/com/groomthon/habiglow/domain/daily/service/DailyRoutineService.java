@@ -34,8 +34,8 @@ public class DailyRoutineService {
             int consecutiveDays = consecutiveDaysCalculator.calculate(
                 record.getRoutineId(), memberId, date, record.getPerformanceLevel());
             
-            // 루틴의 성장 모드인 경우 currentCycleDays 업데이트
-            updateCurrentCycleDays(record.getRoutine(), record.getPerformanceLevel());
+            // 루틴의 성장 모드인 경우 성공/실패 카운트 업데이트
+            updateCycleDays(record.getRoutine(), record.getPerformanceLevel());
             DailyRoutineEntity entity = DailyRoutineEntity.create(
                     record.getRoutine(),
                     record.getMember(),
@@ -56,19 +56,28 @@ public class DailyRoutineService {
     }
     
     /**
-     * 성장 모드 루틴의 currentCycleDays 업데이트
+     * 성장 모드 루틴의 성공/실패 카운트 업데이트
      */
-    private void updateCurrentCycleDays(RoutineEntity routine, PerformanceLevel performanceLevel) {
+    private void updateCycleDays(RoutineEntity routine, PerformanceLevel performanceLevel) {
         // 성장 모드가 아니면 업데이트하지 않음
         if (!routine.isGrowthModeEnabled()) {
             return;
         }
         
-        // FULL_SUCCESS인 경우 증가, 아니면 리셋
         if (performanceLevel == PerformanceLevel.FULL_SUCCESS) {
-            routine.updateGrowthConfiguration(routine.getGrowthConfiguration().withIncrementedCycle());
+            // 성공 시: currentCycleDays++, failureCycleDays=0 (리셋)
+            routine.updateGrowthConfiguration(
+                routine.getGrowthConfiguration()
+                    .withIncrementedCycle()
+                    .withResetFailureCycle()
+            );
         } else {
-            routine.updateGrowthConfiguration(routine.getGrowthConfiguration().withResetCycle());
+            // 실패 시: failureCycleDays++, currentCycleDays=0 (리셋)
+            routine.updateGrowthConfiguration(
+                routine.getGrowthConfiguration()
+                    .withIncrementedFailureCycle()
+                    .withResetSuccessCycle()
+            );
         }
     }
 }

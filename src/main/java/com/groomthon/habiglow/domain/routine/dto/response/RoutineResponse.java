@@ -46,6 +46,12 @@ public class RoutineResponse {
     @Schema(description = "목표 증가 수치", example = "50")
     private Integer targetIncrement;
     
+    @Schema(description = "현재 성공 주기 일수", example = "3")
+    private Integer currentCycleDays;
+    
+    @Schema(description = "현재 실패 주기 일수", example = "2")
+    private Integer failureCycleDays;
+    
     @Schema(description = "생성일시")
     private LocalDateTime createdAt;
     
@@ -63,6 +69,8 @@ public class RoutineResponse {
                 .targetValue(routine.getTargetValue())
                 .growthCycleDays(routine.getGrowthCycleDays())
                 .targetIncrement(routine.getTargetIncrement())
+                .currentCycleDays(routine.getCurrentCycleDays())
+                .failureCycleDays(routine.getGrowthConfiguration().getFailureCycleDays())
                 .createdAt(routine.getCreatedAt())
                 .updatedAt(routine.getUpdatedAt())
                 .build();
