@@ -47,8 +47,9 @@ public class GrowthConfigurationService {
 
         Integer newTarget = config.getTargetValue() + config.getTargetIncrement();
         
-        // 새로운 설정으로 업데이트 (불변성 유지)
-        GrowthConfiguration updatedConfig = config.withUpdatedTarget(newTarget);
+        // 새로운 설정으로 업데이트: 목표값 변경 + 성공 카운트 리셋
+        GrowthConfiguration updatedConfig = config.withUpdatedTarget(newTarget)
+                .withResetSuccessCycle();
         routine.updateGrowthConfiguration(updatedConfig);
         
         return newTarget;
@@ -71,26 +72,12 @@ public class GrowthConfigurationService {
 
         Integer newTarget = Math.max(currentTarget - decrement, minimumTarget);
         
-        // 새로운 설정으로 업데이트 (불변성 유지)
-        GrowthConfiguration updatedConfig = config.withUpdatedTarget(newTarget);
+        // 새로운 설정으로 업데이트: 목표값 변경 + 실패 카운트 리셋
+        GrowthConfiguration updatedConfig = config.withUpdatedTarget(newTarget)
+                .withResetFailureCycle();
         routine.updateGrowthConfiguration(updatedConfig);
         
         return newTarget;
-    }
-
-    public void resetGrowthCycle(RoutineEntity routine) {
-        GrowthConfiguration config = routine.getGrowthConfiguration();
-        
-        if (!config.isEnabled()) {
-            throw new BaseException(ErrorCode.ROUTINE_NOT_GROWTH_MODE);
-        }
-
-        if (!config.isCycleCompleted()) {
-            throw new BaseException(ErrorCode.GROWTH_CYCLE_NOT_COMPLETED);
-        }
-
-        GrowthConfiguration updatedConfig = config.withResetCycle();
-        routine.updateGrowthConfiguration(updatedConfig);
     }
 
 }

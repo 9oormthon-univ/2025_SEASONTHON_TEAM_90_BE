@@ -5,19 +5,14 @@ import java.time.LocalDate;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
-import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.groomthon.habiglow.domain.daily.entity.DailyRoutineEntity;
-import com.groomthon.habiglow.domain.daily.entity.PerformanceLevel;
-import com.groomthon.habiglow.domain.daily.repository.DailyRoutineRepository;
-import com.groomthon.habiglow.domain.routine.dto.response.adaptation.RoutineAdaptationCheckResponse;
 import com.groomthon.habiglow.domain.routine.dto.response.adaptation.GrowthReadyRoutineResponse;
+import com.groomthon.habiglow.domain.routine.dto.response.adaptation.RoutineAdaptationCheckResponse;
 import com.groomthon.habiglow.domain.routine.entity.RoutineEntity;
-import com.groomthon.habiglow.domain.routine.repository.RoutineRepository;
 import com.groomthon.habiglow.domain.routine.service.strategy.GrowthStrategy;
 import com.groomthon.habiglow.global.exception.BaseException;
 import com.groomthon.habiglow.global.response.ErrorCode;
@@ -31,8 +26,6 @@ import lombok.extern.slf4j.Slf4j;
 public class GrowthAnalysisService {
 
     private final Clock clock;
-    private final DailyRoutineRepository dailyRoutineRepository;
-    private final RoutineRepository routineRepository;
     private final RoutineDataAccessService routineDataAccessService;
     private final GrowthStrategy growthStrategy;
 
@@ -68,20 +61,6 @@ public class GrowthAnalysisService {
             memberId, growthReadyRoutines.size());
 
         return RoutineAdaptationCheckResponse.growth(growthReadyRoutines);
-    }
-
-    public boolean isGrowthCycleCompleted(Long routineId, Long memberId, LocalDate targetDate) {
-        DailyRoutineEntity lastRecord = routineDataAccessService
-            .getSuccessRecord(routineId, memberId, targetDate);
-        
-        if (lastRecord == null) {
-            return false;
-        }
-
-        RoutineEntity routine = routineRepository.findById(routineId)
-            .orElseThrow(() -> new BaseException(ErrorCode.ROUTINE_NOT_FOUND));
-
-        return growthStrategy.isAdaptationCycleCompleted(routine, List.of(lastRecord));
     }
 
     public void validateGrowthConditions(RoutineEntity routine, Long memberId) {

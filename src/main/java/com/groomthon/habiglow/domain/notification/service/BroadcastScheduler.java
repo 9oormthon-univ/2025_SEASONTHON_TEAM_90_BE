@@ -1,5 +1,6 @@
 package com.groomthon.habiglow.domain.notification.service;
 
+import com.groomthon.habiglow.domain.notification.dto.response.SendResult;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -44,8 +45,7 @@ public class BroadcastScheduler {
         int hour = now.getHour();
         TitleBody tb = pickMessage(hour);
         try {
-            NotificationService.SendResult res =
-                    notificationService.sendBroadcast(tb.getTitle(), tb.getBody(), routeData(hour));
+            SendResult res = notificationService.sendBroadcast(tb.getTitle(), tb.getBody(), routeData(hour));
             log.info("[FCM] broadcast {}: success={}, failure={}", hour, res.getSuccess(), res.getFailure());
         } catch (Exception e) {
             log.error("[FCM] broadcast error at {}", hour, e);

@@ -14,19 +14,18 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.groomthon.habiglow.domain.routine.common.RoutineCategory;
 import com.groomthon.habiglow.domain.routine.dto.request.CreateRoutineRequest;
 import com.groomthon.habiglow.domain.routine.dto.request.UpdateRoutineRequest;
-import com.groomthon.habiglow.domain.routine.dto.response.adaptation.AdaptationAction;
-import com.groomthon.habiglow.domain.routine.dto.response.adaptation.AdaptiveRoutineCheckResponse;
-import com.groomthon.habiglow.domain.routine.dto.response.ResetGrowthCycleResponse;
-import com.groomthon.habiglow.domain.routine.dto.response.adaptation.RoutineAdaptationResultResponse;
 import com.groomthon.habiglow.domain.routine.dto.response.RoutineCategoryResponse;
 import com.groomthon.habiglow.domain.routine.dto.response.RoutineListResponse;
 import com.groomthon.habiglow.domain.routine.dto.response.RoutineResponse;
-import com.groomthon.habiglow.domain.routine.common.RoutineCategory;
+import com.groomthon.habiglow.domain.routine.dto.response.adaptation.AdaptationAction;
+import com.groomthon.habiglow.domain.routine.dto.response.adaptation.AdaptiveRoutineCheckResponse;
+import com.groomthon.habiglow.domain.routine.dto.response.adaptation.RoutineAdaptationResultResponse;
 import com.groomthon.habiglow.domain.routine.facade.RoutineManagementFacade;
-import com.groomthon.habiglow.domain.routine.service.RoutineGrowthService;
 import com.groomthon.habiglow.domain.routine.facade.RoutineQueryFacade;
+import com.groomthon.habiglow.domain.routine.service.RoutineGrowthService;
 import com.groomthon.habiglow.global.jwt.JwtMemberExtractor;
 import com.groomthon.habiglow.global.response.ApiSuccessCode;
 import com.groomthon.habiglow.global.response.AutoApiResponse;
@@ -209,26 +208,5 @@ public class RoutineController {
         @RequestParam AdaptationAction action) {
         Long userId = jwtMemberExtractor.extractMemberId(request);
         return routineManagementFacade.executeRoutineAdaptation(userId, routineId, action);
-    }
-    
-    @Operation(
-        summary = "성장 주기 리셋 (레거시)",
-        description = "성장 주기가 완료된 루틴의 주기를 리셋합니다. 성장을 거부할 때 사용합니다."
-    )
-    @ApiResponses(value = {
-        @ApiResponse(responseCode = "200", description = "리셋 성공"),
-        @ApiResponse(responseCode = "400", description = "리셋 조건 미충족", content = @Content),
-        @ApiResponse(responseCode = "404", description = "루틴이 존재하지 않음", content = @Content)
-    })
-    @CustomExceptionDescription(SwaggerResponseDescription.ROUTINE_ERROR)
-    @PatchMapping("/{routineId}/reset-cycle")
-    @PreAuthorize("isAuthenticated()")
-    @SuccessCode(ApiSuccessCode.SUCCESS)
-    @Deprecated
-    public ResetGrowthCycleResponse resetGrowthCycle(
-        HttpServletRequest request,
-        @Parameter(description = "루틴 ID", example = "1") @PathVariable Long routineId) {
-        Long userId = jwtMemberExtractor.extractMemberId(request);
-        return routineGrowthService.resetGrowthCycle(routineId, userId);
     }
 }

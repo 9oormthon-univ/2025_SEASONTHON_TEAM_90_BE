@@ -50,6 +50,9 @@ public class GrowthReadyRoutineResponse {
     @Schema(description = "현재 주기 연속일", example = "3")
     private Integer currentCycleDays;
     
+    @Schema(description = "현재 실패 주기 일수", example = "1")
+    private Integer failureCycleDays;
+    
     @Schema(description = "마지막 수행 날짜", example = "2025-01-30")
     private LocalDate lastPerformedDate;
     
@@ -65,6 +68,7 @@ public class GrowthReadyRoutineResponse {
                 .completedCycleDays(routine.getGrowthCycleDays())
                 .consecutiveDays(lastRecord != null ? lastRecord.getConsecutiveDays() : 0)
                 .currentCycleDays(routine.getCurrentCycleDays())
+                .failureCycleDays(routine.getGrowthConfiguration().getFailureCycleDays())
                 .lastPerformedDate(lastRecord != null ? lastRecord.getPerformedDate() : null)
                 .build();
     }
