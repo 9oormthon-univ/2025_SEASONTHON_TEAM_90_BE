@@ -2,7 +2,7 @@ package com.groomthon.habiglow.global.dto;
 
 import com.groomthon.habiglow.global.response.ErrorType;
 
-import com.groomthon.habiglow.global.response.MemberSuccessCode;
+import com.groomthon.habiglow.global.response.ApiSuccessCode;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Getter;
@@ -21,11 +21,11 @@ public class CommonApiResponse<T> {
 	private final T data;
 
 	// 성공 응답
-	public static <T> CommonApiResponse<T> success(MemberSuccessCode successCode, T data) {
+	public static <T> CommonApiResponse<T> success(ApiSuccessCode successCode, T data) {
 		return new CommonApiResponse<>(successCode.getCode(), successCode.getMessage(), data);
 	}
 
-	public static CommonApiResponse<Void> success(MemberSuccessCode successCode) {
+	public static CommonApiResponse<Void> success(ApiSuccessCode successCode) {
 		return new CommonApiResponse<>(successCode.getCode(), successCode.getMessage(), null);
 	}
 

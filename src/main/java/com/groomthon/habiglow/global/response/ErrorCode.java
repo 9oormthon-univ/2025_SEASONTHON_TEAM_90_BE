@@ -8,27 +8,66 @@ import lombok.RequiredArgsConstructor;
 @Getter
 @RequiredArgsConstructor
 public enum ErrorCode implements ErrorType {
-	// 4xx Client Error
-	TOKEN_MALFORMED("E400", "잘못된 형식의 토큰입니다", HttpStatus.BAD_REQUEST.value()),
-	INVALID_INPUT_VALUE("E400", "잘못된 입력값입니다", HttpStatus.BAD_REQUEST.value()),
-	PARAMETER_VALIDATION_ERROR("E400", "파라미터 검증에 실패했습니다", HttpStatus.BAD_REQUEST.value()),
+	// 공통 오류 (COMMON)
+	INVALID_INPUT_VALUE("COMMON001", "잘못된 입력값입니다", HttpStatus.BAD_REQUEST.value()),
+	PARAMETER_VALIDATION_ERROR("COMMON002", "파라미터 검증에 실패했습니다", HttpStatus.BAD_REQUEST.value()),
+	INTERNAL_SERVER_ERROR("COMMON999", "내부 서버 오류가 발생했습니다", HttpStatus.INTERNAL_SERVER_ERROR.value()),
 
-	LOGIN_FAIL("E401", "이메일 또는 비밀번호가 틀렸습니다", HttpStatus.UNAUTHORIZED.value()),
-	INVALID_TOKEN("E401", "유효하지 않은 토큰입니다", HttpStatus.UNAUTHORIZED.value()),
-	TOKEN_EXPIRED("E401", "만료된 토큰입니다", HttpStatus.UNAUTHORIZED.value()),
-	REFRESH_TOKEN_NOT_FOUND("E401", "리프레시 토큰을 찾을 수 없습니다", HttpStatus.UNAUTHORIZED.value()),
-	ACCESS_TOKEN_REQUIRED("E401", "액세스 토큰이 필요합니다", HttpStatus.UNAUTHORIZED.value()),
-	TOKEN_BLACKLISTED("E401", "차단된 토큰입니다", HttpStatus.UNAUTHORIZED.value()),
-	OAUTH2_LOGIN_FAILED("E401", "소셜 로그인에 실패했습니다. 다시 시도해주세요.", HttpStatus.UNAUTHORIZED.value()),
+	// 인증 관련 오류 (AUTH)
+	UNAUTHORIZED("AUTH000", "인증이 필요합니다", HttpStatus.UNAUTHORIZED.value()),
+	ACCESS_DENIED("AUTH001", "접근 권한이 없습니다", HttpStatus.FORBIDDEN.value()),
+	LOGIN_FAIL("AUTH002", "이메일 또는 비밀번호가 틀렸습니다", HttpStatus.UNAUTHORIZED.value()),
+	INVALID_SOCIAL_TOKEN("AUTH003", "유효하지 않은 소셜 토큰입니다", HttpStatus.UNAUTHORIZED.value()),
+	SOCIAL_LOGIN_ERROR("AUTH004", "소셜 로그인 처리 중 오류가 발생했습니다", HttpStatus.UNAUTHORIZED.value()),
+	OAUTH2_LOGIN_FAILED("AUTH005", "소셜 로그인에 실패했습니다. 다시 시도해주세요.", HttpStatus.UNAUTHORIZED.value()),
 
-	MEMBER_NOT_FOUND("E404", "회원을 찾을 수 없습니다", HttpStatus.NOT_FOUND.value()),
+	// 토큰 관련 오류 (TOKEN)
+	TOKEN_MALFORMED("TOKEN001", "잘못된 형식의 토큰입니다", HttpStatus.BAD_REQUEST.value()),
+	INVALID_TOKEN("TOKEN002", "유효하지 않은 토큰입니다", HttpStatus.UNAUTHORIZED.value()),
+	TOKEN_EXPIRED("TOKEN003", "만료된 토큰입니다", HttpStatus.UNAUTHORIZED.value()),
+	REFRESH_TOKEN_NOT_FOUND("TOKEN004", "리프레시 토큰을 찾을 수 없습니다", HttpStatus.UNAUTHORIZED.value()),
+	ACCESS_TOKEN_REQUIRED("TOKEN005", "액세스 토큰이 필요합니다", HttpStatus.UNAUTHORIZED.value()),
+	TOKEN_BLACKLISTED("TOKEN006", "차단된 토큰입니다", HttpStatus.UNAUTHORIZED.value()),
 
-	TOO_MANY_REQUESTS("E429", "너무 많은 요청입니다. 잠시 후 다시 시도해주세요.", HttpStatus.TOO_MANY_REQUESTS.value()),
+	// 회원 관련 오류 (MEMBER)
+	MEMBER_NOT_FOUND("MEMBER001", "회원을 찾을 수 없습니다", HttpStatus.NOT_FOUND.value()),
+	DUPLICATE_EMAIL("MEMBER002", "이미 가입된 이메일입니다", HttpStatus.CONFLICT.value()),
 
-	DUPLICATE_EMAIL("E409", "이미 가입된 이메일입니다", HttpStatus.CONFLICT.value()),
+	// 루틴 관련 오류 (ROUTINE)
+	ROUTINE_NOT_FOUND("ROUTINE001", "루틴을 찾을 수 없습니다", HttpStatus.NOT_FOUND.value()),
+	ROUTINE_GROWTH_MODE_DISABLED("ROUTINE002", "성장 모드가 비활성화된 루틴입니다", HttpStatus.BAD_REQUEST.value()),
+	ROUTINE_INVALID_TITLE("ROUTINE003", "루틴 제목은 필수이며 100자 이하여야 합니다", HttpStatus.BAD_REQUEST.value()),
+	ROUTINE_INVALID_CATEGORY("ROUTINE004", "루틴 카테고리는 필수입니다", HttpStatus.BAD_REQUEST.value()),
+	ROUTINE_INVALID_GROWTH_SETTINGS("ROUTINE005", "성장 모드 설정이 올바르지 않습니다", HttpStatus.BAD_REQUEST.value()),
+	ROUTINE_CANNOT_INCREASE_TARGET("ROUTINE006", "목표치를 증가시킬 수 없는 상태입니다", HttpStatus.BAD_REQUEST.value()),
+	ROUTINE_NOT_GROWTH_MODE("ROUTINE007", "성장 모드가 활성화되지 않은 루틴입니다", HttpStatus.BAD_REQUEST.value()),
+	GROWTH_CYCLE_NOT_COMPLETED("ROUTINE008", "아직 성장 주기가 완료되지 않았습니다", HttpStatus.BAD_REQUEST.value()),
+	ROUTINE_CANNOT_DECREASE_TARGET("ROUTINE009", "목표치를 감소시킬 수 없는 상태입니다", HttpStatus.BAD_REQUEST.value()),
+	REDUCTION_CYCLE_NOT_COMPLETED("ROUTINE010", "아직 감소 조건이 충족되지 않았습니다", HttpStatus.BAD_REQUEST.value()),
+	
+	// 일일 기록 관련 오류 (DAILY)
+	DAILY_RECORD_FUTURE_DATE_NOT_ALLOWED("DAILY001", "미래 날짜는 수정할 수 없습니다", HttpStatus.BAD_REQUEST.value()),
+	DAILY_RECORD_INVALID_PERFORMANCE_LEVEL("DAILY002", "올바르지 않은 수행 정도입니다", HttpStatus.BAD_REQUEST.value()),
+	DAILY_RECORD_INVALID_EMOTION_TYPE("DAILY003", "올바르지 않은 감정 타입입니다", HttpStatus.BAD_REQUEST.value()),
+	DAILY_RECORD_INVALID_ROUTINES("DAILY004", "유효하지 않은 루틴이 포함되어 있습니다", HttpStatus.BAD_REQUEST.value()),
 
-	// 5xx Server Error
-	INTERNAL_SERVER_ERROR("E500", "내부 서버 오류가 발생했습니다", HttpStatus.INTERNAL_SERVER_ERROR.value());
+	// 보안 관련 오류 (SECURITY)
+	TOO_MANY_REQUESTS("SECURITY001", "너무 많은 요청입니다. 잠시 후 다시 시도해주세요.", HttpStatus.TOO_MANY_REQUESTS.value()),
+
+	// AI 관련
+	AI_ANALYSIS_FAILED("AI001", "AI 주간 인사이트 분석에 실패했습니다.", HttpStatus.SERVICE_UNAVAILABLE.value()),
+	AI_RESPONSE_PARSE_FAILED("AI002", "AI 응답 파싱에 실패했습니다.", HttpStatus.INTERNAL_SERVER_ERROR.value()),
+	AI_API_CLIENT_ERROR("AI003", "AI API 요청이 잘못되었습니다.", HttpStatus.BAD_REQUEST.value()), // 새로 추가
+
+
+	// AI 주간 분석 관련 오류
+	INVALID_WEEK_START("WEEKLY001", "주차 시작일은 월요일이어야 합니다.", HttpStatus.BAD_REQUEST.value()),
+	FUTURE_WEEK_NOT_ALLOWED("WEEKLY002", "미래 주차 데이터는 분석할 수 없습니다.", HttpStatus.BAD_REQUEST.value()),
+	NO_WEEKLY_DATA_FOUND("WEEKLY003", "해당 주차에 기록된 데이터가 없습니다.", HttpStatus.NOT_FOUND.value()),
+	INSUFFICIENT_DATA_FOR_ANALYSIS("WEEKLY004", "분석에 필요한 충분한 데이터가 없습니다.", HttpStatus.BAD_REQUEST.value());
+
+
+
 
 	private final String code;
 	private final String message;

@@ -1,5 +1,7 @@
 package com.groomthon.habiglow.domain.auth.service;
 
+import java.nio.charset.StandardCharsets;
+import java.security.MessageDigest;
 import java.util.Optional;
 
 import org.springframework.stereotype.Component;
@@ -28,13 +30,11 @@ public class TokenValidator {
 	 * Refresh Token의 종합적 검증
 	 */
 	public TokenValidationResult validateRefreshToken(String refreshToken) {
-		// 1. JWT 형식 및 만료시간 검증
 		if (!jwtUtil.isRefreshToken(refreshToken)) {
 			log.warn("Invalid refresh token format or expired");
 			return TokenValidationResult.invalid("Invalid or expired refresh token");
 		}
 
-		// 2. 토큰에서 사용자 ID 추출
 		Optional<String> memberIdOpt = jwtUtil.getId(refreshToken);
 		if (memberIdOpt.isEmpty()) {
 			log.warn("Cannot extract member ID from refresh token");
@@ -43,14 +43,12 @@ public class TokenValidator {
 
 		String memberId = memberIdOpt.get();
 
-		// 3. 데이터베이스에 저장된 토큰과 일치 여부 확인
 		RefreshToken storedToken = refreshTokenRepository.findById(memberId).orElse(null);
-		if (storedToken == null || !storedToken.getToken().equals(refreshToken)) {
+		if (storedToken == null || !constantTimeEquals(storedToken.getToken(), refreshToken)) {
 			log.warn("Refresh token not found or mismatched for member: {}", memberId);
 			return TokenValidationResult.invalid("Token not found or mismatched");
 		}
 
-		// 4. 토큰에서 추가 정보 추출
 		Optional<String> emailOpt = jwtUtil.getEmail(refreshToken);
 		Optional<String> socialUniqueIdOpt = jwtUtil.getSocialUniqueId(refreshToken);
 
@@ -64,7 +62,29 @@ public class TokenValidator {
 	}
 
 	/**
-	 * Access Token의 블랙리스트 및 만료 검증
+	 * Access Token의 종합적 검증 (형식, 만료, 블랙리스트)
+	 */
+	public TokenValidationResult validateAccessToken(String accessToken) {
+		if (!jwtUtil.isAccessToken(accessToken)) {
+			log.warn("Invalid access token format or expired");
+			return TokenValidationResult.invalid("Invalid or expired access token");
+		}
+
+		Optional<String> memberIdOpt = jwtUtil.getId(accessToken);
+		Optional<String> emailOpt = jwtUtil.getEmail(accessToken);
+		
+		if (memberIdOpt.isEmpty() || emailOpt.isEmpty()) {
+			log.warn("Cannot extract claims from access token");
+			return TokenValidationResult.invalid("Invalid token payload");
+		}
+
+		log.debug("Access token validation successful for member: {}", memberIdOpt.get());
+		return TokenValidationResult.valid(memberIdOpt.get(), emailOpt.get(), 
+			jwtUtil.getSocialUniqueId(accessToken).orElse(null));
+	}
+
+	/**
+	 * Access Token의 블랙리스트 및 만료 검증 (기존 호환성)
 	 */
 	public boolean isValidAccessToken(String accessToken) {
 		return jwtUtil.isAccessToken(accessToken);
@@ -96,5 +116,19 @@ public class TokenValidator {
 		public static TokenValidationResult invalid(String errorMessage) {
 			return new TokenValidationResult(false, null, null, null, errorMessage);
 		}
+	}
+
+	/**
+	 * Timing Attack을 방지하는 상수 시간 문자열 비교
+	 */
+	private boolean constantTimeEquals(String a, String b) {
+		if (a == null || b == null) {
+			return a == b;
+		}
+		
+		byte[] aBytes = a.getBytes(StandardCharsets.UTF_8);
+		byte[] bBytes = b.getBytes(StandardCharsets.UTF_8);
+		
+		return MessageDigest.isEqual(aBytes, bBytes);
 	}
 }

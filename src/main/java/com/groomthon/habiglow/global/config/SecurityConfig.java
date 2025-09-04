@@ -1,19 +1,24 @@
 package com.groomthon.habiglow.global.config;
 
+import java.util.concurrent.ConcurrentHashMap;
+
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
-import org.springframework.security.core.session.SessionRegistry;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
+import com.google.common.util.concurrent.RateLimiter;
 import com.groomthon.habiglow.global.config.properties.SecurityProperties;
+import com.groomthon.habiglow.domain.auth.service.BlacklistService;
+import com.groomthon.habiglow.global.jwt.JWTUtil;
 import com.groomthon.habiglow.global.jwt.JwtAuthenticationFilter;
+import com.groomthon.habiglow.global.security.JwtAccessDeniedHandler;
+import com.groomthon.habiglow.global.security.JwtAuthenticationEntryPoint;
 
-import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 
 @Configuration
@@ -23,12 +28,26 @@ public class SecurityConfig {
 
 	private final SecurityProperties securityProperties;
 	private final CorsConfig corsConfig;
-	private final OAuth2SecurityConfig oAuth2SecurityConfig;
-	private final SessionRegistry sessionRegistry;
+	private final JWTUtil jwtUtil;
+	private final BlacklistService blacklistService;
+
+	@Bean
+	public RateLimitFilter rateLimitFilter(ConcurrentHashMap<String, RateLimiter> rateLimiterMap, 
+			com.groomthon.habiglow.global.util.SecurityResponseUtils responseUtils) {
+		return new RateLimitFilter(rateLimiterMap, responseUtils);
+	}
+
+	@Bean
+	public JwtAuthenticationFilter jwtAuthenticationFilter() {
+		return new JwtAuthenticationFilter(jwtUtil, blacklistService);
+	}
 
 	@Bean
 	public SecurityFilterChain securityFilterChain(HttpSecurity http,
-		JwtAuthenticationFilter jwtAuthenticationFilter) throws Exception {
+		JwtAuthenticationFilter jwtAuthenticationFilter,
+		RateLimitFilter rateLimitFilter,
+		JwtAuthenticationEntryPoint jwtAuthenticationEntryPoint,
+		JwtAccessDeniedHandler jwtAccessDeniedHandler) throws Exception {
 
 		http
 			.csrf(AbstractHttpConfigurer::disable)
@@ -36,26 +55,41 @@ public class SecurityConfig {
 			.httpBasic(AbstractHttpConfigurer::disable)
 			.cors(cors -> cors.configurationSource(corsConfig.corsConfigurationSource()))
 			.sessionManagement(session -> session
-				.sessionCreationPolicy(SessionCreationPolicy.STATELESS)
-				.maximumSessions(1) // 사용자당 최대 1개 세션
-				.maxSessionsPreventsLogin(false) // 새 로그인시 기존 세션 만료
-				.sessionRegistry(sessionRegistry)
-				.and()
-				.sessionFixation().migrateSession() // 세션 고정 공격 방지
-				.invalidSessionUrl("/login?expired"))
+				.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+			.headers(headers -> headers
+				// X-Frame-Options: DENY (클릭재킹 방지)
+				.frameOptions(frameOptions -> frameOptions.deny())
+				// X-Content-Type-Options: nosniff (MIME 타입 스니핑 방지)
+				.contentTypeOptions(contentTypeOptions -> {})
+				// HSTS 헤더 설정 (HTTPS 강제)
+				.httpStrictTransportSecurity(hsts -> hsts
+					.maxAgeInSeconds(31536000) // 1년
+					.includeSubDomains(true)
+					.preload(true)
+				)
+				// 추가 보안 헤더들
+				.addHeaderWriter((request, response) -> {
+					// X-XSS-Protection 헤더 (레거시 브라우저 지원용)
+					response.setHeader("X-XSS-Protection", "1; mode=block");
+					// Referrer Policy 헤더
+					response.setHeader("Referrer-Policy", "strict-origin-when-cross-origin");
+					// Permissions Policy 헤더 (보안 강화)
+					response.setHeader("Permissions-Policy", 
+						"camera=(), microphone=(), geolocation=(), interest-cohort=()");
+				})
+			)
 			.authorizeHttpRequests(auth -> auth
 				.requestMatchers(securityProperties.getPublicUrlsArray()).permitAll()
+				.requestMatchers("/error").permitAll() // 에러 페이지 재귀 방지
 				.anyRequest().authenticated())
 			.exceptionHandling(except -> except
-				.authenticationEntryPoint((request, response, authException) ->
-					response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Unauthorized")));
+				.authenticationEntryPoint(jwtAuthenticationEntryPoint) // 커스텀 EntryPoint
+				.accessDeniedHandler(jwtAccessDeniedHandler)); // 커스텀 AccessDeniedHandler
 
-		// OAuth2 소셜 로그인만 활성화
-		http.oauth2Login(oAuth2SecurityConfig::configureOAuth2Login);
-
-		// JWT 인증 필터만 사용 (일반 로그인 필터 제거)
+		http.addFilterBefore(rateLimitFilter, UsernamePasswordAuthenticationFilter.class);
 		http.addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
 
 		return http.build();
 	}
+	
 }

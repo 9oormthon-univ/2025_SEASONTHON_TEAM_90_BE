@@ -4,6 +4,7 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseCookie;
 import org.springframework.stereotype.Service;
 
+import com.groomthon.habiglow.domain.auth.dto.response.TokenResponse;
 import com.groomthon.habiglow.domain.auth.service.RefreshTokenService;
 import com.groomthon.habiglow.domain.member.entity.MemberEntity;
 
@@ -19,61 +20,37 @@ public class JwtTokenService {
 	private final JWTUtil jwtUtil;
 	private final RefreshTokenService refreshTokenService;
 
-	public void issueTokens(HttpServletResponse response, MemberEntity member) {
+	public TokenResponse issueTokens(HttpServletResponse response, MemberEntity member) {
 		String memberId = member.getId().toString();
-		String accessToken, refreshToken;
+		TokenPair tokens = createTokenPair(memberId, member.getMemberEmail(), member.getSocialUniqueId());
 
-		if (member.isSocialUser()) {
-			// 소셜 사용자인 경우 socialUniqueId 포함
-			accessToken = jwtUtil.createAccessToken(memberId, member.getMemberEmail(), member.getSocialUniqueId());
-			refreshToken = jwtUtil.createRefreshToken(memberId, member.getMemberEmail(), member.getSocialUniqueId());
-			log.info("소셜 사용자 토큰 발급 - socialUniqueId: {}", member.getSocialUniqueId());
-		} else {
-			// 일반 사용자 (향후 제거 예정)
-			accessToken = jwtUtil.createAccessToken(memberId, member.getMemberEmail());
-			refreshToken = jwtUtil.createRefreshToken(memberId, member.getMemberEmail());
-		}
+		refreshTokenService.saveRefreshToken(memberId, tokens.refreshToken);
 
-		refreshTokenService.saveToken(memberId, refreshToken);
-
-		setAccessToken(response, accessToken);
-		setRefreshCookie(response, refreshToken);
+		setRefreshCookie(response, tokens.refreshToken);
 
 		log.info("Access / Refresh 토큰 발급 완료 - Member: {}", member.getMemberEmail());
+		
+		return TokenResponse.withRefresh(tokens.accessToken, jwtUtil.getAccessTokenExpiration() / 1000);
 	}
 
-	public void reissueAccessToken(HttpServletResponse response, String memberId, String email, String socialUniqueId) {
-		String accessToken;
-		if (socialUniqueId != null) {
-			accessToken = jwtUtil.createAccessToken(memberId, email, socialUniqueId);
-			log.info("소셜 사용자 Access 토큰 재발급 - socialUniqueId: {}", socialUniqueId);
-		} else {
-			accessToken = jwtUtil.createAccessToken(memberId, email);
-			log.info("일반 사용자 Access 토큰 재발급 (향후 제거 예정)");
-		}
-		setAccessToken(response, accessToken);
+	public TokenResponse reissueAccessToken(HttpServletResponse response, String memberId, String email, String socialUniqueId) {
+		String accessToken = jwtUtil.createAccessTokenSafe(memberId, email, socialUniqueId);
 		log.info("Access 토큰 재발급 완료 - Member: {}", email);
+		
+		return TokenResponse.accessOnly(accessToken, jwtUtil.getAccessTokenExpiration() / 1000);
 	}
 
-	public void reissueAllTokens(HttpServletResponse response, String memberId, String email, String socialUniqueId) {
-		String accessToken, refreshToken;
 
-		if (socialUniqueId != null) {
-			accessToken = jwtUtil.createAccessToken(memberId, email, socialUniqueId);
-			refreshToken = jwtUtil.createRefreshToken(memberId, email, socialUniqueId);
-			log.info("소셜 사용자 전체 토큰 재발급 - socialUniqueId: {}", socialUniqueId);
-		} else {
-			accessToken = jwtUtil.createAccessToken(memberId, email);
-			refreshToken = jwtUtil.createRefreshToken(memberId, email);
-			log.info("일반 사용자 전체 토큰 재발급 (향후 제거 예정)");
-		}
+	public TokenResponse reissueAllTokens(HttpServletResponse response, String memberId, String email, String socialUniqueId) {
+		TokenPair tokens = createTokenPair(memberId, email, socialUniqueId);
 
-		refreshTokenService.saveToken(memberId, refreshToken);
+		refreshTokenService.saveRefreshToken(memberId, tokens.refreshToken);
 
-		setAccessToken(response, accessToken);
-		setRefreshCookie(response, refreshToken);
+		setRefreshCookie(response, tokens.refreshToken);
 
 		log.info("Access / Refresh 토큰 모두 재발급 완료 - Member: {}", email);
+		
+		return TokenResponse.withRefresh(tokens.accessToken, jwtUtil.getAccessTokenExpiration() / 1000);
 	}
 
 
@@ -82,12 +59,26 @@ public class JwtTokenService {
 		response.setHeader(HttpHeaders.SET_COOKIE, expired.toString());
 	}
 
-	private void setAccessToken(HttpServletResponse response, String accessToken) {
-		response.setHeader(HttpHeaders.AUTHORIZATION, "Bearer " + accessToken);
-	}
 
 	private void setRefreshCookie(HttpServletResponse response, String refreshToken) {
 		ResponseCookie cookie = jwtUtil.createRefreshTokenCookie(refreshToken);
 		response.setHeader(HttpHeaders.SET_COOKIE, cookie.toString());
+	}
+
+	private TokenPair createTokenPair(String memberId, String email, String socialUniqueId) {
+		String accessToken = jwtUtil.createAccessTokenSafe(memberId, email, socialUniqueId);
+		String refreshToken = jwtUtil.createRefreshTokenSafe(memberId, email, socialUniqueId);
+		return new TokenPair(accessToken, refreshToken);
+	}
+
+
+	private static class TokenPair {
+		final String accessToken;
+		final String refreshToken;
+
+		TokenPair(String accessToken, String refreshToken) {
+			this.accessToken = accessToken;
+			this.refreshToken = refreshToken;
+		}
 	}
 }

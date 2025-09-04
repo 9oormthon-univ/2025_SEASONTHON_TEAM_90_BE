@@ -33,9 +33,9 @@ public class ApiResponseAdvice implements ResponseBodyAdvice<Object> {
 
 		// @SuccessCode 어노테이션이 있으면 지정된 성공 코드 사용
 		SuccessCode successCodeAnnotation = returnType.getMethodAnnotation(SuccessCode.class);
-		MemberSuccessCode successCode = successCodeAnnotation != null
+		ApiSuccessCode successCode = successCodeAnnotation != null
 			? successCodeAnnotation.value()
-			: MemberSuccessCode.SUCCESS;
+			: ApiSuccessCode.SUCCESS;
 
 		if (body == null || returnType.getParameterType() == Void.class) {
 			return CommonApiResponse.success(successCode);

@@ -1,13 +1,16 @@
 package com.groomthon.habiglow.domain.auth.controller;
 
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.groomthon.habiglow.domain.auth.dto.request.SocialLoginRequest;
 import com.groomthon.habiglow.domain.auth.dto.response.TokenResponse;
 import com.groomthon.habiglow.domain.auth.service.AuthenticationService;
+import com.groomthon.habiglow.domain.auth.service.SocialAuthService;
 import com.groomthon.habiglow.global.response.AutoApiResponse;
-import com.groomthon.habiglow.global.response.MemberSuccessCode;
+import com.groomthon.habiglow.global.response.ApiSuccessCode;
 import com.groomthon.habiglow.global.response.SuccessCode;
 import com.groomthon.habiglow.global.swagger.CustomExceptionDescription;
 import com.groomthon.habiglow.global.swagger.SwaggerResponseDescription;
@@ -18,45 +21,46 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 
 @RestController
 @RequestMapping("/api/auth")
 @RequiredArgsConstructor
 @AutoApiResponse
-@Tag(name = "인증 API", description = "소셜 로그인 전용 JWT 토큰 관리")
+@Tag(name = "인증 API", description = "클라이언트 기반 소셜 로그인 및 JWT 토큰 관리")
 public class AuthApiController {
 
 	private final AuthenticationService authenticationService;
+	private final SocialAuthService socialAuthService;
 
-	@Operation(summary = "Access Token 재발급")
+	@Operation(summary = "클라이언트 소셜 로그인", description = "클라이언트가 받은 소셜 액세스 토큰으로 서버 JWT 토큰을 발급받습니다")
+	@ApiResponses(value = {
+		@ApiResponse(responseCode = "200", description = "로그인 성공"),
+		@ApiResponse(responseCode = "400", description = "잘못된 요청 데이터"),
+		@ApiResponse(responseCode = "401", description = "유효하지 않은 소셜 토큰")
+	})
+	@PostMapping("/social/login")
+	@CustomExceptionDescription(SwaggerResponseDescription.AUTH_ERROR)
+	@SuccessCode(ApiSuccessCode.SOCIAL_LOGIN_SUCCESS)
+	public TokenResponse socialLogin(@Valid @RequestBody SocialLoginRequest request) {
+		return socialAuthService.authenticateWithSocialToken(request);
+	}
+
+	@Operation(summary = "토큰 재발급 (RTR 적용)", 
+			description = "Refresh Token을 사용하여 Access Token과 Refresh Token을 모두 재발급합니다. 보안을 위해 기존 Refresh Token은 무효화됩니다.")
 	@ApiResponses(value = {
 		@ApiResponse(responseCode = "200", description = "성공"),
 		@ApiResponse(responseCode = "401", description = "유효하지 않은 토큰")
 	})
 	@PostMapping("/token/refresh")
 	@CustomExceptionDescription(SwaggerResponseDescription.AUTH_ERROR)
-	@SuccessCode(MemberSuccessCode.TOKEN_REISSUE_SUCCESS)
-	public TokenResponse refreshAccessToken(
+	@SuccessCode(ApiSuccessCode.TOKEN_REISSUE_SUCCESS)
+	public TokenResponse refreshToken(
 		HttpServletRequest request,
 		HttpServletResponse response) {
 
-		return authenticationService.refreshAccessToken(request, response);
-	}
-
-	@Operation(summary = "Access + Refresh Token 모두 재발급")
-	@ApiResponses(value = {
-		@ApiResponse(responseCode = "200", description = "성공"),
-		@ApiResponse(responseCode = "401", description = "유효하지 않은 토큰")
-	})
-	@PostMapping("/token/refresh/full")
-	@CustomExceptionDescription(SwaggerResponseDescription.AUTH_ERROR)
-	@SuccessCode(MemberSuccessCode.TOKEN_REISSUE_FULL_SUCCESS)
-	public TokenResponse refreshAllTokens(
-		HttpServletRequest request,
-		HttpServletResponse response) {
-
-		return authenticationService.refreshAllTokens(request, response);
+		return authenticationService.refreshTokens(request, response);
 	}
 
 	@Operation(summary = "로그아웃")
@@ -65,7 +69,7 @@ public class AuthApiController {
 	})
 	@PostMapping("/logout")
 	@CustomExceptionDescription(SwaggerResponseDescription.AUTH_ERROR)
-	@SuccessCode(MemberSuccessCode.LOGOUT_SUCCESS)
+	@SuccessCode(ApiSuccessCode.LOGOUT_SUCCESS)
 	public void logout(
 		HttpServletRequest request,
 		HttpServletResponse response) {

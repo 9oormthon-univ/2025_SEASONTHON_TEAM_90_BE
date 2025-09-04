@@ -1,15 +1,19 @@
 package com.groomthon.habiglow.global.jwt;
 
 import java.io.IOException;
+import java.util.Collections;
+import java.util.Optional;
 
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import com.groomthon.habiglow.domain.auth.service.BlacklistService;
-import com.groomthon.habiglow.domain.member.security.CustomUserDetailsService;
+import com.groomthon.habiglow.global.exception.jwt.BlacklistedJwtException;
+import com.groomthon.habiglow.global.exception.jwt.InvalidJwtSignatureException;
+import com.groomthon.habiglow.global.exception.jwt.JwtAuthenticationException;
 
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
@@ -24,55 +28,57 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
 	private final JWTUtil jwtUtil;
 	private final BlacklistService blacklistService;
-	private final CustomUserDetailsService userDetailsService;
 
 	@Override
 	protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
 		throws ServletException, IOException {
 
-		jwtUtil.extractAccessToken(request)
-			.filter(token -> validateAccessToken(token, response))
-			.flatMap(jwtUtil::getEmail)
-			.ifPresent(email -> {
-				try {
-					UserDetails userDetails = userDetailsService.loadUserByUsername(email);
-					Authentication authentication = new UsernamePasswordAuthenticationToken(
-						userDetails,
-						null,
-						userDetails.getAuthorities()
-					);
-					SecurityContextHolder.getContext().setAuthentication(authentication);
-					log.info("SecurityContext에 인증 객체 저장 완료: {}", email);
-				} catch (Exception e) {
-					log.warn("UserDetails 로딩 실패: {}", e.getMessage());
-					sendUnauthorized(response, "회원 인증 실패");
-				}
-			});
-
+		Optional<String> token = jwtUtil.extractAccessToken(request);
+		
+		if (token.isPresent()) {
+			try {
+				validateAndSetAuthentication(token.get());
+			} catch (JwtAuthenticationException e) {
+				SecurityContextHolder.clearContext();
+				request.setAttribute("jwtAuthenticationException", e);
+			}
+		}
+		
 		filterChain.doFilter(request, response);
 	}
 
-	private boolean validateAccessToken(String token, HttpServletResponse response) {
-		if (!jwtUtil.validateToken(token, "access")) {
-			log.warn("토큰 검증 실패");
-			sendUnauthorized(response, "유효하지 않은 토큰입니다.");
-			return false;
+	private void validateAndSetAuthentication(String token) {
+		// JWT 토큰 검증 - 명시적으로 Access Token 타입 확인
+		if (!jwtUtil.isAccessToken(token)) {
+			log.warn("유효하지 않은 Access Token입니다");
+			throw new InvalidJwtSignatureException();
 		}
-
+		
+		// 블랙리스트 검증
 		if (blacklistService.isBlacklisted(token)) {
 			log.warn("블랙리스트에 등록된 토큰입니다.");
-			sendUnauthorized(response, "TOKEN_BLACKLISTED");
-			return false;
+			throw new BlacklistedJwtException();
 		}
-
-		return true;
+		
+		// 인증 설정
+		setAuthentication(token);
 	}
-
-	private void sendUnauthorized(HttpServletResponse response, String message) {
+	
+	private void setAuthentication(String token) {
 		try {
-			response.sendError(HttpServletResponse.SC_UNAUTHORIZED, message);
-		} catch (IOException e) {
-			log.error("응답 중 에러 발생", e);
+			String email = jwtUtil.getEmail(token).orElse("");
+			String userId = jwtUtil.getId(token).orElse("");
+
+			Authentication authentication = new UsernamePasswordAuthenticationToken(
+				userId, // principal: 사용자 ID
+				null,   // credentials: JWT 토큰 기반이므로 null
+				Collections.singletonList(new SimpleGrantedAuthority("SOCIAL_USER")) // authorities
+			);
+			SecurityContextHolder.getContext().setAuthentication(authentication);
+			log.debug("JWT 기반 SecurityContext 저장 완료: email={}, userId={}", email, userId);
+		} catch (Exception e) {
+			log.warn("JWT 인증 처리 실패: {}", e.getMessage());
+			throw new InvalidJwtSignatureException(e);
 		}
 	}
 }

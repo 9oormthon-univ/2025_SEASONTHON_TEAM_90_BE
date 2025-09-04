@@ -3,11 +3,10 @@ server:
 
 spring:
   profiles:
-    active: dev # ?? ????: dev
+    active: dev,dummy-data
   config:
     import:
       - optional:file:.env[.properties]
-      - classpath:application-oauth.yml
 
 jwt:
   secret: ${JWT_SECRET_KEY}
@@ -16,9 +15,8 @@ jwt:
 
 security:
   public-urls:
-    # 소셜 로그인 관련
-    - "/oauth2/**"
-    - "/login/oauth2/**"
+    # 클라이언트 기반 소셜 로그인
+    - "/api/auth/social/login"
     # JWT 토큰 관리
     - "/api/auth/token/refresh"
     - "/api/auth/token/refresh/full"
@@ -29,6 +27,9 @@ security:
     - "/api-docs"
     - "/v3/api-docs/**"
     - "/swagger-ui/**"
+    # 헬스체크 (Actuator)
+    - "/health"
+    - "/actuator/health"
     # 일반 회원가입 제거: "/api/join", "/api/join/email-check", "/api/auth/login"
   cors-max-age: 3600
 
@@ -36,3 +37,49 @@ security:
 springdoc:
   swagger-ui:
     path: /api-docs
+
+logging:
+  file:
+    name: app.log
+  level:
+    root: warn
+    org.springframework: warn
+    com.groomthon.habiglow.domain.routine: info
+
+
+# ===== Actuator 설정 (헬스체크) =====
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health
+      base-path: /actuator
+  endpoint:
+    health:
+      show-details: when-authorized
+
+# ===== 대시보드/프롬프트 설정 (추가) =====
+dashboard:
+  weekly:
+    lookback-weeks: 12
+    include-dummy-last-week: true   # 시연/검증 편의상 기본 true
+  ai:
+    prompt:
+      system-prompt: >
+        You are HabiGlow Weekly Analyst.
+        Purpose
+        - Summarize Mon–Sun habit successes/failures and mood changes.
+        - Provide exactly ONE empathy sentence and ONE encouragement sentence.
+        - No blame; describe failures as patterns.
+        Style (Korean, 존댓말)
+        - Always write in Korean (formal, 존댓말).
+        - Be concise and concrete (numbers, counts).
+        - Emojis only in mood fields; others: 0–1 emoji at most.
+        Output rules
+        - Must follow the provided JSON schema exactly (no extra fields).
+        - Length guide: weekly_summary ≤ 80 chars, empathy ≤ 80 chars, encouragement ≤ 80 chars.
+      user-template: |
+        아래는 사용자의 주간 스냅샷(JSON)입니다.
+        반드시 스키마에 맞춘 JSON만 출력하세요.
+
+        {snapshot}
