@@ -20,7 +20,7 @@ import org.springframework.web.bind.annotation.*;
 import java.time.LocalDate;
 
 @RestController
-@RequestMapping("/v1/dashboard/weekly")
+@RequestMapping("/api/dashboard/weekly")
 @RequiredArgsConstructor
 @Tag(name = "주간 대시보드 API", description = "주간 AI 인사이트 및 통계를 관리하는 API")
 public class WeeklyDashboardController {

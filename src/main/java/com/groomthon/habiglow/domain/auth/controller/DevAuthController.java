@@ -1,6 +1,5 @@
 package com.groomthon.habiglow.domain.auth.controller;
 
-import org.springframework.context.annotation.Profile;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -25,7 +24,6 @@ import lombok.extern.slf4j.Slf4j;
 @RequestMapping("/api/dev/auth")
 @RequiredArgsConstructor
 @Slf4j
-@Profile({"dev", "local"}) // 개발 환경에서만 활성화
 @Tag(name = "개발용 인증 API", description = "개발 환경에서만 사용 가능한 Mock 인증 API")
 public class DevAuthController {
 

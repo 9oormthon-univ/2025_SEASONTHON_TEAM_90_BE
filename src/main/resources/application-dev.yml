@@ -25,6 +25,12 @@ openai:
 cookie:
   secure: false
 
+fcm:
+  firebase:
+    config:
+      path: "firebase/habiglow-service-account.json"
+
+
 swagger:
   server:
     url: ${SWAGGER_SERVER_URL:http://localhost:8080}
