@@ -69,7 +69,7 @@ POST /api/daily-records/{date}
 {
   "reflection": {
     "content": "string",
-    "emotion": "HAPPY | SOSO | SAD | MAD"
+    "emotion": "LOW | NORMAL | GOOD | VERY_GOOD"
   },
   "routineRecords": [
     {
@@ -93,12 +93,12 @@ POST /api/daily-records/{date}
 
 #### Emotion Types
 
-| Value | Description |
-|-------|-------------|
-| `HAPPY` | 행복 |
-| `SOSO` | 그저그래 |
-| `SAD` | 슬픔 |
-| `MAD` | 화남 |
+| Value       | Description |
+|-------------|-------------|
+| `LOW`       | 낮음          |
+| `NORMAL`    | 보통          |
+| `GOOD`      | 좋음          |
+| `VERY_GOOD` | 매우좋음        |
 
 #### Performance Levels
 
@@ -383,7 +383,7 @@ POST /api/daily-records/2025-01-30
 {
   "reflection": {
     "content": "오늘은 바빠서 루틴을 못했지만, 내일은 꼭 하자!",
-    "emotion": "SOSO"
+    "emotion": "GOOD"
   }
 }
 ```

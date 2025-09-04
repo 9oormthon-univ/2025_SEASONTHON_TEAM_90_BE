@@ -7,10 +7,10 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public enum EmotionType {
     
-    HAPPY("행복"),
-    SOSO("그저그래"),
-    SAD("슬픔"),
-    MAD("화남");
+    LOW("낮음"),
+    NORMAL("보통"),
+    GOOD("좋음"),
+    VERY_GOOD("매우 좋음");
     
     private final String description;
 }
