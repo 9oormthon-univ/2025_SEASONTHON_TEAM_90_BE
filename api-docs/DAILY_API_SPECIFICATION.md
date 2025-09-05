@@ -1,9 +1,9 @@
 # Daily 도메인 API 명세서
 
-> **최신 업데이트**: 2025-09-04  
-> **버전**: 1.4.0  
-> **신규 기능**: 실패 주기 관리 시스템 (failureCycleDays)  
-> **개선사항**: 성장/감소 카운터 통합 관리  
+> **최신 업데이트**: 2025-01-04  
+> **버전**: 1.5.0  
+> **신규 기능**: 월별 통계 조회 API  
+> **개선사항**: 일별 루틴 성공률 통계 제공  
 
 ---
 
@@ -15,9 +15,10 @@ Daily 도메인은 사용자의 **일일 루틴 수행 기록**과 **회고**를
 - 특정 날짜의 루틴 수행 기록 저장 및 조회
 - 일일 회고(감정 포함) 기록 관리  
 - 연속 수행 일수 자동 계산
-- **🆕 성장 주기 관리**: currentCycleDays 자동 업데이트
-- **🆕 실패 주기 관리**: failureCycleDays 자동 업데이트
+- 성장 주기 관리: currentCycleDays 자동 업데이트
+- 실패 주기 관리: failureCycleDays 자동 업데이트
 - 루틴 성장 모드 스냅샷 저장
+- **🆕 월별 통계**: 일별 루틴 성공률 통계 조회
 
 ### 아키텍처 개선사항 (v1.2.0)
 - **CQS 패턴**: Command/Query 책임 분리
@@ -248,6 +249,75 @@ GET /api/daily-records/today
 
 ---
 
+### 4. 월별 통계 조회 🆕
+
+특정 월에 대해 각 일별로 성공한 루틴(FullSuccess)/전체 루틴 수와 성공률을 조회합니다.
+
+```http
+GET /api/daily-records/monthly-stats/{year}/{month}
+```
+
+#### Parameters
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| `year` | Path | ✅ | 조회할 연도 (예: 2025) |
+| `month` | Path | ✅ | 조회할 월 (1-12) |
+
+#### Response
+
+```json
+{
+  "code": "S215",
+  "message": "월별 통계 조회 성공",
+  "data": {
+    "year": 2025,
+    "month": 1,
+    "dailyStats": [
+      {
+        "day": 1,
+        "successfulRoutines": 3,
+        "totalRoutines": 5,
+        "successRate": 60.0
+      },
+      {
+        "day": 2,
+        "successfulRoutines": 0,
+        "totalRoutines": 0,
+        "successRate": 0.0
+      },
+      {
+        "day": 3,
+        "successfulRoutines": 4,
+        "totalRoutines": 4,
+        "successRate": 100.0
+      }
+    ]
+  }
+}
+```
+
+#### Response Schema
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `year` | Integer | 조회한 연도 |
+| `month` | Integer | 조회한 월 |
+| `dailyStats` | Array | 일별 통계 배열 |
+| `dailyStats[].day` | Integer | 해당 월의 일 (1-31) |
+| `dailyStats[].successfulRoutines` | Integer | 성공한 루틴 수 (FULL_SUCCESS만 카운트) |
+| `dailyStats[].totalRoutines` | Integer | 전체 루틴 수 |
+| `dailyStats[].successRate` | Double | 성공률 (%) - 소수점 둘째 자리까지 |
+
+#### 비즈니스 로직
+
+1. **성공 기준**: `FULL_SUCCESS`만 성공으로 카운트
+2. **기록 없는 날**: 0/0/0%로 표시 
+3. **전체 날짜 포함**: 해당 월의 1일부터 말일까지 모든 날짜 반환
+4. **성공률 계산**: totalRoutines > 0일 때만 계산, 소수점 둘째 자리까지 반올림
+
+---
+
 ## ❌ 에러 응답
 
 ### 공통 에러 형식
@@ -305,6 +375,23 @@ GET /api/daily-records/today
 | `reflection` | ReflectionResponse \| null | 회고 정보 |
 | `routineRecords` | RoutineRecordResponse[] | 수행 기록 목록 |
 | `allRoutines` | RoutineResponse[] | 전체 루틴 목록 |
+
+### MonthlyStatsResponse 🆕
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `year` | Integer | 조회한 연도 |
+| `month` | Integer | 조회한 월 |
+| `dailyStats` | DailyStat[] | 일별 통계 목록 |
+
+### DailyStat 🆕
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `day` | Integer | 해당 월의 일 (1-31) |
+| `successfulRoutines` | Integer | 성공한 루틴 수 (FULL_SUCCESS만) |
+| `totalRoutines` | Integer | 전체 루틴 수 |
+| `successRate` | Double | 성공률 (%) |
 
 ### ReflectionResponse
 
@@ -496,4 +583,4 @@ Day 6: NOT_PERFORMED 기록
 
 API 관련 문의사항이 있으시면 개발팀에 문의해 주세요.
 
-**최종 업데이트**: 2025-09-04
+**최종 업데이트**: 2025-01-04

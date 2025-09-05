@@ -91,9 +91,8 @@ public class WeeklyInsightService {
     }
 
     private WeeklyAnalysisData collect(Long memberId, LocalDate weekStart, LocalDate weekEnd) {
-        // 최소 수정: 기존 수집기 사용 (현재는 지난 주 수집 전용)
-        // 필요시 WeeklyDataCollector를 주간 범용 수집으로 확장
-        return dataCollector.collectLastWeekData(memberId);
+        // 범용 주차별 데이터 수집으로 수정
+        return dataCollector.collectWeekData(memberId, weekStart);
     }
 
     private static String sha256(String s) {
