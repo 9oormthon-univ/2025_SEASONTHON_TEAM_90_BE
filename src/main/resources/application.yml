@@ -21,7 +21,7 @@ fcm:
 security:
   public-urls:
     # 클라이언트 기반 소셜 로그인
-    - "/api/auth/social/login"
+    - "/api/auth/social/**"
     # JWT 토큰 관리
     - "/api/auth/token/refresh"
     - "/api/auth/token/refresh/full"
