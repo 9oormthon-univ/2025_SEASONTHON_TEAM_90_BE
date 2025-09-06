@@ -261,23 +261,12 @@ public class WeeklyDashboardService {
         return (desc != null && !desc.isBlank()) ? desc : c.name();
     }
 
-    private static String emojiToMoodName(String emoji) {
-        if (emoji == null) return null;
-        return switch (emoji) {
-            case "🙂", "😊", "😀" -> "HAPPY";
-            case "😐", "😶" -> "SOSO";
-            case "☹️", "🙁", "😢" -> "SAD";
-            case "😡", "😠" -> "MAD";
-            default -> "SOSO";
-        };
-    }
-
     private static Map<String, Integer> buildEmotionDistribution(List<DailyCompletionInfo> daily) {
         Map<String, Integer> dist = new LinkedHashMap<>();
-        dist.put("HAPPY", 0);
-        dist.put("SOSO", 0);
-        dist.put("SAD", 0);
-        dist.put("MAD", 0);
+        dist.put("LOW", 0);
+        dist.put("NORMAL", 0);
+        dist.put("GOOD", 0);
+        dist.put("VERY_GOOD", 0);
         for (var d : daily) {
             if (d.isFuture()) continue;
             if (d.getMood() == null) continue;
