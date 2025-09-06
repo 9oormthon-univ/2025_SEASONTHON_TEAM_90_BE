@@ -186,7 +186,7 @@ public class WeeklyDashboardService {
                         .done(done)
                         .total(total)
                         .rate(rate)
-                        .mood(emojiToMoodName(day.getMood()))
+                        .mood(day.getMood()) // 직접 사용 (이미 EmotionType.name() 형태)
                         .isFuture(false)
                         .build());
 
