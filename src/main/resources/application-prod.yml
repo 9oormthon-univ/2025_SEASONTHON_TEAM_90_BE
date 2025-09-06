@@ -28,6 +28,7 @@ openai:
 
 cookie:
   secure: true
+  domain: .duckdns.org
 
 fcm:
   firebase:
