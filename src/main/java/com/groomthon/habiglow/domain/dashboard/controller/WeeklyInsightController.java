@@ -2,6 +2,8 @@ package com.groomthon.habiglow.domain.dashboard.controller;
 
 import com.groomthon.habiglow.domain.dashboard.dto.WeeklyInsightDto;
 import com.groomthon.habiglow.domain.dashboard.service.WeeklyInsightService;
+import com.groomthon.habiglow.global.dto.CommonApiResponse;
+import com.groomthon.habiglow.global.response.ApiSuccessCode;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.enums.ParameterIn;
@@ -13,7 +15,6 @@ import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.format.annotation.DateTimeFormat;
-import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDate;
@@ -39,7 +40,7 @@ public class WeeklyInsightController {
             @ApiResponse(responseCode = "500", description = "서버 오류")
     })
     @GetMapping("/insight")
-    public ResponseEntity<WeeklyInsightDto> getInsight(
+    public CommonApiResponse<WeeklyInsightDto> getInsight(
             @Parameter(name = "weekStart", description = "주 시작일(월요일)", required = true, example = "2025-08-25", in = ParameterIn.QUERY)
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate weekStart,
             @Parameter(name = "force", description = "기존 저장이 있어도 재생성 여부", example = "false", in = ParameterIn.QUERY)
@@ -47,7 +48,8 @@ public class WeeklyInsightController {
             @Parameter(name = "memberId", description = "대상 사용자 ID (예: 더미는 1)", required = true, example = "1", in = ParameterIn.QUERY)
             @RequestParam Long memberId
     ) {
-        return ResponseEntity.ok(service.getOrCreate(memberId, weekStart, force));
+        var dto = service.getOrCreate(memberId, weekStart, force);
+        return CommonApiResponse.success(ApiSuccessCode.SUCCESS, dto);
     }
 
     @Operation(
@@ -62,12 +64,13 @@ public class WeeklyInsightController {
             @ApiResponse(responseCode = "500", description = "서버 오류")
     })
     @GetMapping("/insight/last-week")
-    public ResponseEntity<WeeklyInsightDto> getLastWeekInsight(
+    public CommonApiResponse<WeeklyInsightDto> getLastWeekInsight(
             @Parameter(name = "force", description = "기존 저장이 있어도 재생성 여부", example = "false", in = ParameterIn.QUERY)
             @RequestParam(defaultValue = "false") boolean force,
             @Parameter(name = "memberId", description = "대상 사용자 ID (예: 더미는 1)", required = true, example = "1", in = ParameterIn.QUERY)
             @RequestParam Long memberId
     ) {
-        return ResponseEntity.ok(service.getLastWeekOrCreate(memberId, force));
+        var dto = service.getLastWeekOrCreate(memberId, force);
+        return CommonApiResponse.success(ApiSuccessCode.SUCCESS, dto);
     }
 }
