@@ -48,6 +48,9 @@ public class JWTUtil {
 	@Value("${cookie.secure}")
 	private boolean secure;
 
+	@Value("${cookie.domain:}")
+	private String domain;
+
 	private SecretKey secretKey;
 
 	@PostConstruct
@@ -182,13 +185,18 @@ public class JWTUtil {
 	}
 
 	private ResponseCookie buildRefreshCookie(String value, long maxAge) {
-		return ResponseCookie.from(COOKIE_NAME_REFRESH, value)
+		var builder = ResponseCookie.from(COOKIE_NAME_REFRESH, value)
 			.maxAge(maxAge)
 			.path("/")
 			.httpOnly(true)
 			.secure(secure)
-			.sameSite("Lax")
-			.build();
+			.sameSite("Lax");
+		
+		if (domain != null && !domain.isEmpty()) {
+			builder.domain(domain);
+		}
+		
+		return builder.build();
 	}
 
 	// 공통 토큰 생성 헬퍼 메서드들
