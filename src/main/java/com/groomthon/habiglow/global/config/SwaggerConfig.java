@@ -43,8 +43,8 @@ import io.swagger.v3.oas.models.servers.Server;
 		description = "JWT 인증 기반 로그인 시스템의 REST API 문서입니다.",
 		version = "v1.0.0",
 		contact = @Contact(
-			name = "김규일",
-			email = "rlarbdlf222@gmail.com",
+			name = "김규일, 홍성민",
+			email = "rlarbdlf222@gmail.com, hskhsmmm@gmail.com",
 			url = "https://github.com/Kimgyuilli"
 		),
 		license = @License(
