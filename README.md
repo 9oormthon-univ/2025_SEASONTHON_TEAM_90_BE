@@ -106,33 +106,94 @@ habiglow/
 │   ├── 🚀 HabiglowApplication.java
 │   ├── 📁 domain/
 │   │   ├── 🔐 auth/                     # 인증 도메인
-│   │   │   ├── controller/              # 토큰 관리 API
-│   │   │   ├── service/                 # 인증 비즈니스 로직
+│   │   │   ├── controller/              # 토큰 관리 API (AuthApiController, DevAuthController)
+│   │   │   ├── service/                 # 인증 비즈니스 로직 (AuthenticationService, RefreshTokenService 등)
 │   │   │   ├── entity/                  # RefreshToken, BlacklistedToken
-│   │   │   └── dto/                     # TokenResponse, MockLoginRequest
-│   │   └── 👤 member/                   # 사용자 도메인
-│   │       ├── controller/              # 사용자 CRUD API
-│   │       ├── service/                 # 사용자 비즈니스 로직
-│   │       ├── entity/                  # MemberEntity (socialUniqueId 포함)
-│   │       └── dto/                     # MemberResponse
+│   │   │   ├── repository/              # 토큰 저장소 (RefreshTokenRepository, BlacklistedTokenRepository)
+│   │   │   └── dto/                     # 요청/응답 DTO (TokenResponse, MockLoginRequest, SocialLoginRequest)
+│   │   │       ├── request/             # 요청 DTO
+│   │   │       └── response/            # 응답 DTO
+│   │   ├── 📅 daily/                    # 일간 기록 도메인
+│   │   │   ├── controller/              # 일간 기록 API (DailyRecordController)
+│   │   │   ├── service/                 # 일간 기록 비즈니스 로직
+│   │   │   ├── entity/                  # 일간 기록 엔티티
+│   │   │   ├── repository/              # 일간 기록 저장소
+│   │   │   ├── facade/                  # 파사드 패턴 구현
+│   │   │   ├── event/                   # 도메인 이벤트
+│   │   │   ├── exception/               # 도메인별 예외
+│   │   │   └── dto/                     # 일간 기록 DTO
+│   │   │       ├── request/             # 요청 DTO (RoutinePerformanceRequest, SaveDailyRecordRequest)
+│   │   │       ├── response/            # 응답 DTO (DailyRecordResponse)
+│   │   │       └── error/               # 에러 DTO (InvalidRoutineError)
+│   │   ├── 📊 dashboard/                # 대시보드 도메인
+│   │   │   ├── controller/              # 대시보드 API
+│   │   │   ├── service/                 # 대시보드 비즈니스 로직
+│   │   │   ├── entity/                  # 대시보드 엔티티
+│   │   │   ├── repository/              # 대시보드 저장소
+│   │   │   ├── client/                  # 외부 클라이언트 연동
+│   │   │   ├── config/                  # 대시보드 설정
+│   │   │   ├── util/                    # 유틸리티 클래스
+│   │   │   └── dto/                     # 대시보드 DTO
+│   │   ├── 👤 member/                   # 사용자 도메인
+│   │   │   ├── controller/              # 사용자 CRUD API
+│   │   │   ├── service/                 # 사용자 비즈니스 로직
+│   │   │   ├── entity/                  # MemberEntity (socialUniqueId 포함)
+│   │   │   ├── repository/              # 사용자 저장소
+│   │   │   └── dto/                     # 사용자 DTO
+│   │   │       ├── request/             # 요청 DTO
+│   │   │       └── response/            # 응답 DTO (MemberResponse)
+│   │   ├── 🔔 notification/             # 알림 도메인
+│   │   │   ├── controller/              # 알림 API
+│   │   │   ├── service/                 # 알림 비즈니스 로직
+│   │   │   ├── entity/                  # 알림 엔티티
+│   │   │   ├── repository/              # 알림 저장소
+│   │   │   ├── enums/                   # 알림 관련 열거형
+│   │   │   └── dto/                     # 알림 DTO
+│   │   │       ├── request/             # 요청 DTO
+│   │   │       └── response/            # 응답 DTO
+│   │   └── 🔄 routine/                  # 루틴 도메인
+│   │       ├── controller/              # 루틴 API
+│   │       ├── service/                 # 루틴 비즈니스 로직
+│   │       │   └── strategy/            # 전략 패턴 구현
+│   │       ├── entity/                  # 루틴 엔티티
+│   │       ├── repository/              # 루틴 저장소
+│   │       ├── facade/                  # 파사드 패턴 구현
+│   │       ├── event/                   # 도메인 이벤트
+│   │       ├── common/                  # 공통 유틸리티
+│   │       └── dto/                     # 루틴 DTO
+│   │           ├── request/             # 요청 DTO
+│   │           └── response/            # 응답 DTO
+│   │               └── adaptation/      # 적응형 응답 DTO
 │   └── 🌐 global/
-│       ├── config/                      # Security, OAuth2, Swagger 설정
+│       ├── config/                      # 글로벌 설정
+│       │   └── properties/              # 설정 프로퍼티
 │       ├── jwt/                         # JWT 토큰 관리
 │       ├── oauth2/                      # OAuth2 소셜 로그인
 │       │   ├── strategy/                # Google, Naver, Kakao 전략
 │       │   ├── userInfo/                # 제공업체별 사용자 정보
-│       │   └── handler/                 # 로그인 성공/실패 핸들러
+│       │   ├── service/                 # OAuth2 서비스
+│       │   ├── entity/                  # OAuth2 엔티티
+│       │   └── dto/                     # OAuth2 DTO
+│       ├── security/                    # 보안 설정
 │       ├── response/                    # 통합 응답 처리
-│       └── exception/                   # 전역 예외 처리
+│       ├── exception/                   # 전역 예외 처리
+│       │   └── jwt/                     # JWT 관련 예외
+│       ├── advice/                      # 글로벌 어드바이스
+│       ├── swagger/                     # Swagger 설정
+│       ├── fcm/                         # FCM 푸시 알림
+│       ├── entity/                      # 글로벌 엔티티
+│       ├── dto/                         # 글로벌 DTO
+│       └── util/                        # 유틸리티 클래스
 ├── 📁 src/main/resources/
 │   ├── application.yml                  # 메인 설정
 │   ├── application-dev.yml              # 개발환경 (Mock API 활성화)
-│   ├── application-prod.yml             # 운영환경
+│   └── application-prod.yml             # 운영환경
+├── 📁 api-docs/                         # API 문서 디렉토리
+│   ├── API_SPECIFICATION.md             # 인증 API 명세서
+│   └── ROUTINE_API_SPECIFICATION.md     # 루틴 API 명세서
 ├── 🐳 docker-compose.yml                # PostgreSQL + App 컨테이너
 ├── 📋 build.gradle                      # Gradle 빌드 설정
-└── 📚 문서/
-    ├── README.md                        # 이 파일
-    └── API_SPECIFICATION.md             # API 명세서
+└── 📚 README.md                         # 프로젝트 문서
 ```
 
 ## 📚 **문서 & 참고자료**
